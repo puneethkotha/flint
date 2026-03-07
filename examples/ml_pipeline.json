@@ -1,0 +1,68 @@
+{
+  "name": "ML Training Pipeline",
+  "description": "Fetch data, preprocess, train, evaluate, and log results",
+  "schedule": "0 2 * * 0",
+  "timezone": "UTC",
+  "tags": ["ml", "training"],
+  "nodes": [
+    {
+      "id": "fetch_data",
+      "name": "Fetch Training Data",
+      "type": "http",
+      "depends_on": [],
+      "timeout_seconds": 60,
+      "config": {
+        "url": "https://api.example.com/training-data",
+        "method": "GET"
+      },
+      "retry_policy": { "max_attempts": 3 },
+      "corruption_checks": {
+        "required_fields": ["body"],
+        "cardinality": { "field": "body", "min": 100 }
+      }
+    },
+    {
+      "id": "preprocess",
+      "name": "Preprocess Data",
+      "type": "python",
+      "depends_on": ["fetch_data"],
+      "timeout_seconds": 120,
+      "config": {
+        "code": "async def run(context):\n    data = context.get('fetch_data', {}).get('body', [])\n    clean = [d for d in data if d is not None] if isinstance(data, list) else []\n    return {'processed_count': len(clean), 'sample_size': min(len(clean), 1000)}"
+      },
+      "retry_policy": { "max_attempts": 1 },
+      "corruption_checks": {
+        "required_fields": ["processed_count"],
+        "range": { "processed_count": { "min": 1 } }
+      }
+    },
+    {
+      "id": "train",
+      "name": "Train Model",
+      "type": "shell",
+      "depends_on": ["preprocess"],
+      "timeout_seconds": 3600,
+      "config": {
+        "command": "python train.py --epochs 10 --lr 0.001",
+        "cwd": "/app/ml"
+      },
+      "retry_policy": { "max_attempts": 1 },
+      "corruption_checks": {
+        "required_fields": ["stdout"]
+      }
+    },
+    {
+      "id": "evaluate",
+      "name": "Evaluate Model",
+      "type": "shell",
+      "depends_on": ["train"],
+      "timeout_seconds": 600,
+      "config": {
+        "command": "python evaluate.py --output metrics.json",
+        "cwd": "/app/ml"
+      },
+      "retry_policy": { "max_attempts": 1 },
+      "corruption_checks": {}
+    }
+  ]
+}

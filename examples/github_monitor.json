@@ -1,0 +1,40 @@
+{
+  "name": "GitHub Events Monitor",
+  "description": "Fetch GitHub public events and count them",
+  "schedule": null,
+  "timezone": "UTC",
+  "tags": ["github", "monitor"],
+  "nodes": [
+    {
+      "id": "fetch_events",
+      "name": "Fetch GitHub Events",
+      "type": "http",
+      "depends_on": [],
+      "timeout_seconds": 30,
+      "config": {
+        "url": "https://api.github.com/events",
+        "method": "GET",
+        "headers": { "Accept": "application/vnd.github.v3+json" }
+      },
+      "retry_policy": { "max_attempts": 3 },
+      "corruption_checks": {
+        "cardinality": { "min": 1 }
+      }
+    },
+    {
+      "id": "count_events",
+      "name": "Count Events",
+      "type": "python",
+      "depends_on": ["fetch_events"],
+      "timeout_seconds": 10,
+      "config": {
+        "code": "async def run(context):\n    events = context.get('fetch_events', {}).get('body', [])\n    count = len(events) if isinstance(events, list) else 0\n    print(f'GitHub Events Count: {count}')\n    return {'count': count, 'message': f'Found {count} public GitHub events'}"
+      },
+      "retry_policy": { "max_attempts": 1 },
+      "corruption_checks": {
+        "required_fields": ["count"],
+        "range": { "count": { "min": 0 } }
+      }
+    }
+  ]
+}

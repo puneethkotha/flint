@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: flint
+          POSTGRES_DB: flint
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Install dependencies
+        run: uv sync --all-extras
+
+      - name: Run unit tests
+        env:
+          DATABASE_URL: postgresql://postgres:flint@localhost:5432/flint
+          REDIS_URL: redis://localhost:6379
+          KAFKA_BOOTSTRAP_SERVERS: localhost:9092
+          ANTHROPIC_API_KEY: skip
+          LLM_PROVIDER: claude
+          FLINT_ENV: development
+          FLINT_SECRET_KEY: test-secret
+        run: uv run pytest tests/unit/ -v --tb=short
+
+      - name: Run benchmarks
+        env:
+          DATABASE_URL: postgresql://postgres:flint@localhost:5432/flint
+          REDIS_URL: redis://localhost:6379
+          KAFKA_BOOTSTRAP_SERVERS: localhost:9092
+          ANTHROPIC_API_KEY: skip
+          LLM_PROVIDER: claude
+          FLINT_ENV: development
+          FLINT_SECRET_KEY: test-secret
+        run: uv run python tests/benchmarks/throughput_bench.py
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+      - name: Install dependencies
+        run: uv sync --all-extras
+      - name: Lint
+        run: uv run ruff check flint/

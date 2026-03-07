@@ -1,0 +1,55 @@
+{
+  "name": "Morning News Digest",
+  "description": "Fetch top news, summarize, and send email digest",
+  "schedule": "0 7 * * *",
+  "timezone": "America/New_York",
+  "tags": ["news", "digest", "email"],
+  "nodes": [
+    {
+      "id": "fetch_hn",
+      "name": "Fetch HN Top Stories",
+      "type": "http",
+      "depends_on": [],
+      "timeout_seconds": 15,
+      "config": {
+        "url": "https://hacker-news.firebaseio.com/v0/topstories.json",
+        "method": "GET"
+      },
+      "retry_policy": { "max_attempts": 3 },
+      "corruption_checks": {
+        "cardinality": { "min": 1 }
+      }
+    },
+    {
+      "id": "summarize",
+      "name": "Generate Digest",
+      "type": "llm",
+      "depends_on": ["fetch_hn"],
+      "timeout_seconds": 60,
+      "config": {
+        "prompt": "Generate a morning digest email from these Hacker News top story IDs: {{fetch_hn.body}}. Include 5 interesting topics based on the IDs.",
+        "model": "claude-sonnet-4-6",
+        "max_tokens": 600,
+        "output_key": "digest"
+      },
+      "retry_policy": { "max_attempts": 2 },
+      "corruption_checks": {
+        "required_fields": ["digest"],
+        "non_nullable_fields": ["digest"]
+      }
+    },
+    {
+      "id": "send_notification",
+      "name": "Send Webhook Notification",
+      "type": "webhook",
+      "depends_on": ["summarize"],
+      "timeout_seconds": 15,
+      "config": {
+        "url": "https://hooks.slack.com/services/YOUR/WEBHOOK",
+        "payload": { "text": "📰 Morning Digest:\n{{summarize.digest}}" }
+      },
+      "retry_policy": { "max_attempts": 3 },
+      "corruption_checks": {}
+    }
+  ]
+}

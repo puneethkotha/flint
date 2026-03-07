@@ -1,0 +1,66 @@
+{
+  "title": "Flint Dashboard",
+  "uid": "flint-main",
+  "version": 1,
+  "schemaVersion": 36,
+  "refresh": "10s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Job Throughput",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "rate(flint_jobs_total[5m]) * 60",
+          "legendFormat": "jobs/min"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "p95 Job Latency",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, rate(flint_job_duration_seconds_bucket[5m]))",
+          "legendFormat": "p95"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Active Jobs",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 8 },
+      "targets": [
+        { "expr": "flint_jobs_active", "legendFormat": "Active" }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Corruption Events",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "targets": [
+        {
+          "expr": "rate(flint_corruption_detected_total[5m])",
+          "legendFormat": "{{check_type}}"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Task Retries",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "targets": [
+        {
+          "expr": "rate(flint_task_retries_total[5m])",
+          "legendFormat": "{{failure_type}}"
+        }
+      ]
+    }
+  ]
+}

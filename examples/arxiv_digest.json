@@ -1,0 +1,43 @@
+{
+  "name": "ArXiv Daily Digest",
+  "description": "Fetch new ArXiv papers and summarize with LLM",
+  "schedule": "0 8 * * *",
+  "timezone": "UTC",
+  "tags": ["arxiv", "research", "llm"],
+  "nodes": [
+    {
+      "id": "fetch_papers",
+      "name": "Fetch ArXiv Papers",
+      "type": "http",
+      "depends_on": [],
+      "timeout_seconds": 30,
+      "config": {
+        "url": "https://export.arxiv.org/api/query?search_query=cat:cs.AI&sortBy=submittedDate&sortOrder=descending&max_results=10",
+        "method": "GET"
+      },
+      "retry_policy": { "max_attempts": 3 },
+      "corruption_checks": {
+        "required_fields": ["body"],
+        "non_nullable_fields": ["body"]
+      }
+    },
+    {
+      "id": "summarize",
+      "name": "Summarize with Claude",
+      "type": "llm",
+      "depends_on": ["fetch_papers"],
+      "timeout_seconds": 90,
+      "config": {
+        "prompt": "Summarize the top 5 most interesting AI papers from this ArXiv feed in 3 bullet points each: {{fetch_papers.body}}",
+        "model": "claude-sonnet-4-6",
+        "max_tokens": 1000,
+        "output_key": "summary"
+      },
+      "retry_policy": { "max_attempts": 2 },
+      "corruption_checks": {
+        "required_fields": ["summary"],
+        "non_nullable_fields": ["summary"]
+      }
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "name": "Hourly DB Sync",
+  "description": "Pull API data and sync to PostgreSQL every hour",
+  "schedule": "0 * * * *",
+  "timezone": "UTC",
+  "tags": ["sync", "database"],
+  "nodes": [
+    {
+      "id": "fetch_records",
+      "name": "Fetch API Records",
+      "type": "http",
+      "depends_on": [],
+      "timeout_seconds": 30,
+      "config": {
+        "url": "https://api.example.com/records?since=1h",
+        "method": "GET"
+      },
+      "retry_policy": { "max_attempts": 3 },
+      "corruption_checks": {
+        "required_fields": ["body"]
+      }
+    },
+    {
+      "id": "transform",
+      "name": "Transform Records",
+      "type": "python",
+      "depends_on": ["fetch_records"],
+      "timeout_seconds": 30,
+      "config": {
+        "code": "async def run(context):\n    records = context.get('fetch_records', {}).get('body', [])\n    if not isinstance(records, list):\n        records = []\n    transformed = [{'id': r.get('id'), 'data': r} for r in records if isinstance(r, dict)]\n    return {'records': transformed, 'count': len(transformed)}"
+      },
+      "retry_policy": { "max_attempts": 1 },
+      "corruption_checks": {
+        "required_fields": ["count"],
+        "range": { "count": { "min": 0 } }
+      }
+    },
+    {
+      "id": "upsert_db",
+      "name": "Upsert to Database",
+      "type": "sql",
+      "depends_on": ["transform"],
+      "timeout_seconds": 60,
+      "config": {
+        "query": "INSERT INTO sync_log (synced_at, record_count) VALUES (NOW(), $1)",
+        "params": ["{{transform.count}}"],
+        "fetch": "none"
+      },
+      "retry_policy": { "max_attempts": 3 },
+      "corruption_checks": {}
+    }
+  ]
+}
