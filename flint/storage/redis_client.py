@@ -1,8 +1,7 @@
-"""aioredis connection pool."""
+"""Redis async client using redis[asyncio]."""
 
-import aioredis
 import structlog
-from aioredis import Redis
+from redis.asyncio import Redis, from_url
 
 from flint.config import get_settings
 
@@ -17,11 +16,10 @@ async def get_redis() -> Redis:
     if _redis is None:
         settings = get_settings()
         logger.info("creating_redis_client", url=settings.redis_url)
-        _redis = await aioredis.from_url(
+        _redis = await from_url(
             settings.redis_url,
             encoding="utf-8",
             decode_responses=True,
-            max_connections=20,
         )
     return _redis
 
@@ -30,7 +28,7 @@ async def close_redis() -> None:
     """Close the Redis connection."""
     global _redis
     if _redis is not None:
-        await _redis.close()
+        await _redis.aclose()
         _redis = None
         logger.info("redis_client_closed")
 
@@ -40,7 +38,7 @@ async def ping_redis() -> bool:
     try:
         client = await get_redis()
         result = await client.ping()
-        return result is True
+        return bool(result)
     except Exception as exc:
         logger.warning("redis_ping_failed", error=str(exc))
         return False

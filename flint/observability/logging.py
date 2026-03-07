@@ -12,6 +12,13 @@ def configure_logging(log_level: str = "INFO") -> None:
     """Configure structlog for JSON output with stdlib integration."""
     level = getattr(logging, log_level.upper(), logging.INFO)
 
+    # Use stdlib logger factory so add_logger_name works correctly
+    logging.basicConfig(
+        format="%(message)s",
+        stream=sys.stdout,
+        level=level,
+    )
+
     structlog.configure(
         processors=[
             structlog.contextvars.merge_contextvars,
@@ -22,19 +29,13 @@ def configure_logging(log_level: str = "INFO") -> None:
             structlog.processors.StackInfoRenderer(),
             structlog.processors.format_exc_info,
             structlog.processors.UnicodeDecoder(),
-            structlog.processors.JSONRenderer(),
+            structlog.dev.ConsoleRenderer() if level == logging.DEBUG
+            else structlog.processors.JSONRenderer(),
         ],
         wrapper_class=structlog.make_filtering_bound_logger(level),
         context_class=dict,
-        logger_factory=structlog.PrintLoggerFactory(sys.stdout),
+        logger_factory=structlog.stdlib.LoggerFactory(),
         cache_logger_on_first_use=True,
-    )
-
-    # Configure stdlib logging to integrate with structlog
-    logging.basicConfig(
-        format="%(message)s",
-        stream=sys.stdout,
-        level=level,
     )
 
     # Silence noisy libraries
