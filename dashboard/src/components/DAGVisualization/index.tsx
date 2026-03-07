@@ -29,7 +29,6 @@ interface Props {
 }
 
 function layoutNodes(dagNodes: DAGNode[]): { x: number; y: number; id: string }[] {
-  // Simple layered layout
   const levelMap: Record<string, number> = {}
 
   const getLevel = (id: string): number => {
@@ -39,8 +38,8 @@ function layoutNodes(dagNodes: DAGNode[]): { x: number; y: number; id: string }[
       levelMap[id] = 0
       return 0
     }
-    const maxParentLevel = Math.max(...node.depends_on.map(d => getLevel(d)))
-    levelMap[id] = maxParentLevel + 1
+    const max = Math.max(...node.depends_on.map(d => getLevel(d)))
+    levelMap[id] = max + 1
     return levelMap[id]
   }
 
@@ -55,9 +54,9 @@ function layoutNodes(dagNodes: DAGNode[]): { x: number; y: number; id: string }[
 
   const positions: { x: number; y: number; id: string }[] = []
   Object.entries(levels).forEach(([level, ids]) => {
-    const x = parseInt(level) * 220 + 80
+    const x = parseInt(level) * 230 + 60
     ids.forEach((id, i) => {
-      const y = i * 100 + (4 - ids.length) * 50 + 80
+      const y = i * 90 + (Math.max(0, 3 - ids.length) * 45) + 60
       positions.push({ x, y, id })
     })
   })
@@ -66,7 +65,6 @@ function layoutNodes(dagNodes: DAGNode[]): { x: number; y: number; id: string }[
 
 export default function DAGVisualization({ dag, jobId, taskStatuses, onTaskStatusUpdate }: Props) {
   const dagNodes = (dag.nodes as DAGNode[]) || []
-
   const positions = useMemo(() => layoutNodes(dagNodes), [dagNodes])
 
   const buildNodes = useCallback((): Node<TaskNodeData>[] =>
@@ -86,30 +84,37 @@ export default function DAGVisualization({ dag, jobId, taskStatuses, onTaskStatu
 
   const buildEdges = useCallback((): Edge[] =>
     dagNodes.flatMap(n =>
-      (n.depends_on || []).map(dep => ({
-        id: `${dep}->${n.id}`,
-        source: dep,
-        target: n.id,
-        animated: taskStatuses[dep] === 'running' || taskStatuses[n.id] === 'running',
-        style: {
-          stroke: taskStatuses[dep] === 'completed' ? '#22c55e' :
-                  taskStatuses[dep] === 'failed' ? '#ef4444' : '#444',
-          strokeWidth: 2,
-        },
-        markerEnd: { type: MarkerType.ArrowClosed, color: '#444' },
-      }))
+      (n.depends_on || []).map(dep => {
+        const depStatus = taskStatuses[dep]
+        return {
+          id: `${dep}->${n.id}`,
+          source: dep,
+          target: n.id,
+          animated: taskStatuses[n.id] === 'running',
+          style: {
+            stroke: depStatus === 'completed' ? '#166534'
+              : depStatus === 'failed' ? '#7f1d1d'
+              : '#2a2a2a',
+            strokeWidth: 1.5,
+          },
+          markerEnd: {
+            type: MarkerType.ArrowClosed,
+            color: '#2a2a2a',
+            width: 16,
+            height: 16,
+          },
+        }
+      })
     ), [dagNodes, taskStatuses])
 
   const [nodes, setNodes, onNodesChange] = useNodesState(buildNodes())
   const [edges, setEdges, onEdgesChange] = useEdgesState(buildEdges())
 
-  // Update nodes/edges when statuses change
   useEffect(() => {
     setNodes(buildNodes())
     setEdges(buildEdges())
   }, [taskStatuses, buildNodes, buildEdges, setNodes, setEdges])
 
-  // WebSocket for live updates
   useWebSocket(jobId, (msg) => {
     if (msg.task_id && msg.status) {
       onTaskStatusUpdate(prev => ({ ...prev, [msg.task_id!]: msg.status! }))
@@ -125,12 +130,24 @@ export default function DAGVisualization({ dag, jobId, taskStatuses, onTaskStatu
         onEdgesChange={onEdgesChange}
         nodeTypes={nodeTypes}
         fitView
-        fitViewOptions={{ padding: 0.2 }}
-        style={{ background: '#0f0f0f' }}
+        fitViewOptions={{ padding: 0.25 }}
+        style={{ background: '#0a0a0a' }}
         proOptions={{ hideAttribution: true }}
       >
-        <Background color="#1a1a1a" variant={BackgroundVariant.Dots} gap={24} />
-        <Controls style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }} />
+        <Background
+          color="#1a1a1a"
+          variant={BackgroundVariant.Dots}
+          gap={28}
+          size={1}
+        />
+        <Controls
+          style={{
+            background: '#111111',
+            border: '1px solid #1e1e1e',
+            borderRadius: 6,
+            boxShadow: 'none',
+          }}
+        />
       </ReactFlow>
     </div>
   )

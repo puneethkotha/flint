@@ -5,9 +5,23 @@ import DAGVisualization from '../DAGVisualization'
 const EXAMPLES = [
   'fetch https://api.github.com/events and print the count',
   'Every morning at 9am, fetch GitHub trending repos and post to Slack',
-  'Run tests, if passing deploy to production and notify Slack',
+  'Run tests, if passing deploy to production and notify the team',
   'Every hour pull orders from API, compute revenue, store in Postgres',
 ]
+
+const btn: React.CSSProperties = {
+  height: 36,
+  padding: '0 16px',
+  borderRadius: 6,
+  fontSize: 13,
+  fontWeight: 500,
+  border: '1px solid #1e1e1e',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  transition: 'background 0.15s, border-color 0.15s',
+  whiteSpace: 'nowrap',
+}
 
 export default function WorkflowCreator() {
   const [description, setDescription] = useState('')
@@ -48,128 +62,184 @@ export default function WorkflowCreator() {
     }
   }
 
+  const disabled = loading || !description.trim()
+
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, height: 'calc(100vh - 120px)' }}>
-      {/* Left: Input panel */}
-      <div style={{ background: '#1a1a1a', borderRadius: 12, padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, height: 'calc(100vh - 80px)' }}>
+
+      {/* Left panel */}
+      <div style={{
+        background: '#111111',
+        borderRadius: 8,
+        border: '1px solid #1e1e1e',
+        padding: 24,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 20,
+      }}>
+        {/* Header */}
         <div>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600 }}>Create Workflow</h2>
-          <p style={{ margin: '4px 0 0', color: '#666', fontSize: 13 }}>
+          <p style={{ fontSize: 14, fontWeight: 600, color: '#f5f5f5', marginBottom: 4 }}>
+            New Workflow
+          </p>
+          <p style={{ fontSize: 12, color: '#6b7280' }}>
             Describe your workflow in plain English
           </p>
         </div>
 
+        {/* Textarea */}
         <textarea
           value={description}
           onChange={e => setDescription(e.target.value)}
-          placeholder="Describe your workflow in plain English...&#10;&#10;Examples:&#10;• fetch https://api.github.com/events and print the count&#10;• Every morning at 9am, fetch trending GitHub repos and post to Slack&#10;• Run tests, if passing deploy to production"
+          placeholder="Describe your workflow..."
           style={{
-            flex: 1,
-            background: '#0f0f0f',
-            border: '1px solid #2a2a2a',
-            borderRadius: 8,
-            color: '#fff',
-            padding: 16,
-            fontSize: 14,
-            resize: 'none',
+            minHeight: 160,
+            background: '#0a0a0a',
+            border: '1px solid #1e1e1e',
+            borderRadius: 4,
+            color: '#f5f5f5',
+            padding: '12px 14px',
+            fontSize: 13,
+            resize: 'vertical',
             lineHeight: 1.6,
-            fontFamily: 'inherit',
             outline: 'none',
+            flex: '0 0 auto',
           }}
-          onFocus={e => (e.target.style.borderColor = '#3b82f6')}
-          onBlur={e => (e.target.style.borderColor = '#2a2a2a')}
+          onFocus={e => { e.target.style.borderColor = '#2563eb' }}
+          onBlur={e => { e.target.style.borderColor = '#1e1e1e' }}
         />
 
         {/* Example chips */}
         <div>
-          <p style={{ margin: '0 0 8px', fontSize: 12, color: '#555' }}>Quick examples:</p>
+          <p style={{ fontSize: 11, color: '#6b7280', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            Examples
+          </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {EXAMPLES.map(ex => (
               <button
                 key={ex}
                 onClick={() => setDescription(ex)}
                 style={{
-                  background: '#2a2a2a',
-                  border: '1px solid #333',
-                  borderRadius: 20,
-                  color: '#888',
+                  background: 'none',
+                  border: '1px solid #1e1e1e',
+                  borderRadius: 4,
+                  color: '#6b7280',
                   fontSize: 11,
                   padding: '4px 10px',
-                  cursor: 'pointer',
+                  lineHeight: 1.4,
                   transition: 'all 0.15s',
+                  textAlign: 'left',
                 }}
-                onMouseEnter={e => { (e.target as HTMLElement).style.borderColor = '#3b82f6'; (e.target as HTMLElement).style.color = '#fff' }}
-                onMouseLeave={e => { (e.target as HTMLElement).style.borderColor = '#333'; (e.target as HTMLElement).style.color = '#888' }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = '#1a1a1a'
+                  e.currentTarget.style.color = '#f5f5f5'
+                  e.currentTarget.style.borderColor = '#2e2e2e'
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = 'none'
+                  e.currentTarget.style.color = '#6b7280'
+                  e.currentTarget.style.borderColor = '#1e1e1e'
+                }}
               >
-                {ex.length > 45 ? ex.slice(0, 45) + '...' : ex}
+                {ex.length > 50 ? ex.slice(0, 50) + '...' : ex}
               </button>
             ))}
           </div>
         </div>
 
+        {/* Spacer */}
+        <div style={{ flex: 1 }} />
+
         {/* Action buttons */}
-        <div style={{ display: 'flex', gap: 10 }}>
+        <div style={{ display: 'flex', gap: 8 }}>
           <button
             onClick={handlePreview}
-            disabled={loading || !description.trim()}
+            disabled={disabled}
             style={{
+              ...btn,
               flex: 1,
-              background: '#2a2a2a',
-              border: '1px solid #3b82f6',
-              borderRadius: 8,
-              color: '#3b82f6',
-              padding: '10px 0',
-              cursor: 'pointer',
-              fontSize: 14,
-              fontWeight: 500,
-              opacity: loading || !description.trim() ? 0.5 : 1,
+              background: 'none',
+              color: disabled ? '#3a3a3a' : '#f5f5f5',
+              borderColor: disabled ? '#1e1e1e' : '#2e2e2e',
+              opacity: disabled ? 0.5 : 1,
             }}
+            onMouseEnter={e => { if (!disabled) e.currentTarget.style.background = '#1a1a1a' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'none' }}
           >
-            {loading ? '⟳ Parsing...' : '👁 Preview DAG'}
+            {loading ? 'Parsing...' : 'Preview'}
           </button>
           <button
             onClick={handleCreateAndRun}
-            disabled={loading || !description.trim()}
+            disabled={disabled}
             style={{
+              ...btn,
               flex: 1,
-              background: loading ? '#2a2a2a' : '#3b82f6',
-              border: 'none',
-              borderRadius: 8,
-              color: '#fff',
-              padding: '10px 0',
-              cursor: 'pointer',
-              fontSize: 14,
-              fontWeight: 600,
-              opacity: loading || !description.trim() ? 0.5 : 1,
+              background: disabled ? '#111' : '#2563eb',
+              color: disabled ? '#3a3a3a' : '#fff',
+              borderColor: disabled ? '#1e1e1e' : '#2563eb',
+              opacity: disabled ? 0.5 : 1,
             }}
+            onMouseEnter={e => { if (!disabled) e.currentTarget.style.background = '#1d4ed8' }}
+            onMouseLeave={e => { if (!disabled) e.currentTarget.style.background = '#2563eb' }}
           >
-            {loading ? '⟳ Running...' : '🚀 Create & Run'}
+            {loading ? 'Running...' : 'Create & Run'}
           </button>
         </div>
 
+        {/* Error */}
         {error && (
-          <div style={{ background: '#1f0a0a', border: '1px solid #ef4444', borderRadius: 8, padding: 12, color: '#ef4444', fontSize: 13 }}>
-            ✗ {error}
+          <div style={{
+            background: '#0f0505',
+            border: '1px solid #2a1010',
+            borderRadius: 6,
+            padding: '10px 12px',
+            color: '#f87171',
+            fontSize: 12,
+            lineHeight: 1.5,
+          }}>
+            {error}
           </div>
         )}
 
+        {/* Success */}
         {jobId && (
-          <div style={{ background: '#0a1a0a', border: '1px solid #22c55e', borderRadius: 8, padding: 12, color: '#22c55e', fontSize: 13 }}>
-            ✓ Job started: <code style={{ color: '#86efac' }}>{jobId}</code>
+          <div style={{
+            background: '#050f05',
+            border: '1px solid #102010',
+            borderRadius: 6,
+            padding: '10px 12px',
+            fontSize: 12,
+            color: '#6b7280',
+          }}>
+            Job started:{' '}
+            <code style={{ color: '#f5f5f5', fontSize: 11 }}>{jobId}</code>
           </div>
         )}
 
+        {/* Warnings */}
         {warnings.length > 0 && (
-          <div style={{ background: '#1a1500', border: '1px solid #eab308', borderRadius: 8, padding: 12 }}>
+          <div style={{
+            border: '1px solid #1e1e1e',
+            borderRadius: 6,
+            padding: '10px 12px',
+          }}>
             {warnings.map((w, i) => (
-              <p key={i} style={{ margin: 0, color: '#fbbf24', fontSize: 12 }}>⚠ {w}</p>
+              <p key={i} style={{ color: '#6b7280', fontSize: 12, lineHeight: 1.5 }}>
+                {w}
+              </p>
             ))}
           </div>
         )}
       </div>
 
-      {/* Right: DAG visualization */}
-      <div style={{ background: '#1a1a1a', borderRadius: 12, overflow: 'hidden', position: 'relative' }}>
+      {/* Right panel — DAG */}
+      <div style={{
+        background: '#111111',
+        borderRadius: 8,
+        border: '1px solid #1e1e1e',
+        overflow: 'hidden',
+        position: 'relative',
+      }}>
         {dag ? (
           <DAGVisualization
             dag={dag}
@@ -180,16 +250,11 @@ export default function WorkflowCreator() {
         ) : (
           <div style={{
             display: 'flex',
-            flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
             height: '100%',
-            color: '#333',
-            gap: 12,
           }}>
-            <span style={{ fontSize: 48 }}>🔗</span>
-            <p style={{ margin: 0, fontSize: 14 }}>DAG preview will appear here</p>
-            <p style={{ margin: 0, fontSize: 12 }}>Describe your workflow and click "Preview DAG"</p>
+            <p style={{ fontSize: 13, color: '#6b7280' }}>DAG preview will appear here</p>
           </div>
         )}
       </div>
