@@ -25,8 +25,7 @@ interface HealthData {
 }
 
 function HeartbeatPanel() {
-  const { colors, theme } = useTheme()
-  const isLight = theme === 'light'
+  const { colors } = useTheme()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [health, setHealth] = useState<HealthData | null>(null)
   const frameRef = useRef<number>(0)
@@ -94,7 +93,7 @@ function HeartbeatPanel() {
     <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
       <div style={{ width: 5, height: 5, borderRadius: '50%', background: ok ? '#22c55e' : '#ef4444', flexShrink: 0 }} />
       <span style={{ fontSize: 11, color: colors.textMuted, fontFamily: 'ui-monospace, monospace', minWidth: 40 }}>{label}</span>
-      <span style={{ fontSize: 11, color: isLight ? '#7A7568' : '#888', fontFamily: 'ui-monospace, monospace' }}>{value}</span>
+      <span style={{ fontSize: 11, color: '#888', fontFamily: 'ui-monospace, monospace' }}>{value}</span>
     </div>
   )
 
@@ -186,8 +185,7 @@ function StatCards({ jobs }: { jobs: JobResponse[] }) {
 }
 
 export default function ExecutionDashboard() {
-  const { colors, theme } = useTheme()
-  const isLight = theme === 'light'
+  const { colors } = useTheme()
   const { jobs, loading } = useJobs(5000)
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null)
   const [selectedJob, setSelectedJob] = useState<JobResponse | null>(null)
@@ -230,7 +228,7 @@ export default function ExecutionDashboard() {
 
   const statusDotColor = selectedJob?.status === 'completed' ? '#22c55e'
     : selectedJob?.status === 'failed' ? '#ef4444'
-    : selectedJob?.status === 'running' ? (isLight ? '#374151' : '#f5f5f5')
+    : selectedJob?.status === 'running' ? '#f5f5f5'
     : colors.textMuted
 
   return (

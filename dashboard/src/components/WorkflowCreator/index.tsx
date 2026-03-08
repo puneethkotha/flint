@@ -58,8 +58,7 @@ function useTypewriter(strings: string[], enabled: boolean) {
 }
 
 export default function WorkflowCreator() {
-  const { colors, theme } = useTheme()
-  const isLight = theme === 'light'
+  const { colors } = useTheme()
   const [description, setDescription] = useState('')
   const [dag, setDag] = useState<Record<string, unknown> | null>(null)
   const [warnings, setWarnings] = useState<string[]>([])
@@ -150,7 +149,7 @@ export default function WorkflowCreator() {
             style={{
               background: 'transparent',
               border: 'none',
-              borderBottom: `1px solid ${focused ? (isLight ? '#9E9A8E' : '#333') : colors.panelBorder}`,
+              borderBottom: `1px solid ${focused ? '#333' : colors.panelBorder}`,
               color: colors.textPrimary,
               padding: '0 0 16px',
               fontSize: 15,
@@ -165,7 +164,7 @@ export default function WorkflowCreator() {
 
           {/* Inspiration cards */}
           <div style={{ marginTop: 24, marginBottom: 'auto' }}>
-            <p style={{ fontSize: 10, color: isLight ? '#9E9A8E' : '#444', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 500, marginBottom: 10 }}>
+            <p style={{ fontSize: 10, color: '#444', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 500, marginBottom: 10 }}>
               Try an example
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -184,7 +183,7 @@ export default function WorkflowCreator() {
                   }}
                   onMouseEnter={e => {
                     e.currentTarget.style.background = colors.rowHover
-                    e.currentTarget.style.borderColor = isLight ? '#C8C4B8' : '#2a2a2a'
+                    e.currentTarget.style.borderColor = '#2a2a2a'
                   }}
                   onMouseLeave={e => {
                     e.currentTarget.style.background = 'none'
@@ -213,12 +212,12 @@ export default function WorkflowCreator() {
         {(error || jobId || warnings.length > 0) && (
           <div style={{ padding: '0 32px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
             {error && (
-              <div style={{ border: `1px solid ${isLight ? '#fecaca' : '#2a1010'}`, padding: '10px 12px', color: isLight ? '#dc2626' : '#f87171', fontSize: 12, lineHeight: 1.5, background: isLight ? '#fff5f5' : '#0f0505' }}>
+              <div style={{ border: '1px solid #2a1010', padding: '10px 12px', color: '#f87171', fontSize: 12, lineHeight: 1.5, background: '#0f0505' }}>
                 {error}
               </div>
             )}
             {jobId && (
-              <div style={{ border: `1px solid ${isLight ? '#bbf7d0' : '#1a2a1a'}`, padding: '10px 12px', fontSize: 12, color: colors.textMuted, background: isLight ? '#f0fdf4' : '#0a0f0a' }}>
+              <div style={{ border: '1px solid #1a2a1a', padding: '10px 12px', fontSize: 12, color: colors.textMuted, background: '#0a0f0a' }}>
                 Job queued <code style={{ color: colors.codeColor, fontSize: 11 }}>{jobId.slice(0, 8)}...</code> — view in Dashboard
               </div>
             )}
@@ -234,14 +233,14 @@ export default function WorkflowCreator() {
             onClick={handlePreview} disabled={disabled}
             style={{
               flex: 1, height: 38, background: 'none',
-              border: `1px solid ${disabled ? colors.panelBorder : (isLight ? '#C8C4B8' : '#2a2a2a')}`,
+              border: `1px solid ${disabled ? colors.panelBorder : '#2a2a2a'}`,
               color: disabled ? colors.textDisabled : colors.textPrimary,
               fontSize: 13, fontWeight: 500,
               cursor: disabled ? 'not-allowed' : 'pointer',
               transition: 'border-color 0.15s, background 0.15s', borderRadius: 0,
             }}
-            onMouseEnter={e => { if (!disabled) { e.currentTarget.style.borderColor = isLight ? '#9E9A8E' : '#444'; e.currentTarget.style.background = colors.rowHover } }}
-            onMouseLeave={e => { if (!disabled) { e.currentTarget.style.borderColor = isLight ? '#C8C4B8' : '#2a2a2a'; e.currentTarget.style.background = 'none' } }}
+            onMouseEnter={e => { if (!disabled) { e.currentTarget.style.borderColor = '#444'; e.currentTarget.style.background = colors.rowHover } }}
+            onMouseLeave={e => { if (!disabled) { e.currentTarget.style.borderColor = '#2a2a2a'; e.currentTarget.style.background = 'none' } }}
           >
             {loading && phase === 'parsing' && !jobId ? 'Parsing...' : 'Preview DAG'}
           </button>
@@ -260,7 +259,7 @@ export default function WorkflowCreator() {
               position: 'relative',
               overflow: 'hidden',
             }}
-            onMouseEnter={e => { if (!disabled && !loading) e.currentTarget.style.background = isLight ? '#374151' : '#e5e5e5' }}
+            onMouseEnter={e => { if (!disabled && !loading) e.currentTarget.style.background = '#e5e5e5' }}
             onMouseLeave={e => { if (!disabled && !loading) e.currentTarget.style.background = colors.textPrimary }}
           >
             {/* Shimmer sweep overlay while loading */}
@@ -298,12 +297,12 @@ export default function WorkflowCreator() {
           <DAGVisualization dag={dag} jobId={jobId} taskStatuses={taskStatuses} onTaskStatusUpdate={setTaskStatuses} />
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', padding: 40 }}>
-            <div style={{ border: `1px dashed ${isLight ? '#C8C4B8' : '#222'}`, padding: '48px 64px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-              <div style={{ width: 32, height: 32, border: `1px dashed ${isLight ? '#C8C4B8' : '#2a2a2a'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 4 }}>
-                <div style={{ width: 10, height: 10, border: `1px solid ${isLight ? '#E8E5DF' : '#333'}` }} />
+            <div style={{ border: '1px dashed #222', padding: '48px 64px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 32, height: 32, border: '1px dashed #2a2a2a', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 4 }}>
+                <div style={{ width: 10, height: 10, border: '1px solid #333' }} />
               </div>
               <p style={{ fontSize: 13, color: colors.textMuted, fontWeight: 500 }}>DAG will appear here</p>
-              <p style={{ fontSize: 11, color: isLight ? '#C8C4B8' : '#2a2a2a', textAlign: 'center', maxWidth: 200 }}>
+              <p style={{ fontSize: 11, color: '#2a2a2a', textAlign: 'center', maxWidth: 200 }}>
                 Type a workflow description and click Preview DAG
               </p>
             </div>

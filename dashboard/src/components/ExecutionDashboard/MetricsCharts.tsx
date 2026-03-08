@@ -31,14 +31,13 @@ function buildMetrics(jobs: JobResponse[]): DataPoint[] {
 interface Props { jobs: JobResponse[] }
 
 export default function MetricsCharts({ jobs }: Props) {
-  const { colors, theme } = useTheme()
-  const isLight = theme === 'light'
+  const { colors } = useTheme()
   const data = buildMetrics(jobs)
   const running = jobs.filter(j => j.status === 'running').length
 
   const axisStyle = { fill: colors.textMuted, fontSize: 10 }
   const noLines = { axisLine: false, tickLine: false }
-  const gridColor = isLight ? '#EDEAE3' : '#1a1a1a'
+  const gridColor = '#1a1a1a'
 
   const tooltipStyle = {
     contentStyle: { background: colors.panelBg, border: `1px solid ${colors.panelBorder}`, borderRadius: 0, fontSize: 11, color: colors.textPrimary, boxShadow: 'none' },
@@ -60,7 +59,7 @@ export default function MetricsCharts({ jobs }: Props) {
             <AreaChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: -8 }}>
               <defs>
                 <linearGradient id="tGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#2563eb" stopOpacity={isLight ? 0.15 : 0.2} />
+                  <stop offset="0%" stopColor="#2563eb" stopOpacity={0.2} />
                   <stop offset="100%" stopColor="#2563eb" stopOpacity={0} />
                 </linearGradient>
               </defs>
@@ -82,7 +81,7 @@ export default function MetricsCharts({ jobs }: Props) {
               <XAxis dataKey="time" tick={axisStyle} {...noLines} />
               <YAxis tick={axisStyle} {...noLines} width={32} />
               <Tooltip {...tooltipStyle} />
-              <Line type="monotone" dataKey="p95" name="p95ms" stroke={isLight ? '#9ca3af' : '#555'} strokeWidth={1.5} dot={false} isAnimationActive={false} />
+              <Line type="monotone" dataKey="p95" name="p95ms" stroke='#555' strokeWidth={1.5} dot={false} isAnimationActive={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>

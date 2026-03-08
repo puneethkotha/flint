@@ -65,12 +65,11 @@ function layoutNodes(dagNodes: DAGNode[]): { x: number; y: number; id: string }[
 }
 
 export default function DAGVisualization({ dag, jobId, taskStatuses, onTaskStatusUpdate }: Props) {
-  const { colors, theme } = useTheme()
-  const isLight = theme === 'light'
+  const { colors } = useTheme()
   const dagNodes = (dag.nodes as DAGNode[]) || []
   const positions = useMemo(() => layoutNodes(dagNodes), [dagNodes])
 
-  const edgeColor = isLight ? '#d1d5db' : '#2a2a2a'
+  const edgeColor = '#2a2a2a'
 
   const buildNodes = useCallback((): Node<TaskNodeData>[] =>
     dagNodes.map(n => {
@@ -126,7 +125,7 @@ export default function DAGVisualization({ dag, jobId, taskStatuses, onTaskStatu
         proOptions={{ hideAttribution: true }}
       >
         <Background
-          color={isLight ? '#e5e7eb' : '#1a1a1a'}
+          color='#1a1a1a'
           variant={BackgroundVariant.Dots}
           gap={28} size={1}
         />

@@ -22,31 +22,11 @@ function useAPIStatus() {
   return status
 }
 
-function SunIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="5"/>
-      <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
-      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-      <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
-      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-    </svg>
-  )
-}
-function MoonIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-    </svg>
-  )
-}
-
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('create')
   const [visible, setVisible] = useState(true)
-  const { theme, colors, toggle } = useTheme()
+  const { colors } = useTheme()
   const apiStatus = useAPIStatus()
-  const isLight = theme === 'light'
 
   // Show intro only once per session
   const [showIntro, setShowIntro] = useState(() => !sessionStorage.getItem('flint-intro-seen'))
@@ -80,7 +60,7 @@ export default function App() {
         textarea, input { font-family: inherit; }
         ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: ${isLight ? '#C8C4B8' : '#222'}; border-radius: 2px; }
+        ::-webkit-scrollbar-thumb { background: #222; border-radius: 2px; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
         @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(400%); } }
         @keyframes btnShimmer { 0% { transform: translateX(-150%); } 100% { transform: translateX(250%); } }
@@ -214,32 +194,16 @@ export default function App() {
             ))}
           </div>
 
-          {/* Right: API status + theme toggle */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <div style={{
-                width: 6, height: 6, borderRadius: '50%', background: statusDot,
-                animation: apiStatus === 'checking' ? 'pulse 1.5s ease-in-out infinite' : 'none',
-                flexShrink: 0,
-              }} />
-              <span className="flint-api-label" style={{ fontSize: 11, color: colors.textMuted, fontFamily: 'ui-monospace, monospace' }}>
-                {apiStatus === 'ok' ? 'api live' : apiStatus === 'error' ? 'api down' : '...'}
-              </span>
-            </div>
-            <button
-              onClick={toggle}
-              title={`Switch to ${isLight ? 'dark' : 'light'} mode`}
-              style={{
-                background: 'none', border: `1px solid ${colors.panelBorder}`,
-                color: colors.textMuted, width: 28, height: 28,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                borderRadius: 6, transition: 'border-color 0.15s, color 0.15s', flexShrink: 0,
-              }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = isLight ? '#9E9A8E' : '#333'; e.currentTarget.style.color = colors.textPrimary }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = colors.panelBorder; e.currentTarget.style.color = colors.textMuted }}
-            >
-              {isLight ? <MoonIcon /> : <SunIcon />}
-            </button>
+          {/* Right: API status */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+            <div style={{
+              width: 6, height: 6, borderRadius: '50%', background: statusDot,
+              animation: apiStatus === 'checking' ? 'pulse 1.5s ease-in-out infinite' : 'none',
+              flexShrink: 0,
+            }} />
+            <span className="flint-api-label" style={{ fontSize: 11, color: colors.textMuted, fontFamily: 'ui-monospace, monospace' }}>
+              {apiStatus === 'ok' ? 'api live' : apiStatus === 'error' ? 'api down' : '...'}
+            </span>
           </div>
         </nav>
 

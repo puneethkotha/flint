@@ -4,7 +4,25 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
     <title>Flint — Workflow Engine</title>
+    <style>
+      /* Force dark always — Flint is a dark-only tool */
+      :root { color-scheme: dark only; }
+      *, *::before, *::after { box-sizing: border-box; }
+      html, body, #root {
+        background: #080808 !important;
+        color: #f5f5f5;
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        -webkit-font-smoothing: antialiased;
+      }
+      /* Kill any OS light-mode overrides on native elements */
+      @media (prefers-color-scheme: light) {
+        html, body, #root { background: #080808 !important; color: #f5f5f5 !important; }
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>

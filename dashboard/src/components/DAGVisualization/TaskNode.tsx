@@ -18,8 +18,7 @@ export interface TaskNodeData {
 }
 
 function TaskNode({ data }: NodeProps<TaskNodeData>) {
-  const { colors, theme } = useTheme()
-  const isLight = theme === 'light'
+  const { colors } = useTheme()
   const nodeRef = useRef<HTMLDivElement>(null)
   const prevStatus = useRef(data.status)
   const typeColor = TYPE_COLOR[data.type] || '#6b7280'
@@ -39,16 +38,16 @@ function TaskNode({ data }: NodeProps<TaskNodeData>) {
   }, [data.status])
 
   const borderColor =
-    data.status === 'completed' ? (isLight ? '#86efac' : '#166534')
-    : data.status === 'failed'    ? (isLight ? '#fca5a5' : '#7f1d1d')
-    : data.status === 'running'   ? '#F59E0B'
+    data.status === 'completed' ? '#166534'
+    : data.status === 'failed'  ? '#7f1d1d'
+    : data.status === 'running' ? '#F59E0B'
     : colors.panelBorder
 
   const dotColor =
     data.status === 'completed' ? '#22c55e'
     : data.status === 'failed'  ? '#ef4444'
     : data.status === 'running' ? '#F59E0B'
-    : isLight ? '#C8C4B8' : '#444'
+    : '#444'
 
   return (
     <>
