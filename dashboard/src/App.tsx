@@ -79,7 +79,7 @@ export default function App() {
         textarea, input { font-family: inherit; }
         ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: ${isLight ? '#d1d5db' : '#222'}; border-radius: 2px; }
+        ::-webkit-scrollbar-thumb { background: ${isLight ? '#C8C4B8' : '#222'}; border-radius: 2px; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
         @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(400%); } }
       `}</style>
@@ -168,7 +168,7 @@ export default function App() {
                 transition: 'border-color 0.15s, color 0.15s',
               }}
               onMouseEnter={e => {
-                e.currentTarget.style.borderColor = isLight ? '#9ca3af' : '#333'
+                e.currentTarget.style.borderColor = isLight ? '#9E9A8E' : '#333'
                 e.currentTarget.style.color = colors.textPrimary
               }}
               onMouseLeave={e => {

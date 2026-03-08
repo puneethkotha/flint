@@ -45,22 +45,23 @@ const DARK: ThemeColors = {
 }
 
 const LIGHT: ThemeColors = {
-  pageBg:       '#fafafa',
-  panelBg:      '#ffffff',
-  panelBorder:  '#e5e7eb',
-  inputBg:      '#f9fafb',
-  rowAlt:       '#f9fafb',
-  rowHover:     '#f3f4f6',
-  rowSelected:  '#eff6ff',
-  textPrimary:  '#111111',
-  textSecondary:'#374151',
-  textMuted:    '#9ca3af',
-  textDisabled: '#d1d5db',
-  divider:      '#e5e7eb',
-  handle:       '#d1d5db',
-  navBg:        '#ffffff',
-  statCardBg:   '#f9fafb',
-  codeColor:    '#6b7280',
+  // Warm off-white — Claude's exact palette
+  pageBg:        '#F5F4EF',  // warm parchment page
+  panelBg:       '#FDFCFA',  // slightly warmer white for panels
+  panelBorder:   '#E8E5DF',  // warm gray border
+  inputBg:       '#F5F4EF',  // matches page
+  rowAlt:        '#F5F4EF',  // warm tint on alternate rows
+  rowHover:      '#EDEAE3',  // hover — slightly darker warm
+  rowSelected:   '#E8E3D8',  // selected — warm tan
+  textPrimary:   '#1A1916',  // near-black with slight warmth
+  textSecondary: '#3D3B35',  // warm dark gray
+  textMuted:     '#9E9A8E',  // warm muted
+  textDisabled:  '#C8C4B8',  // warm disabled
+  divider:       '#E8E5DF',  // same as border
+  handle:        '#C8C4B8',  // node handle
+  navBg:         '#FDFCFA',  // nav slightly brighter than page
+  statCardBg:    '#F5F4EF',  // stat cards match page bg
+  codeColor:     '#7A7568',  // warm code gray
 }
 
 interface ThemeCtx {
@@ -82,7 +83,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     localStorage.setItem('flint-theme', theme)
-    document.body.style.background = theme === 'dark' ? '#080808' : '#fafafa'
+    document.body.style.background = theme === 'dark' ? '#080808' : '#F5F4EF'
   }, [theme])
 
   const toggle = () => setTheme(t => t === 'dark' ? 'light' : 'dark')

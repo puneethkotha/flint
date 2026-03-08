@@ -115,14 +115,14 @@ export default function ExecutionDashboard() {
           </>
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', flexDirection: 'column', gap: 12 }}>
-            <div style={{ border: `1px dashed ${isLight ? '#e5e7eb' : '#1e1e1e'}`, padding: '40px 56px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+            <div style={{ border: `1px dashed ${isLight ? '#C8C4B8' : '#1e1e1e'}`, padding: '40px 56px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
               <div style={{ display: 'flex', gap: 6, marginBottom: 4 }}>
                 {[...Array(3)].map((_, i) => (
-                  <div key={i} style={{ width: 28, height: 18, border: `1px solid ${isLight ? '#e5e7eb' : '#222'}` }} />
+                  <div key={i} style={{ width: 28, height: 18, border: `1px solid ${isLight ? '#E8E5DF' : '#222'}` }} />
                 ))}
               </div>
               <p style={{ fontSize: 12, color: colors.textMuted, fontWeight: 500 }}>Select a job to view execution graph</p>
-              <p style={{ fontSize: 11, color: isLight ? '#d1d5db' : '#2a2a2a', textAlign: 'center' }}>Click any row in the table</p>
+              <p style={{ fontSize: 11, color: isLight ? '#C8C4B8' : '#2a2a2a', textAlign: 'center' }}>Click any row in the table</p>
             </div>
           </div>
         )}

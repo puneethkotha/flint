@@ -134,7 +134,7 @@ export default function WorkflowCreator() {
             style={{
               background: 'transparent',
               border: 'none',
-              borderBottom: `1px solid ${focused ? (isLight ? '#9ca3af' : '#333') : colors.panelBorder}`,
+              borderBottom: `1px solid ${focused ? (isLight ? '#9E9A8E' : '#333') : colors.panelBorder}`,
               color: colors.textPrimary,
               padding: '0 0 16px',
               fontSize: 15,
@@ -149,7 +149,7 @@ export default function WorkflowCreator() {
 
           {/* Inspiration cards */}
           <div style={{ marginTop: 24, marginBottom: 'auto' }}>
-            <p style={{ fontSize: 10, color: isLight ? '#9ca3af' : '#444', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 500, marginBottom: 10 }}>
+            <p style={{ fontSize: 10, color: isLight ? '#9E9A8E' : '#444', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 500, marginBottom: 10 }}>
               Try an example
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -168,7 +168,7 @@ export default function WorkflowCreator() {
                   }}
                   onMouseEnter={e => {
                     e.currentTarget.style.background = colors.rowHover
-                    e.currentTarget.style.borderColor = isLight ? '#d1d5db' : '#2a2a2a'
+                    e.currentTarget.style.borderColor = isLight ? '#C8C4B8' : '#2a2a2a'
                   }}
                   onMouseLeave={e => {
                     e.currentTarget.style.background = 'none'
@@ -218,14 +218,14 @@ export default function WorkflowCreator() {
             onClick={handlePreview} disabled={disabled}
             style={{
               flex: 1, height: 38, background: 'none',
-              border: `1px solid ${disabled ? colors.panelBorder : (isLight ? '#d1d5db' : '#2a2a2a')}`,
+              border: `1px solid ${disabled ? colors.panelBorder : (isLight ? '#C8C4B8' : '#2a2a2a')}`,
               color: disabled ? colors.textDisabled : colors.textPrimary,
               fontSize: 13, fontWeight: 500,
               cursor: disabled ? 'not-allowed' : 'pointer',
               transition: 'border-color 0.15s, background 0.15s', borderRadius: 0,
             }}
-            onMouseEnter={e => { if (!disabled) { e.currentTarget.style.borderColor = isLight ? '#9ca3af' : '#444'; e.currentTarget.style.background = colors.rowHover } }}
-            onMouseLeave={e => { if (!disabled) { e.currentTarget.style.borderColor = isLight ? '#d1d5db' : '#2a2a2a'; e.currentTarget.style.background = 'none' } }}
+            onMouseEnter={e => { if (!disabled) { e.currentTarget.style.borderColor = isLight ? '#9E9A8E' : '#444'; e.currentTarget.style.background = colors.rowHover } }}
+            onMouseLeave={e => { if (!disabled) { e.currentTarget.style.borderColor = isLight ? '#C8C4B8' : '#2a2a2a'; e.currentTarget.style.background = 'none' } }}
           >
             {loading ? 'Parsing...' : 'Preview DAG'}
           </button>
@@ -259,12 +259,12 @@ export default function WorkflowCreator() {
           <DAGVisualization dag={dag} jobId={jobId} taskStatuses={taskStatuses} onTaskStatusUpdate={setTaskStatuses} />
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', padding: 40 }}>
-            <div style={{ border: `1px dashed ${isLight ? '#d1d5db' : '#222'}`, padding: '48px 64px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-              <div style={{ width: 32, height: 32, border: `1px dashed ${isLight ? '#d1d5db' : '#2a2a2a'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 4 }}>
-                <div style={{ width: 10, height: 10, border: `1px solid ${isLight ? '#e5e7eb' : '#333'}` }} />
+            <div style={{ border: `1px dashed ${isLight ? '#C8C4B8' : '#222'}`, padding: '48px 64px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 32, height: 32, border: `1px dashed ${isLight ? '#C8C4B8' : '#2a2a2a'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 4 }}>
+                <div style={{ width: 10, height: 10, border: `1px solid ${isLight ? '#E8E5DF' : '#333'}` }} />
               </div>
               <p style={{ fontSize: 13, color: colors.textMuted, fontWeight: 500 }}>DAG will appear here</p>
-              <p style={{ fontSize: 11, color: isLight ? '#d1d5db' : '#2a2a2a', textAlign: 'center', maxWidth: 200 }}>
+              <p style={{ fontSize: 11, color: isLight ? '#C8C4B8' : '#2a2a2a', textAlign: 'center', maxWidth: 200 }}>
                 Type a workflow description and click Preview DAG
               </p>
             </div>
