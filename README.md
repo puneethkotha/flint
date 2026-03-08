@@ -1,4 +1,4 @@
-# ⚡ Flint
+# Flint
 
 > Describe any workflow in plain English. Flint runs it reliably.
 
