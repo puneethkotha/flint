@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: flint-api
+    runtime: python
+    buildCommand: pip install uv && uv sync
+    startCommand: uvicorn flint.api.app:create_app --factory --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: LLM_PROVIDER
+        value: claude
+      - key: FLINT_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: flint-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: flint-redis
+          type: redis
+          property: connectionString
+
+  - type: redis
+    name: flint-redis
+    plan: free
+    maxmemoryPolicy: noeviction
+
+databases:
+  - name: flint-db
+    plan: free
+    databaseName: flint
+    user: flint
