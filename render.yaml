@@ -26,6 +26,9 @@ services:
     name: flint-redis
     plan: free
     maxmemoryPolicy: noeviction
+    ipAllowList:
+      - source: 0.0.0.0/0
+        description: allow all
 
 databases:
   - name: flint-db
