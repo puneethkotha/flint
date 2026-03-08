@@ -2,7 +2,7 @@
 
 > Describe any workflow in plain English. Flint runs it reliably.
 
-![Demo GIF](./demo.gif)
+![Flint Demo](assets/demo.gif)
 
 [![PyPI](https://img.shields.io/pypi/v/flint-dag?color=3b82f6)](https://pypi.org/project/flint-dag/)
 [![Stars](https://img.shields.io/github/stars/puneethkotha/flint?color=eab308)](https://github.com/puneethkotha/flint)
