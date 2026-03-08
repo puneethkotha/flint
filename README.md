@@ -100,7 +100,7 @@ Python 3.11 · FastAPI · asyncpg · aiokafka · redis[asyncio] · APScheduler �
 ## Author
 
 **Puneeth Kotha** — NYU MS Computer Engineering 2026  
-[github.com/puneethkotha](https://github.com/puneethkotha) · [linkedin.com/in/puneeth-kotha-760360215](https://linkedin.com/in/puneeth-kotha-760360215) · pk3058@nyu.edu · 551-349-1757
+[github.com/puneethkotha](https://github.com/puneethkotha) · [linkedin.com/in/puneeth-kotha-760360215](https://linkedin.com/in/puneeth-kotha-760360215)
 
 ---
 
