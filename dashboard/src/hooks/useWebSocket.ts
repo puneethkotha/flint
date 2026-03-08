@@ -17,9 +17,9 @@ export function useWebSocket(jobId: string | null, onMessage: (msg: WSMessage) =
   useEffect(() => {
     if (!jobId) return
 
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const host = window.location.host
-    const url = `${protocol}//${host}/ws/jobs/${jobId}`
+    const apiUrl = import.meta.env.VITE_API_URL ?? window.location.origin
+    const wsBase = apiUrl.replace(/^https:/, 'wss:').replace(/^http:/, 'ws:')
+    const url = `${wsBase}/ws/jobs/${jobId}`
 
     const ws = new WebSocket(url)
     wsRef.current = ws

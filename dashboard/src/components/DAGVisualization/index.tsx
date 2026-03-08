@@ -117,7 +117,7 @@ export default function DAGVisualization({ dag, jobId, taskStatuses, onTaskStatu
 
   useWebSocket(jobId, (msg) => {
     if (msg.task_id && msg.status) {
-      onTaskStatusUpdate(prev => ({ ...prev, [msg.task_id!]: msg.status! }))
+      onTaskStatusUpdate({ ...taskStatuses, [msg.task_id]: msg.status })
     }
   })
 
