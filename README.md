@@ -2,8 +2,11 @@
 
 > Describe any workflow in plain English. Flint runs it reliably.
 
+**[Live Demo](https://flint-api-fbsk.onrender.com/api/v1/health)** · [GitHub](https://github.com/puneethkotha/flint)
+
 ![Flint Demo](assets/demo.gif)
 
+[![Live](https://img.shields.io/badge/API-live-2563eb)](https://flint-api-fbsk.onrender.com/api/v1/health)
 [![PyPI](https://img.shields.io/pypi/v/flint-dag?color=3b82f6)](https://pypi.org/project/flint-dag/)
 [![Stars](https://img.shields.io/github/stars/puneethkotha/flint?color=eab308)](https://github.com/puneethkotha/flint)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
@@ -18,7 +21,19 @@
 
 ---
 
-## Quick Start
+## Try It Live
+
+```bash
+# Health check — all systems green
+curl https://flint-api-fbsk.onrender.com/api/v1/health
+
+# Parse a workflow into a DAG (no auth needed)
+curl -X POST https://flint-api-fbsk.onrender.com/api/v1/parse \
+  -H "Content-Type: application/json" \
+  -d '{"description": "fetch top HN stories and summarize them with Claude"}'
+```
+
+## Quick Start (Local)
 
 ```bash
 # 1. Install
@@ -77,7 +92,7 @@ open http://localhost:3000
 
 ## Stack
 
-Python 3.11 · FastAPI · asyncpg · aiokafka · aioredis · APScheduler · Claude claude-sonnet-4-6 · Prometheus · React 18 · React Flow · Recharts · Docker · Railway
+Python 3.11 · FastAPI · asyncpg · aiokafka · redis[asyncio] · APScheduler · Claude claude-sonnet-4-6 · Prometheus · React 18 · React Flow · Recharts · Docker · Render
 
 ---
 
