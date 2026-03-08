@@ -64,7 +64,7 @@ open http://localhost:3000
 | Corruption Detection | **91.2%** | > 90% |
 | Retry Waste Reduction | **63.4%** | > 63% |
 
-*Benchmarked on MacBook Pro M2, 10,000 concurrent workflows in-memory.*
+*Benchmarked on MacBook Pro M3, 10,000 concurrent workflows in-memory.*
 
 ---
 
