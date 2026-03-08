@@ -64,6 +64,7 @@ export default function WorkflowCreator() {
   const [dag, setDag] = useState<Record<string, unknown> | null>(null)
   const [warnings, setWarnings] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
+  const [phase, setPhase] = useState<'idle' | 'parsing' | 'running'>('idle')
   const [error, setError] = useState<string | null>(null)
   const [jobId, setJobId] = useState<string | null>(null)
   const [taskStatuses, setTaskStatuses] = useState<Record<string, string>>({})
@@ -73,26 +74,41 @@ export default function WorkflowCreator() {
 
   const handlePreview = async () => {
     if (!description.trim()) return
-    setLoading(true); setError(null)
+    setLoading(true); setPhase('parsing'); setError(null)
     try {
       const result = await api.parseWorkflow(description)
       setDag(result.dag); setWarnings(result.warnings)
     } catch (e) { setError(e instanceof Error ? e.message : 'Parse failed') }
-    finally { setLoading(false) }
+    finally { setLoading(false); setPhase('idle') }
   }
 
   const handleCreateAndRun = async () => {
     if (!description.trim()) return
-    setLoading(true); setError(null)
+    setLoading(true); setPhase('parsing'); setError(null)
     try {
       const wf = await api.createWorkflow({ description, run_immediately: true })
+      setPhase('running')
       const job = await api.triggerJob(wf.id)
       setJobId(job.job_id)
     } catch (e) { setError(e instanceof Error ? e.message : 'Failed to create workflow') }
-    finally { setLoading(false) }
+    finally { setLoading(false); setPhase('idle') }
   }
 
+  // Cmd+Enter / Ctrl+Enter to run
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && description.trim() && !loading) {
+        e.preventDefault()
+        handleCreateAndRun()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [description, loading])
+
   const disabled = loading || !description.trim()
+
+  const runBtnLabel = phase === 'parsing' ? 'Parsing...' : phase === 'running' ? 'Running...' : 'Create & Run'
 
   return (
     <div className="flint-split">
@@ -213,7 +229,7 @@ export default function WorkflowCreator() {
         )}
 
         {/* Buttons */}
-        <div style={{ padding: '16px 32px 28px', display: 'flex', gap: 8, borderTop: `1px solid ${colors.panelBorder}` }} className="flint-btn-row">
+        <div style={{ padding: '16px 32px 28px', display: 'flex', gap: 8, borderTop: `1px solid ${colors.panelBorder}`, alignItems: 'center' }} className="flint-btn-row">
           <button
             onClick={handlePreview} disabled={disabled}
             style={{
@@ -227,8 +243,10 @@ export default function WorkflowCreator() {
             onMouseEnter={e => { if (!disabled) { e.currentTarget.style.borderColor = isLight ? '#9E9A8E' : '#444'; e.currentTarget.style.background = colors.rowHover } }}
             onMouseLeave={e => { if (!disabled) { e.currentTarget.style.borderColor = isLight ? '#C8C4B8' : '#2a2a2a'; e.currentTarget.style.background = 'none' } }}
           >
-            {loading ? 'Parsing...' : 'Preview DAG'}
+            {loading && phase === 'parsing' && !jobId ? 'Parsing...' : 'Preview DAG'}
           </button>
+
+          {/* Create & Run with shimmer sweep when loading */}
           <button
             onClick={handleCreateAndRun} disabled={disabled}
             style={{
@@ -238,13 +256,31 @@ export default function WorkflowCreator() {
               color: disabled ? colors.textDisabled : colors.pageBg,
               fontSize: 13, fontWeight: 600,
               cursor: disabled ? 'not-allowed' : 'pointer',
-              transition: 'background 0.15s', borderRadius: 0,
+              borderRadius: 0,
+              position: 'relative',
+              overflow: 'hidden',
             }}
-            onMouseEnter={e => { if (!disabled) e.currentTarget.style.background = isLight ? '#374151' : '#e5e5e5' }}
-            onMouseLeave={e => { if (!disabled) e.currentTarget.style.background = colors.textPrimary }}
+            onMouseEnter={e => { if (!disabled && !loading) e.currentTarget.style.background = isLight ? '#374151' : '#e5e5e5' }}
+            onMouseLeave={e => { if (!disabled && !loading) e.currentTarget.style.background = colors.textPrimary }}
           >
-            {loading ? 'Running...' : 'Create & Run'}
+            {/* Shimmer sweep overlay while loading */}
+            {loading && (
+              <span style={{
+                position: 'absolute', inset: 0,
+                background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.25) 50%, transparent 100%)',
+                animation: 'btnShimmer 1.2s ease-in-out infinite',
+                pointerEvents: 'none',
+              }} />
+            )}
+            <span style={{ position: 'relative', zIndex: 1 }}>{runBtnLabel}</span>
           </button>
+
+          {/* Cmd+Enter hint */}
+          {!disabled && (
+            <span style={{ fontSize: 10, color: '#444', whiteSpace: 'nowrap', fontFamily: 'ui-monospace, monospace', flexShrink: 0 }}>
+              ⌘↵
+            </span>
+          )}
         </div>
       </div>
 

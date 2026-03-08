@@ -34,18 +34,11 @@ export default function MetricsCharts({ jobs }: Props) {
   const { colors, theme } = useTheme()
   const isLight = theme === 'light'
   const data = buildMetrics(jobs)
-  const withDuration = jobs.filter(j => j.duration_ms)
-  const avgDuration = withDuration.length > 0
-    ? Math.round(withDuration.reduce((a, j) => a + (j.duration_ms ?? 0), 0) / withDuration.length)
-    : 0
-  const total = jobs.length
-  const completed = jobs.filter(j => j.status === 'completed').length
-  const failed = jobs.filter(j => j.status === 'failed').length
   const running = jobs.filter(j => j.status === 'running').length
 
   const axisStyle = { fill: colors.textMuted, fontSize: 10 }
   const noLines = { axisLine: false, tickLine: false }
-  const gridColor = isLight ? '#f3f4f6' : '#1a1a1a'
+  const gridColor = isLight ? '#EDEAE3' : '#1a1a1a'
 
   const tooltipStyle = {
     contentStyle: { background: colors.panelBg, border: `1px solid ${colors.panelBorder}`, borderRadius: 0, fontSize: 11, color: colors.textPrimary, boxShadow: 'none' },
@@ -55,29 +48,7 @@ export default function MetricsCharts({ jobs }: Props) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-      {/* 4 stat cards */}
-      <div className="flint-stat-grid">
-        {[
-          { label: 'Total Runs', value: total },
-          { label: 'Completed', value: completed },
-          { label: 'Failed', value: failed },
-          { label: 'Avg Duration', value: avgDuration > 0 ? `${avgDuration}ms` : '—' },
-        ].map(({ label, value }) => (
-          <div key={label} style={{
-            background: colors.statCardBg,
-            padding: '16px 20px',
-            display: 'flex', flexDirection: 'column', gap: 6,
-            transition: 'background 0.2s',
-          }}>
-            <div style={{ fontSize: 30, fontWeight: 600, color: colors.textPrimary, letterSpacing: '-0.04em', lineHeight: 1 }}>
-              {value}
-            </div>
-            <div style={{ fontSize: 10, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 500 }}>
-              {label}
-            </div>
-          </div>
-        ))}
-      </div>
+      {/* Charts only — stat cards are now above the jobs table */}
 
       {/* Charts */}
       <div className="flint-chart-grid">

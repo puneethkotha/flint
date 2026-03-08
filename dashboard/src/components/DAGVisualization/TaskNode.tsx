@@ -1,4 +1,4 @@
-import React, { memo } from 'react'
+import React, { memo, useEffect, useRef } from 'react'
 import { Handle, Position, NodeProps } from 'reactflow'
 import { useTheme } from '../../theme'
 
@@ -11,14 +11,6 @@ const TYPE_COLOR: Record<string, string> = {
   llm:     '#db2777',
 }
 
-const STATUS_CONFIG: Record<string, { dot: string; glow?: string }> = {
-  pending:   { dot: '#9ca3af' },
-  running:   { dot: '#f5f5f5', glow: '0 0 8px #ffffff33' },
-  completed: { dot: '#22c55e' },
-  failed:    { dot: '#ef4444' },
-  skipped:   { dot: '#9ca3af' },
-}
-
 export interface TaskNodeData {
   label: string
   type: string
@@ -28,42 +20,83 @@ export interface TaskNodeData {
 function TaskNode({ data }: NodeProps<TaskNodeData>) {
   const { colors, theme } = useTheme()
   const isLight = theme === 'light'
-  const s = STATUS_CONFIG[data.status] || STATUS_CONFIG.pending
+  const nodeRef = useRef<HTMLDivElement>(null)
+  const prevStatus = useRef(data.status)
   const typeColor = TYPE_COLOR[data.type] || '#6b7280'
-  const isRunning = data.status === 'running'
 
-  const borderColor = data.status === 'completed' ? (isLight ? '#bbf7d0' : '#1e3a1e')
-    : data.status === 'failed' ? (isLight ? '#fecaca' : '#3a1e1e')
-    : data.status === 'running' ? (isLight ? '#d1d5db' : '#555')
+  // Completed: green scale pulse on status change
+  useEffect(() => {
+    if (data.status === 'completed' && prevStatus.current !== 'completed') {
+      const el = nodeRef.current
+      if (!el) return
+      el.animate([
+        { transform: 'scale(1)', boxShadow: '0 0 0 0 #22c55e00' },
+        { transform: 'scale(1.05)', boxShadow: '0 0 12px 3px #22c55e55' },
+        { transform: 'scale(1)', boxShadow: '0 0 0 0 #22c55e00' },
+      ], { duration: 400, easing: 'ease-out' })
+    }
+    prevStatus.current = data.status
+  }, [data.status])
+
+  const borderColor =
+    data.status === 'completed' ? (isLight ? '#86efac' : '#166534')
+    : data.status === 'failed'    ? (isLight ? '#fca5a5' : '#7f1d1d')
+    : data.status === 'running'   ? '#F59E0B'
     : colors.panelBorder
+
+  const dotColor =
+    data.status === 'completed' ? '#22c55e'
+    : data.status === 'failed'  ? '#ef4444'
+    : data.status === 'running' ? '#F59E0B'
+    : isLight ? '#C8C4B8' : '#444'
 
   return (
     <>
+      <style>{`
+        @keyframes amberGlow {
+          0%, 100% { box-shadow: 0 0 4px 1px #F59E0B44; border-color: #F59E0B; }
+          50%       { box-shadow: 0 0 10px 3px #F59E0B88; border-color: #FCD34D; }
+        }
+        @keyframes dotPulse {
+          0%, 100% { opacity: 1; }
+          50%       { opacity: 0.3; }
+        }
+      `}</style>
+
       <Handle
-        type="target"
-        position={Position.Left}
+        type="target" position={Position.Left}
         style={{ background: colors.panelBg, border: `1px solid ${colors.handle}`, width: 7, height: 7 }}
       />
-      <div style={{
-        background: colors.panelBg,
-        border: `1px solid ${borderColor}`,
-        padding: '10px 14px',
-        minWidth: 148, maxWidth: 210,
-        animation: isRunning ? 'nodePulse 2s ease-in-out infinite' : 'none',
-        transition: 'border-color 0.3s, background 0.2s',
-        borderRadius: 2,
-      }}>
+
+      <div
+        ref={nodeRef}
+        style={{
+          background: colors.panelBg,
+          border: `1px solid ${borderColor}`,
+          padding: '10px 14px',
+          minWidth: 148, maxWidth: 210,
+          borderRadius: 2,
+          transition: 'border-color 0.3s, background 0.2s',
+          animation: data.status === 'running' ? 'amberGlow 2s ease-in-out infinite' : 'none',
+        }}
+      >
+        {/* Status dot + name */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
           <span style={{
             width: 6, height: 6, borderRadius: '50%',
-            background: isLight && data.status === 'running' ? '#374151' : s.dot,
-            flexShrink: 0,
-            boxShadow: !isLight ? s.glow : undefined,
+            background: dotColor, flexShrink: 0,
+            animation: data.status === 'running' ? 'dotPulse 1.2s ease-in-out infinite' : 'none',
           }} />
-          <span style={{ fontSize: 12, fontWeight: 500, color: colors.textSecondary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '-0.01em' }}>
+          <span style={{
+            fontSize: 12, fontWeight: 500, color: colors.textSecondary,
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            letterSpacing: '-0.01em',
+          }}>
             {data.label}
           </span>
         </div>
+
+        {/* Type badge */}
         <div style={{ paddingLeft: 14 }}>
           <span style={{
             display: 'inline-block', fontSize: 9, fontWeight: 600,
@@ -78,6 +111,7 @@ function TaskNode({ data }: NodeProps<TaskNodeData>) {
               fontSize: 10, marginLeft: 8,
               color: data.status === 'completed' ? '#22c55e'
                 : data.status === 'failed' ? '#ef4444'
+                : data.status === 'running' ? '#F59E0B'
                 : colors.textMuted,
             }}>
               {data.status}
@@ -85,17 +119,11 @@ function TaskNode({ data }: NodeProps<TaskNodeData>) {
           )}
         </div>
       </div>
+
       <Handle
-        type="source"
-        position={Position.Right}
+        type="source" position={Position.Right}
         style={{ background: colors.panelBg, border: `1px solid ${colors.handle}`, width: 7, height: 7 }}
       />
-      <style>{`
-        @keyframes nodePulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.7; }
-        }
-      `}</style>
     </>
   )
 }

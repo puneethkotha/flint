@@ -75,6 +75,7 @@ export default function App() {
         ::-webkit-scrollbar-thumb { background: ${isLight ? '#C8C4B8' : '#222'}; border-radius: 2px; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
         @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(400%); } }
+        @keyframes btnShimmer { 0% { transform: translateX(-150%); } 100% { transform: translateX(250%); } }
 
         /* ── Responsive layout ── */
         .flint-main {
