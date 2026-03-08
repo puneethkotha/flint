@@ -1,26 +1,86 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { api } from '../../api/client'
 import DAGVisualization from '../DAGVisualization'
 
-const EXAMPLES = [
-  'fetch https://api.github.com/events and print the count',
-  'Every morning at 9am, fetch GitHub trending repos and post to Slack',
-  'Run tests, if passing deploy to production and notify the team',
-  'Every hour pull orders from API, compute revenue, store in Postgres',
+const TYPEWRITER_PLACEHOLDERS = [
+  'Fetch top HN stories, summarize with Claude, post to Slack...',
+  'Every hour pull orders from API, compute revenue, store in Postgres...',
+  'Run tests, if passing deploy to production and notify the team...',
 ]
 
-const btn: React.CSSProperties = {
-  height: 36,
-  padding: '0 16px',
-  borderRadius: 6,
-  fontSize: 13,
-  fontWeight: 500,
-  border: '1px solid #1e1e1e',
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  transition: 'background 0.15s, border-color 0.15s',
-  whiteSpace: 'nowrap',
+const INSPIRATION_CARDS = [
+  {
+    title: 'GitHub → Slack digest',
+    subtitle: 'Fetch trending repos, summarize, post daily',
+    icon: 'HTTP',
+    color: '#2563eb',
+    prompt: 'Every morning at 9am, fetch GitHub trending repos and post a summary to Slack',
+  },
+  {
+    title: 'Revenue sync',
+    subtitle: 'Pull orders, compute totals, write to Postgres',
+    icon: 'SQL',
+    color: '#7c3aed',
+    prompt: 'Every hour pull new orders from API, compute revenue totals, and store in Postgres',
+  },
+  {
+    title: 'LLM pipeline',
+    subtitle: 'Scrape → summarize with Claude → email',
+    icon: 'LLM',
+    color: '#059669',
+    prompt: 'Scrape Hacker News front page, summarize top 5 stories with Claude, email me the digest',
+  },
+]
+
+function useTypewriter(strings: string[], enabled: boolean) {
+  const [display, setDisplay] = useState('')
+  const [strIdx, setStrIdx] = useState(0)
+  const [charIdx, setCharIdx] = useState(0)
+  const [deleting, setDeleting] = useState(false)
+  const [paused, setPaused] = useState(false)
+
+  useEffect(() => {
+    if (!enabled) return
+    const current = strings[strIdx]
+    let timeout: ReturnType<typeof setTimeout>
+
+    if (paused) {
+      timeout = setTimeout(() => setPaused(false), 1800)
+    } else if (!deleting && charIdx < current.length) {
+      timeout = setTimeout(() => {
+        setDisplay(current.slice(0, charIdx + 1))
+        setCharIdx(c => c + 1)
+      }, 38)
+    } else if (!deleting && charIdx === current.length) {
+      setPaused(true)
+      setDeleting(true)
+    } else if (deleting && charIdx > 0) {
+      timeout = setTimeout(() => {
+        setDisplay(current.slice(0, charIdx - 1))
+        setCharIdx(c => c - 1)
+      }, 18)
+    } else if (deleting && charIdx === 0) {
+      setDeleting(false)
+      setStrIdx(i => (i + 1) % strings.length)
+    }
+    return () => clearTimeout(timeout)
+  }, [charIdx, deleting, paused, strIdx, strings, enabled])
+
+  return display
+}
+
+function ShimmerBar() {
+  return (
+    <div style={{ position: 'relative', height: 2, overflow: 'hidden', background: '#1a1a1a' }}>
+      <div style={{
+        position: 'absolute',
+        top: 0, left: 0,
+        width: '25%', height: '100%',
+        background: 'linear-gradient(90deg, transparent, #F59E0B, transparent)',
+        animation: 'shimmer 1.4s ease-in-out infinite',
+      }} />
+    </div>
+  )
 }
 
 export default function WorkflowCreator() {
@@ -31,6 +91,9 @@ export default function WorkflowCreator() {
   const [error, setError] = useState<string | null>(null)
   const [jobId, setJobId] = useState<string | null>(null)
   const [taskStatuses, setTaskStatuses] = useState<Record<string, string>>({})
+  const [focused, setFocused] = useState(false)
+
+  const placeholder = useTypewriter(TYPEWRITER_PLACEHOLDERS, !description && !focused)
 
   const handlePreview = async () => {
     if (!description.trim()) return
@@ -65,178 +128,213 @@ export default function WorkflowCreator() {
   const disabled = loading || !description.trim()
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, height: 'calc(100vh - 80px)' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, height: 'calc(100vh - 88px)' }}>
 
       {/* Left panel */}
       <div style={{
-        background: '#111111',
-        borderRadius: 8,
-        border: '1px solid #1e1e1e',
-        padding: 24,
+        background: '#0f0f0f',
+        border: '1px solid #1a1a1a',
         display: 'flex',
         flexDirection: 'column',
-        gap: 20,
+        overflow: 'hidden',
       }}>
-        {/* Header */}
-        <div>
-          <p style={{ fontSize: 14, fontWeight: 600, color: '#f5f5f5', marginBottom: 4 }}>
-            New Workflow
-          </p>
-          <p style={{ fontSize: 12, color: '#6b7280' }}>
-            Describe your workflow in plain English
-          </p>
-        </div>
+        {loading && <ShimmerBar />}
 
-        {/* Textarea */}
-        <textarea
-          value={description}
-          onChange={e => setDescription(e.target.value)}
-          placeholder="Describe your workflow..."
-          style={{
-            minHeight: 160,
-            background: '#0a0a0a',
-            border: '1px solid #1e1e1e',
-            borderRadius: 4,
-            color: '#f5f5f5',
-            padding: '12px 14px',
-            fontSize: 13,
-            resize: 'vertical',
-            lineHeight: 1.6,
-            outline: 'none',
-            flex: '0 0 auto',
-          }}
-          onFocus={e => { e.target.style.borderColor = '#2563eb' }}
-          onBlur={e => { e.target.style.borderColor = '#1e1e1e' }}
-        />
+        <div style={{ padding: '32px 32px 28px', flex: 1, display: 'flex', flexDirection: 'column', gap: 0 }}>
+          {/* Heading */}
+          <div style={{ marginBottom: 28 }}>
+            <h1 style={{
+              fontSize: 28,
+              fontWeight: 600,
+              color: '#f5f5f5',
+              letterSpacing: '-0.03em',
+              lineHeight: 1.15,
+              marginBottom: 8,
+            }}>
+              What should Flint run?
+            </h1>
+            <p style={{ fontSize: 14, color: '#555', fontWeight: 400 }}>
+              Plain English. No YAML.
+            </p>
+          </div>
 
-        {/* Example chips */}
-        <div>
-          <p style={{ fontSize: 11, color: '#6b7280', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Examples
-          </p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {EXAMPLES.map(ex => (
-              <button
-                key={ex}
-                onClick={() => setDescription(ex)}
-                style={{
-                  background: 'none',
-                  border: '1px solid #1e1e1e',
-                  borderRadius: 4,
-                  color: '#6b7280',
-                  fontSize: 11,
-                  padding: '4px 10px',
-                  lineHeight: 1.4,
-                  transition: 'all 0.15s',
-                  textAlign: 'left',
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.background = '#1a1a1a'
-                  e.currentTarget.style.color = '#f5f5f5'
-                  e.currentTarget.style.borderColor = '#2e2e2e'
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.background = 'none'
-                  e.currentTarget.style.color = '#6b7280'
-                  e.currentTarget.style.borderColor = '#1e1e1e'
-                }}
-              >
-                {ex.length > 50 ? ex.slice(0, 50) + '...' : ex}
-              </button>
-            ))}
+          {/* Textarea */}
+          <textarea
+            value={description}
+            onChange={e => setDescription(e.target.value)}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            placeholder={placeholder + ((!description && !focused) ? '|' : '')}
+            rows={6}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              borderBottom: `1px solid ${focused ? '#333' : '#1e1e1e'}`,
+              color: '#f5f5f5',
+              padding: '0 0 16px',
+              fontSize: 15,
+              resize: 'none',
+              lineHeight: 1.65,
+              outline: 'none',
+              width: '100%',
+              transition: 'border-color 0.15s',
+              caretColor: '#F59E0B',
+            }}
+          />
+
+          {/* Inspiration cards */}
+          <div style={{ marginTop: 24, marginBottom: 'auto' }}>
+            <p style={{
+              fontSize: 10,
+              color: '#444',
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em',
+              fontWeight: 500,
+              marginBottom: 10,
+            }}>
+              Try an example
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {INSPIRATION_CARDS.map(card => (
+                <button
+                  key={card.title}
+                  onClick={() => setDescription(card.prompt)}
+                  style={{
+                    background: 'none',
+                    border: '1px solid #1a1a1a',
+                    padding: '10px 14px',
+                    textAlign: 'left',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 12,
+                    cursor: 'pointer',
+                    transition: 'border-color 0.15s, background 0.15s',
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.borderColor = '#2a2a2a'
+                    e.currentTarget.style.background = '#141414'
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.borderColor = '#1a1a1a'
+                    e.currentTarget.style.background = 'none'
+                  }}
+                >
+                  <div style={{
+                    background: card.color + '15',
+                    border: `1px solid ${card.color}30`,
+                    borderRadius: 4,
+                    padding: '3px 6px',
+                    fontSize: 9,
+                    fontWeight: 600,
+                    color: card.color,
+                    letterSpacing: '0.05em',
+                    fontFamily: 'ui-monospace, monospace',
+                    flexShrink: 0,
+                  }}>
+                    {card.icon}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 500, color: '#d1d5db', marginBottom: 1 }}>
+                      {card.title}
+                    </div>
+                    <div style={{ fontSize: 11, color: '#555' }}>
+                      {card.subtitle}
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Spacer */}
-        <div style={{ flex: 1 }} />
+        {/* Feedback messages */}
+        {(error || jobId || warnings.length > 0) && (
+          <div style={{ padding: '0 32px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {error && (
+              <div style={{
+                border: '1px solid #2a1010',
+                padding: '10px 12px',
+                color: '#f87171',
+                fontSize: 12,
+                lineHeight: 1.5,
+                background: '#0f0505',
+              }}>
+                {error}
+              </div>
+            )}
+            {jobId && (
+              <div style={{
+                border: '1px solid #1a2a1a',
+                padding: '10px 12px',
+                fontSize: 12,
+                color: '#555',
+                background: '#0a0f0a',
+              }}>
+                Job queued{' '}
+                <code style={{ color: '#888', fontSize: 11 }}>{jobId.slice(0, 8)}...</code>
+                {' '}— view in Dashboard
+              </div>
+            )}
+            {warnings.map((w, i) => (
+              <p key={i} style={{ color: '#6b7280', fontSize: 12, lineHeight: 1.5 }}>⚠ {w}</p>
+            ))}
+          </div>
+        )}
 
         {/* Action buttons */}
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{
+          padding: '16px 32px 28px',
+          display: 'flex',
+          gap: 8,
+          borderTop: '1px solid #1a1a1a',
+        }}>
           <button
             onClick={handlePreview}
             disabled={disabled}
             style={{
-              ...btn,
               flex: 1,
+              height: 38,
               background: 'none',
-              color: disabled ? '#3a3a3a' : '#f5f5f5',
-              borderColor: disabled ? '#1e1e1e' : '#2e2e2e',
-              opacity: disabled ? 0.5 : 1,
+              border: '1px solid #2a2a2a',
+              color: disabled ? '#333' : '#f5f5f5',
+              fontSize: 13,
+              fontWeight: 500,
+              cursor: disabled ? 'not-allowed' : 'pointer',
+              transition: 'border-color 0.15s, background 0.15s',
+              borderRadius: 0,
             }}
-            onMouseEnter={e => { if (!disabled) e.currentTarget.style.background = '#1a1a1a' }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'none' }}
+            onMouseEnter={e => { if (!disabled) e.currentTarget.style.borderColor = '#444' }}
+            onMouseLeave={e => { if (!disabled) e.currentTarget.style.borderColor = '#2a2a2a' }}
           >
-            {loading ? 'Parsing...' : 'Preview'}
+            {loading ? 'Parsing...' : 'Preview DAG'}
           </button>
           <button
             onClick={handleCreateAndRun}
             disabled={disabled}
             style={{
-              ...btn,
               flex: 1,
-              background: disabled ? '#111' : '#2563eb',
-              color: disabled ? '#3a3a3a' : '#fff',
-              borderColor: disabled ? '#1e1e1e' : '#2563eb',
-              opacity: disabled ? 0.5 : 1,
+              height: 38,
+              background: disabled ? '#1a1a1a' : '#f5f5f5',
+              border: '1px solid transparent',
+              color: disabled ? '#333' : '#080808',
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: disabled ? 'not-allowed' : 'pointer',
+              transition: 'background 0.15s',
+              borderRadius: 0,
             }}
-            onMouseEnter={e => { if (!disabled) e.currentTarget.style.background = '#1d4ed8' }}
-            onMouseLeave={e => { if (!disabled) e.currentTarget.style.background = '#2563eb' }}
+            onMouseEnter={e => { if (!disabled) e.currentTarget.style.background = '#e5e5e5' }}
+            onMouseLeave={e => { if (!disabled) e.currentTarget.style.background = '#f5f5f5' }}
           >
             {loading ? 'Running...' : 'Create & Run'}
           </button>
         </div>
-
-        {/* Error */}
-        {error && (
-          <div style={{
-            background: '#0f0505',
-            border: '1px solid #2a1010',
-            borderRadius: 6,
-            padding: '10px 12px',
-            color: '#f87171',
-            fontSize: 12,
-            lineHeight: 1.5,
-          }}>
-            {error}
-          </div>
-        )}
-
-        {/* Success */}
-        {jobId && (
-          <div style={{
-            background: '#050f05',
-            border: '1px solid #102010',
-            borderRadius: 6,
-            padding: '10px 12px',
-            fontSize: 12,
-            color: '#6b7280',
-          }}>
-            Job started:{' '}
-            <code style={{ color: '#f5f5f5', fontSize: 11 }}>{jobId}</code>
-          </div>
-        )}
-
-        {/* Warnings */}
-        {warnings.length > 0 && (
-          <div style={{
-            border: '1px solid #1e1e1e',
-            borderRadius: 6,
-            padding: '10px 12px',
-          }}>
-            {warnings.map((w, i) => (
-              <p key={i} style={{ color: '#6b7280', fontSize: 12, lineHeight: 1.5 }}>
-                {w}
-              </p>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* Right panel — DAG */}
       <div style={{
-        background: '#111111',
-        borderRadius: 8,
-        border: '1px solid #1e1e1e',
+        background: '#0f0f0f',
+        border: '1px solid #1a1a1a',
         overflow: 'hidden',
         position: 'relative',
       }}>
@@ -253,8 +351,31 @@ export default function WorkflowCreator() {
             alignItems: 'center',
             justifyContent: 'center',
             height: '100%',
+            padding: 40,
           }}>
-            <p style={{ fontSize: 13, color: '#6b7280' }}>DAG preview will appear here</p>
+            <div style={{
+              border: '1px dashed #222',
+              padding: '48px 64px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 10,
+            }}>
+              <div style={{
+                width: 32, height: 32,
+                border: '1px dashed #2a2a2a',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                marginBottom: 4,
+              }}>
+                <div style={{ width: 10, height: 10, border: '1px solid #333' }} />
+              </div>
+              <p style={{ fontSize: 13, color: '#333', fontWeight: 500 }}>
+                DAG will appear here
+              </p>
+              <p style={{ fontSize: 11, color: '#2a2a2a', textAlign: 'center', maxWidth: 200 }}>
+                Type a workflow description and click Preview DAG
+              </p>
+            </div>
           </div>
         )}
       </div>

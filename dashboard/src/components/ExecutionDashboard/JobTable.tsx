@@ -1,20 +1,11 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { JobResponse } from '../../api/client'
-
-const STATUS_COLOR: Record<string, string> = {
-  completed: '#f5f5f5',
-  failed: '#f5f5f5',
-  running: '#f5f5f5',
-  queued: '#f5f5f5',
-  pending: '#6b7280',
-  cancelled: '#6b7280',
-}
 
 const STATUS_DOT: Record<string, string> = {
   completed: '#22c55e',
   failed:    '#ef4444',
-  running:   '#2563eb',
-  queued:    '#eab308',
+  running:   '#f5f5f5',
+  queued:    '#F59E0B',
   pending:   '#6b7280',
   cancelled: '#3a3a3a',
 }
@@ -25,23 +16,81 @@ interface Props {
   onSelect: (id: string) => void
 }
 
+function JobRow({ job, selected, index, onSelect }: {
+  job: JobResponse
+  selected: boolean
+  index: number
+  onSelect: () => void
+}) {
+  const [hovered, setHovered] = useState(false)
+
+  const bg = selected ? '#161616' : hovered ? '#141414' : index % 2 === 0 ? '#0c0c0c' : '#0f0f0f'
+
+  return (
+    <tr
+      onClick={onSelect}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        background: bg,
+        cursor: 'pointer',
+        borderBottom: '1px solid #141414',
+        transition: 'background 0.1s',
+      }}
+    >
+      <td style={{ padding: '11px 16px' }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{
+            width: 6, height: 6,
+            borderRadius: '50%',
+            background: STATUS_DOT[job.status] || '#6b7280',
+            flexShrink: 0,
+            boxShadow: job.status === 'running' ? '0 0 6px #f5f5f5aa' : 'none',
+          }} />
+          <span style={{ color: '#d1d5db', fontSize: 12 }}>{job.status}</span>
+        </span>
+      </td>
+      <td style={{ padding: '11px 16px', color: '#555', fontSize: 12 }}>
+        {job.duration_ms ? `${job.duration_ms}ms` : '—'}
+      </td>
+      <td style={{ padding: '11px 16px', color: '#555', fontSize: 12 }}>
+        {job.trigger_type}
+      </td>
+      <td style={{ padding: '11px 16px', color: '#444', fontSize: 11 }}>
+        {job.triggered_at ? new Date(job.triggered_at).toLocaleTimeString() : '—'}
+      </td>
+      <td style={{ padding: '11px 16px', textAlign: 'right' }}>
+        <span style={{
+          fontSize: 11,
+          color: hovered ? '#888' : 'transparent',
+          transition: 'color 0.15s',
+          whiteSpace: 'nowrap',
+          fontFamily: 'ui-monospace, monospace',
+        }}>
+          View DAG →
+        </span>
+      </td>
+    </tr>
+  )
+}
+
 export default function JobTable({ jobs, selectedJobId, onSelect }: Props) {
   return (
     <div style={{ overflowY: 'auto', flex: 1 }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
         <thead>
-          <tr style={{ borderBottom: '1px solid #1e1e1e' }}>
-            {['Status', 'Duration', 'Trigger', 'Started'].map(h => (
+          <tr style={{ borderBottom: '1px solid #1a1a1a' }}>
+            {['Run', 'Duration', 'Trigger', 'Time', ''].map((h, i) => (
               <th
-                key={h}
+                key={i}
                 style={{
-                  textAlign: 'left',
-                  padding: '8px 16px',
-                  color: '#6b7280',
+                  textAlign: i === 4 ? 'right' : 'left',
+                  padding: '9px 16px',
+                  color: '#444',
                   fontWeight: 500,
-                  fontSize: 11,
+                  fontSize: 10,
                   textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
+                  letterSpacing: '0.08em',
                   whiteSpace: 'nowrap',
                 }}
               >
@@ -51,67 +100,23 @@ export default function JobTable({ jobs, selectedJobId, onSelect }: Props) {
           </tr>
         </thead>
         <tbody>
-          {jobs.length === 0 && (
+          {jobs.length === 0 ? (
             <tr>
-              <td
-                colSpan={4}
-                style={{
-                  padding: '40px 16px',
-                  textAlign: 'center',
-                  color: '#6b7280',
-                  fontSize: 13,
-                }}
-              >
+              <td colSpan={5} style={{ padding: '48px 16px', textAlign: 'center', color: '#333', fontSize: 13 }}>
                 No jobs yet
               </td>
             </tr>
+          ) : (
+            jobs.map((job, i) => (
+              <JobRow
+                key={job.id}
+                job={job}
+                selected={selectedJobId === job.id}
+                index={i}
+                onSelect={() => onSelect(job.id)}
+              />
+            ))
           )}
-          {jobs.map((job, i) => (
-            <tr
-              key={job.id}
-              onClick={() => onSelect(job.id)}
-              style={{
-                background: selectedJobId === job.id
-                  ? '#161b27'
-                  : i % 2 === 0 ? '#0f0f0f' : '#111111',
-                cursor: 'pointer',
-                transition: 'background 0.1s',
-                borderBottom: '1px solid #1a1a1a',
-              }}
-              onMouseEnter={e => {
-                if (selectedJobId !== job.id)
-                  e.currentTarget.style.background = '#161616'
-              }}
-              onMouseLeave={e => {
-                if (selectedJobId !== job.id)
-                  e.currentTarget.style.background = i % 2 === 0 ? '#0f0f0f' : '#111111'
-              }}
-            >
-              <td style={{ padding: '10px 16px' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{
-                    width: 6,
-                    height: 6,
-                    borderRadius: '50%',
-                    background: STATUS_DOT[job.status] || '#6b7280',
-                    flexShrink: 0,
-                  }} />
-                  <span style={{ color: STATUS_COLOR[job.status] || '#6b7280', fontSize: 12 }}>
-                    {job.status}
-                  </span>
-                </span>
-              </td>
-              <td style={{ padding: '10px 16px', color: '#6b7280', fontSize: 12 }}>
-                {job.duration_ms ? `${job.duration_ms}ms` : '—'}
-              </td>
-              <td style={{ padding: '10px 16px', color: '#6b7280', fontSize: 12 }}>
-                {job.trigger_type}
-              </td>
-              <td style={{ padding: '10px 16px', color: '#6b7280', fontSize: 11 }}>
-                {job.triggered_at ? new Date(job.triggered_at).toLocaleString() : '—'}
-              </td>
-            </tr>
-          ))}
         </tbody>
       </table>
     </div>
