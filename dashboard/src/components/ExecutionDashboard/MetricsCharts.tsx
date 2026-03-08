@@ -1,12 +1,10 @@
 import React from 'react'
 import {
-  AreaChart, Area,
-  LineChart, Line,
-  XAxis, YAxis,
-  Tooltip, CartesianGrid,
-  ResponsiveContainer,
+  AreaChart, Area, LineChart, Line,
+  XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer,
 } from 'recharts'
 import { JobResponse } from '../../api/client'
+import { useTheme } from '../../theme'
 
 interface DataPoint { time: string; throughput: number; p95: number }
 
@@ -30,26 +28,11 @@ function buildMetrics(jobs: JobResponse[]): DataPoint[] {
   return result
 }
 
-const tooltipStyle = {
-  contentStyle: {
-    background: '#111',
-    border: '1px solid #1a1a1a',
-    borderRadius: 0,
-    fontSize: 11,
-    color: '#f5f5f5',
-    boxShadow: 'none',
-  },
-  labelStyle: { color: '#555', fontSize: 10 },
-  itemStyle: { color: '#d1d5db', fontSize: 11 },
-}
-
-const axis = { fill: '#444', fontSize: 10 }
-const noLines = { axisLine: false, tickLine: false }
-const grid = <CartesianGrid strokeDasharray="2 4" stroke="#1a1a1a" vertical={false} />
-
 interface Props { jobs: JobResponse[] }
 
 export default function MetricsCharts({ jobs }: Props) {
+  const { colors, theme } = useTheme()
+  const isLight = theme === 'light'
   const data = buildMetrics(jobs)
   const withDuration = jobs.filter(j => j.duration_ms)
   const avgDuration = withDuration.length > 0
@@ -60,39 +43,36 @@ export default function MetricsCharts({ jobs }: Props) {
   const failed = jobs.filter(j => j.status === 'failed').length
   const running = jobs.filter(j => j.status === 'running').length
 
+  const axisStyle = { fill: colors.textMuted, fontSize: 10 }
+  const noLines = { axisLine: false, tickLine: false }
+  const gridColor = isLight ? '#f3f4f6' : '#1a1a1a'
+
+  const tooltipStyle = {
+    contentStyle: { background: colors.panelBg, border: `1px solid ${colors.panelBorder}`, borderRadius: 0, fontSize: 11, color: colors.textPrimary, boxShadow: 'none' },
+    labelStyle: { color: colors.textMuted, fontSize: 10 },
+    itemStyle: { color: colors.textSecondary, fontSize: 11 },
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       {/* 4 stat cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, background: '#1a1a1a' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, background: colors.panelBorder }}>
         {[
           { label: 'Total Runs', value: total },
           { label: 'Completed', value: completed },
           { label: 'Failed', value: failed },
-          { label: 'Avg Duration', value: avgDuration > 0 ? `${avgDuration}ms` : `—` },
+          { label: 'Avg Duration', value: avgDuration > 0 ? `${avgDuration}ms` : '—' },
         ].map(({ label, value }) => (
           <div key={label} style={{
-            background: '#0f0f0f',
+            background: colors.statCardBg,
             padding: '16px 20px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 6,
+            display: 'flex', flexDirection: 'column', gap: 6,
+            transition: 'background 0.2s',
           }}>
-            <div style={{
-              fontSize: 30,
-              fontWeight: 600,
-              color: '#f5f5f5',
-              letterSpacing: '-0.04em',
-              lineHeight: 1,
-            }}>
+            <div style={{ fontSize: 30, fontWeight: 600, color: colors.textPrimary, letterSpacing: '-0.04em', lineHeight: 1 }}>
               {value}
             </div>
-            <div style={{
-              fontSize: 10,
-              color: '#555',
-              textTransform: 'uppercase',
-              letterSpacing: '0.1em',
-              fontWeight: 500,
-            }}>
+            <div style={{ fontSize: 10, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 500 }}>
               {label}
             </div>
           </div>
@@ -102,37 +82,36 @@ export default function MetricsCharts({ jobs }: Props) {
       {/* Charts */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
         <div>
-          <p style={{ fontSize: 10, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 500, marginBottom: 12 }}>
+          <p style={{ fontSize: 10, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 500, marginBottom: 12 }}>
             Throughput / min
           </p>
           <ResponsiveContainer width="100%" height={200}>
             <AreaChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: -8 }}>
               <defs>
                 <linearGradient id="tGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#2563eb" stopOpacity={0.2} />
+                  <stop offset="0%" stopColor="#2563eb" stopOpacity={isLight ? 0.15 : 0.2} />
                   <stop offset="100%" stopColor="#2563eb" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              {grid}
-              <XAxis dataKey="time" tick={axis} {...noLines} />
-              <YAxis tick={axis} {...noLines} width={24} allowDecimals={false} />
+              <CartesianGrid strokeDasharray="2 4" stroke={gridColor} vertical={false} />
+              <XAxis dataKey="time" tick={axisStyle} {...noLines} />
+              <YAxis tick={axisStyle} {...noLines} width={24} allowDecimals={false} />
               <Tooltip {...tooltipStyle} />
               <Area type="monotone" dataKey="throughput" name="runs" stroke="#2563eb" fill="url(#tGrad)" strokeWidth={1.5} dot={false} isAnimationActive={false} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
-
         <div>
-          <p style={{ fontSize: 10, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 500, marginBottom: 12 }}>
+          <p style={{ fontSize: 10, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 500, marginBottom: 12 }}>
             p95 Latency (ms)
           </p>
           <ResponsiveContainer width="100%" height={200}>
             <LineChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: -8 }}>
-              {grid}
-              <XAxis dataKey="time" tick={axis} {...noLines} />
-              <YAxis tick={axis} {...noLines} width={32} />
+              <CartesianGrid strokeDasharray="2 4" stroke={gridColor} vertical={false} />
+              <XAxis dataKey="time" tick={axisStyle} {...noLines} />
+              <YAxis tick={axisStyle} {...noLines} width={32} />
               <Tooltip {...tooltipStyle} />
-              <Line type="monotone" dataKey="p95" name="p95ms" stroke="#555" strokeWidth={1.5} dot={false} isAnimationActive={false} />
+              <Line type="monotone" dataKey="p95" name="p95ms" stroke={isLight ? '#9ca3af' : '#555'} strokeWidth={1.5} dot={false} isAnimationActive={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>

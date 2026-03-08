@@ -11,6 +11,7 @@ import ReactFlow, {
 } from 'reactflow'
 import TaskNode, { TaskNodeData } from './TaskNode'
 import { useWebSocket } from '../../hooks/useWebSocket'
+import { useTheme } from '../../theme'
 
 const nodeTypes = { taskNode: TaskNode }
 
@@ -64,21 +65,20 @@ function layoutNodes(dagNodes: DAGNode[]): { x: number; y: number; id: string }[
 }
 
 export default function DAGVisualization({ dag, jobId, taskStatuses, onTaskStatusUpdate }: Props) {
+  const { colors, theme } = useTheme()
+  const isLight = theme === 'light'
   const dagNodes = (dag.nodes as DAGNode[]) || []
   const positions = useMemo(() => layoutNodes(dagNodes), [dagNodes])
+
+  const edgeColor = isLight ? '#d1d5db' : '#2a2a2a'
 
   const buildNodes = useCallback((): Node<TaskNodeData>[] =>
     dagNodes.map(n => {
       const pos = positions.find(p => p.id === n.id) ?? { x: 0, y: 0 }
       return {
-        id: n.id,
-        type: 'taskNode',
+        id: n.id, type: 'taskNode',
         position: { x: pos.x, y: pos.y },
-        data: {
-          label: n.name || n.id,
-          type: n.type,
-          status: taskStatuses[n.id] || 'pending',
-        },
+        data: { label: n.name || n.id, type: n.type, status: taskStatuses[n.id] || 'pending' },
       }
     }), [dagNodes, taskStatuses, positions])
 
@@ -88,24 +88,18 @@ export default function DAGVisualization({ dag, jobId, taskStatuses, onTaskStatu
         const depStatus = taskStatuses[dep]
         return {
           id: `${dep}->${n.id}`,
-          source: dep,
-          target: n.id,
+          source: dep, target: n.id,
           animated: taskStatuses[n.id] === 'running',
           style: {
-            stroke: depStatus === 'completed' ? '#166534'
-              : depStatus === 'failed' ? '#7f1d1d'
-              : '#2a2a2a',
+            stroke: depStatus === 'completed' ? '#22c55e'
+              : depStatus === 'failed' ? '#ef4444'
+              : edgeColor,
             strokeWidth: 1.5,
           },
-          markerEnd: {
-            type: MarkerType.ArrowClosed,
-            color: '#2a2a2a',
-            width: 16,
-            height: 16,
-          },
+          markerEnd: { type: MarkerType.ArrowClosed, color: edgeColor, width: 16, height: 16 },
         }
       })
-    ), [dagNodes, taskStatuses])
+    ), [dagNodes, taskStatuses, edgeColor])
 
   const [nodes, setNodes, onNodesChange] = useNodesState(buildNodes())
   const [edges, setEdges, onEdgesChange] = useEdgesState(buildEdges())
@@ -124,30 +118,23 @@ export default function DAGVisualization({ dag, jobId, taskStatuses, onTaskStatu
   return (
     <div style={{ width: '100%', height: '100%' }}>
       <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
+        nodes={nodes} edges={edges}
+        onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}
         nodeTypes={nodeTypes}
-        fitView
-        fitViewOptions={{ padding: 0.25 }}
-        style={{ background: '#0a0a0a' }}
+        fitView fitViewOptions={{ padding: 0.25 }}
+        style={{ background: colors.pageBg, transition: 'background 0.2s' }}
         proOptions={{ hideAttribution: true }}
       >
         <Background
-          color="#1a1a1a"
+          color={isLight ? '#e5e7eb' : '#1a1a1a'}
           variant={BackgroundVariant.Dots}
-          gap={28}
-          size={1}
+          gap={28} size={1}
         />
-        <Controls
-          style={{
-            background: '#111111',
-            border: '1px solid #1e1e1e',
-            borderRadius: 6,
-            boxShadow: 'none',
-          }}
-        />
+        <Controls style={{
+          background: colors.panelBg,
+          border: `1px solid ${colors.panelBorder}`,
+          borderRadius: 6, boxShadow: 'none',
+        }} />
       </ReactFlow>
     </div>
   )
