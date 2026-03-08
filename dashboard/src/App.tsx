@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import WorkflowCreator from './components/WorkflowCreator'
 import ExecutionDashboard from './components/ExecutionDashboard'
+import Intro from './components/Intro'
 import { useTheme } from './theme'
 
 type Tab = 'create' | 'dashboard'
@@ -46,6 +47,13 @@ export default function App() {
   const { theme, colors, toggle } = useTheme()
   const apiStatus = useAPIStatus()
   const isLight = theme === 'light'
+
+  // Show intro only once per session
+  const [showIntro, setShowIntro] = useState(() => !sessionStorage.getItem('flint-intro-seen'))
+  const handleIntroDone = () => {
+    sessionStorage.setItem('flint-intro-seen', '1')
+    setShowIntro(false)
+  }
 
   const switchTab = (tab: Tab) => {
     if (tab === activeTab) return
@@ -159,6 +167,7 @@ export default function App() {
       `}</style>
 
       <div style={{ background: colors.pageBg, minHeight: '100vh', color: colors.textPrimary, display: 'flex', flexDirection: 'column', transition: 'background 0.2s' }}>
+        {showIntro && <Intro onDone={handleIntroDone} />}
         {/* Navbar */}
         <nav style={{
           height: 48, display: 'flex', alignItems: 'center',
