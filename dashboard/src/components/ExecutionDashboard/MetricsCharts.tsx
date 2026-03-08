@@ -56,7 +56,7 @@ export default function MetricsCharts({ jobs }: Props) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       {/* 4 stat cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, background: colors.panelBorder }}>
+      <div className="flint-stat-grid">
         {[
           { label: 'Total Runs', value: total },
           { label: 'Completed', value: completed },
@@ -80,7 +80,7 @@ export default function MetricsCharts({ jobs }: Props) {
       </div>
 
       {/* Charts */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+      <div className="flint-chart-grid">
         <div>
           <p style={{ fontSize: 10, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 500, marginBottom: 12 }}>
             Throughput / min

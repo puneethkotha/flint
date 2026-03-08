@@ -67,9 +67,9 @@ export default function ExecutionDashboard() {
     : colors.textMuted
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, height: 'calc(100vh - 88px)' }}>
+    <div className="flint-split">
       {/* Left column */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, overflow: 'hidden' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, overflow: 'hidden', minHeight: 0 }}>
         <div style={{ ...panel, flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
           <div style={sectionHeader}>
             <span style={{ fontSize: 12, fontWeight: 500, color: colors.textSecondary, letterSpacing: '-0.01em' }}>Recent Jobs</span>
@@ -84,7 +84,7 @@ export default function ExecutionDashboard() {
       </div>
 
       {/* Right column — DAG */}
-      <div style={{ ...panel, position: 'relative', display: 'flex', flexDirection: 'column' }}>
+      <div className="flint-panel-right" style={{ ...panel, position: 'relative', display: 'flex', flexDirection: 'column' }}>
         {dagLoading ? (
           <>
             <div style={sectionHeader}>

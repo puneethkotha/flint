@@ -95,7 +95,7 @@ export default function WorkflowCreator() {
   const disabled = loading || !description.trim()
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, height: 'calc(100vh - 88px)' }}>
+    <div className="flint-split">
       {/* Left panel */}
       <div style={{
         background: colors.panelBg,
@@ -114,10 +114,10 @@ export default function WorkflowCreator() {
           </div>
         )}
 
-        <div style={{ padding: '32px 32px 28px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ padding: '32px 32px 28px', flex: 1, display: 'flex', flexDirection: 'column' }} className="flint-left-pad">
           {/* Heading */}
           <div style={{ marginBottom: 28 }}>
-            <h1 style={{ fontSize: 28, fontWeight: 600, color: colors.textPrimary, letterSpacing: '-0.03em', lineHeight: 1.15, marginBottom: 8 }}>
+            <h1 style={{ fontSize: 28, fontWeight: 600, color: colors.textPrimary, letterSpacing: '-0.03em', lineHeight: 1.15, marginBottom: 8 }} className="flint-heading">
               What should Flint run?
             </h1>
             <p style={{ fontSize: 14, color: colors.textMuted, fontWeight: 400 }}>Plain English. No YAML.</p>
@@ -213,7 +213,7 @@ export default function WorkflowCreator() {
         )}
 
         {/* Buttons */}
-        <div style={{ padding: '16px 32px 28px', display: 'flex', gap: 8, borderTop: `1px solid ${colors.panelBorder}` }}>
+        <div style={{ padding: '16px 32px 28px', display: 'flex', gap: 8, borderTop: `1px solid ${colors.panelBorder}` }} className="flint-btn-row">
           <button
             onClick={handlePreview} disabled={disabled}
             style={{
@@ -249,12 +249,15 @@ export default function WorkflowCreator() {
       </div>
 
       {/* Right panel — DAG */}
-      <div style={{
-        background: colors.panelBg,
-        border: `1px solid ${colors.panelBorder}`,
-        overflow: 'hidden', position: 'relative',
-        transition: 'background 0.2s, border-color 0.2s',
-      }}>
+      <div
+        className="flint-panel-right"
+        style={{
+          background: colors.panelBg,
+          border: `1px solid ${colors.panelBorder}`,
+          overflow: 'hidden', position: 'relative',
+          transition: 'background 0.2s, border-color 0.2s',
+        }}
+      >
         {dag ? (
           <DAGVisualization dag={dag} jobId={jobId} taskStatuses={taskStatuses} onTaskStatusUpdate={setTaskStatuses} />
         ) : (
