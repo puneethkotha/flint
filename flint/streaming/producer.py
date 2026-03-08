@@ -33,10 +33,12 @@ async def start_producer() -> None:
             acks="all",
             enable_idempotence=True,
             max_batch_size=16384,
+            request_timeout_ms=3000,
+            connections_max_idle_ms=5000,
         )
         await _producer.start()
         logger.info("kafka_producer_started", servers=settings.kafka_bootstrap_servers)
-    except KafkaConnectionError as exc:
+    except Exception as exc:
         logger.warning("kafka_producer_start_failed", error=str(exc))
         _producer = None
 
