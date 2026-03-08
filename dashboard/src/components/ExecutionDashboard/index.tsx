@@ -108,14 +108,19 @@ function HeartbeatPanel() {
         style={{ opacity: 0.9 }}
       />
 
-      {/* Ready text */}
-      <div style={{ textAlign: 'center' }}>
-        <p style={{ fontSize: 20, fontWeight: 500, color: colors.textPrimary, letterSpacing: '-0.02em', marginBottom: 6 }}>
-          Flint is ready.
-        </p>
-        <p style={{ fontSize: 12, color: colors.textMuted }}>
-          Select a job to visualize its execution graph
-        </p>
+      {/* f + flame dot */}
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 3 }}>
+        <span style={{
+          fontSize: 20, fontWeight: 600,
+          color: colors.textPrimary,
+          fontFamily: 'Inter, sans-serif',
+          letterSpacing: '-0.02em',
+        }}>f</span>
+        <img
+          src="/flame.png"
+          alt=""
+          style={{ width: 7, height: 7, objectFit: 'contain', opacity: 0.85 }}
+        />
       </div>
 
       {/* Health stats */}
