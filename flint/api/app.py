@@ -97,6 +97,13 @@ def create_app() -> FastAPI:
     setup_cors(app)
     app.add_middleware(RequestLoggingMiddleware)
 
+    # Root redirect to docs
+    from fastapi.responses import RedirectResponse
+
+    @app.get("/", include_in_schema=False)
+    async def root() -> RedirectResponse:
+        return RedirectResponse(url="/docs")
+
     # API routes
     from flint.api.routes import health, jobs, metrics, parse, workflows
     from flint.api.routes.websocket import router as ws_router

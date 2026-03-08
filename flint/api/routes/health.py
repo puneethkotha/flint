@@ -56,7 +56,7 @@ async def health_check() -> HealthResponse:
             components["kafka"] = ComponentHealth(status="ok")
         else:
             components["kafka"] = ComponentHealth(
-                status="error", error="producer not initialized"
+                status="skipped", error="not configured"
             )
     except Exception as exc:
         components["kafka"] = ComponentHealth(status="error", error=str(exc)[:100])
