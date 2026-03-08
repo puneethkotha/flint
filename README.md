@@ -2,11 +2,12 @@
 
 > Describe any workflow in plain English. Flint runs it reliably.
 
-**[Live Demo](https://flint-api-fbsk.onrender.com/api/v1/health)** · [GitHub](https://github.com/puneethkotha/flint)
+**[Live Dashboard](https://flint-dashboard-silk.vercel.app)** · **[API](https://flint-api-fbsk.onrender.com/api/v1/health)** · [GitHub](https://github.com/puneethkotha/flint)
 
 ![Flint Demo](assets/demo.gif)
 
-[![Live](https://img.shields.io/badge/API-live-2563eb)](https://flint-api-fbsk.onrender.com/api/v1/health)
+[![Dashboard](https://img.shields.io/badge/Dashboard-live-2563eb)](https://flint-dashboard-silk.vercel.app)
+[![API](https://img.shields.io/badge/API-live-2563eb)](https://flint-api-fbsk.onrender.com/api/v1/health)
 [![PyPI](https://img.shields.io/pypi/v/flint-dag?color=3b82f6)](https://pypi.org/project/flint-dag/)
 [![Stars](https://img.shields.io/github/stars/puneethkotha/flint?color=eab308)](https://github.com/puneethkotha/flint)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
