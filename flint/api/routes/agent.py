@@ -9,12 +9,13 @@ from typing import Annotated, Any, AsyncGenerator
 
 import anthropic
 import structlog
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from flint.api.dependencies import get_db_pool, get_executor, get_redis
 from flint.config import get_settings
+from flint.moderation import check_content
 
 logger = structlog.get_logger(__name__)
 router = APIRouter()
@@ -133,6 +134,11 @@ async def agent_chat(
     session_id = body.session_id or str(uuid.uuid4())
     settings = get_settings()
 
+    # Content moderation
+    block_reason = check_content(body.message)
+    if block_reason:
+        raise HTTPException(status_code=400, detail=block_reason)
+
     # Load history and append new user message
     history = await _get_history(redis, session_id)
     history.append({"role": "user", "content": body.message})
@@ -194,6 +200,13 @@ async def agent_chat(
             description = intent_line.split("INTENT_CLEAR:", 1)[1].strip()
         except StopIteration:
             description = body.message  # fallback
+
+        # Re-check extracted description (model output could differ from input)
+        block_reason = check_content(description)
+        if block_reason:
+            await _push_event(redis, session_id, {"type": "error", "message": block_reason})
+            await _push_event(redis, session_id, {"type": "end", "message": ""})
+            return ChatResponse(session_id=session_id, reply=reply_text)
 
         await _push_event(redis, session_id, {
             "type": "building",

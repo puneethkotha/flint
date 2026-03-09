@@ -6,6 +6,7 @@ import structlog
 from fastapi import APIRouter, HTTPException
 
 from flint.api.schemas import ParseRequest, ParseResponse
+from flint.moderation import check_content
 from flint.parser.dag_validator import DAGValidationError
 
 logger = structlog.get_logger(__name__)
@@ -19,6 +20,10 @@ async def parse_workflow(body: ParseRequest) -> ParseResponse:
     Returns the DAG JSON for preview.
     """
     from flint.parser.nl_parser import parse_workflow as _parse
+
+    block_reason = check_content(body.description)
+    if block_reason:
+        raise HTTPException(status_code=400, detail=block_reason)
 
     try:
         dag = await _parse(body.description)

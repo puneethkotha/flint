@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 
 from flint.api.dependencies import get_db_pool, get_executor, get_redis
 from flint.api.schemas import ParseRequest
+from flint.moderation import check_content
 from flint.storage.audit import get_client_ip
 
 logger = structlog.get_logger(__name__)
@@ -48,6 +49,10 @@ async def demo_run(
     except Exception as exc:
         logger.warning("demo_redis_check_failed", error=str(exc))
         raise HTTPException(status_code=503, detail="Demo service unavailable") from exc
+
+    block_reason = check_content(body.description)
+    if block_reason:
+        raise HTTPException(status_code=400, detail=block_reason)
 
     try:
         dag = await parse_workflow(body.description)

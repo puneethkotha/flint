@@ -11,6 +11,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from flint.api.dependencies import get_db_pool, get_executor
 from flint.storage.audit import get_client_ip, get_trace_id, log_audit
 from flint.api.routes.versions import save_workflow_version
+from flint.moderation import check_content, check_dag_content
 from flint.api.schemas import (
     CreateWorkflowRequest,
     SecretsResponse,
@@ -37,13 +38,20 @@ async def create_workflow(
     repo = WorkflowRepository(pool)  # type: ignore[arg-type]
 
     if body.description:
+        block_reason = check_content(body.description)
+        if block_reason:
+            raise HTTPException(status_code=400, detail=block_reason)
         from flint.parser.nl_parser import parse_workflow
         try:
             dag = await parse_workflow(body.description)
         except Exception as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
     else:
-        dag = body.dag.model_dump()  # type: ignore[union-attr]
+        dag_dict = body.dag.model_dump()  # type: ignore[union-attr]
+        block_reason = check_dag_content(dag_dict)
+        if block_reason:
+            raise HTTPException(status_code=400, detail=block_reason)
+        dag = dag_dict
 
     if body.schedule is not None:
         dag["schedule"] = body.schedule
