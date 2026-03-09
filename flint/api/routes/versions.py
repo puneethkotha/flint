@@ -159,9 +159,9 @@ async def list_versions(
 @router.get("/workflows/{workflow_id}/versions/diff", response_model=WorkflowDiff)
 async def diff_versions(
     workflow_id: uuid.UUID,
+    pool: Annotated[Any, Depends(get_db_pool)],
     v1: int = Query(..., description="First version number"),
     v2: int = Query(..., description="Second version number"),
-    pool: Annotated[Any, Depends(get_db_pool)],
 ):
     """Return structural diff between two workflow versions."""
     async with pool.acquire() as conn:

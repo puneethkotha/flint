@@ -54,11 +54,11 @@ class ForkResponse(BaseModel):
 
 @router.get("/marketplace", response_model=MarketplaceListResponse)
 async def browse_marketplace(
+    pool: Annotated[Any, Depends(get_db_pool)],
     tag: str | None = Query(None),
     sort: str = Query("stars", enum=["stars", "forks", "newest", "runs"]),
     page: int = Query(1, ge=1),
     limit: int = Query(20, ge=1, le=100),
-    pool: Annotated[Any, Depends(get_db_pool)],
 ):
     """Browse community workflows."""
     offset = (page - 1) * limit

@@ -61,6 +61,14 @@ class Settings(BaseSettings):
         """Convert postgresql:// to asyncpg-compatible DSN."""
         return self.database_url.replace("postgresql://", "postgresql://", 1)
 
+    @property
+    def sqlalchemy_async_url(self) -> str:
+        """URL for SQLAlchemy async engine (postgresql+asyncpg://)."""
+        url = self.database_url
+        if url.startswith("postgresql://"):
+            return url.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return url
+
 
 @lru_cache
 def get_settings() -> Settings:

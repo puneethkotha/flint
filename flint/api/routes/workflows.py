@@ -9,6 +9,7 @@ import structlog
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from flint.api.dependencies import get_db_pool, get_executor
+from flint.api.routes.versions import save_workflow_version
 from flint.api.schemas import (
     CreateWorkflowRequest,
     WorkflowListResponse,
@@ -44,7 +45,6 @@ async def create_workflow(
 
     workflow = await repo.create(dag)
 
-    from flint.api.routes.versions import save_workflow_version
     await save_workflow_version(pool, workflow.id, workflow.dag_json, change_summary="Initial version")
 
     if workflow.schedule:

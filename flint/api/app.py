@@ -28,6 +28,17 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     pool = await create_pool()
     await init_db(pool)
     app.state.db_pool = pool
+
+    # SQLAlchemy async engine (for simulation module)
+    from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+    sa_engine = create_async_engine(
+        settings.sqlalchemy_async_url,
+        echo=False,
+        pool_pre_ping=True,
+    )
+    app.state.sa_async_session = async_sessionmaker(
+        sa_engine, class_=AsyncSession, expire_on_commit=False, autoflush=False
+    )
     logger.info("db_ready")
 
     # Redis
@@ -105,13 +116,14 @@ def create_app() -> FastAPI:
         return RedirectResponse(url="/docs")
 
     # API routes
-    from flint.api.routes import health, jobs, metrics, parse, workflows, versions, marketplace, benchmarks
+    from flint.api.routes import health, jobs, metrics, parse, workflows, versions, marketplace, benchmarks, simulation
     from flint.api.routes.websocket import router as ws_router
 
     app.include_router(health.router, prefix="/api/v1", tags=["health"])
     app.include_router(versions.router, prefix="/api/v1", tags=["versions"])
     app.include_router(marketplace.router, prefix="/api/v1", tags=["marketplace"])
     app.include_router(benchmarks.router, prefix="/api/v1", tags=["benchmarks"])
+    app.include_router(simulation.router, prefix="/api/v1", tags=["simulation"])
     app.include_router(metrics.router, prefix="/api/v1", tags=["metrics"])
     app.include_router(workflows.router, prefix="/api/v1", tags=["workflows"])
     app.include_router(jobs.router, prefix="/api/v1", tags=["jobs"])

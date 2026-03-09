@@ -99,6 +99,11 @@ def cli():
     pass
 
 
+# Register simulate command from simulate_cmd
+from flint.cli.simulate_cmd import register_simulate_command
+register_simulate_command(cli)
+
+
 # ---------------------------------------------------------------------------
 # flint init
 # ---------------------------------------------------------------------------

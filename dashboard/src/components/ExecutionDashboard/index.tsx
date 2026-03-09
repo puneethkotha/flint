@@ -4,6 +4,8 @@ import JobTable from './JobTable'
 import MetricsCharts from './MetricsCharts'
 import DAGVisualization from '../DAGVisualization'
 import FailureAnalysisCard from '../FailureAnalysis/FailureAnalysisCard'
+import SimulationPanel from '../SimulationMode/SimulationPanel'
+import VersionHistory from '../VersionHistory/VersionHistory'
 import { api, JobResponse } from '../../api/client'
 import type { TaskExecution } from '../../api/client'
 import { useTheme } from '../../theme'
@@ -268,6 +270,7 @@ export default function ExecutionDashboard() {
   const [dagLoading, setDagLoading] = useState(false)
   const [taskStatuses, setTaskStatuses] = useState<Record<string, string>>({})
   const [workflowName, setWorkflowName] = useState<string | null>(null)
+  const [detailTab, setDetailTab] = useState<'execution' | 'simulate' | 'history'>('execution')
 
   // Poll job while queued or running so we get live task_executions and status
   useEffect(() => {
@@ -286,7 +289,7 @@ export default function ExecutionDashboard() {
   }, [selectedJobId, selectedJob?.status])
 
   const handleSelectJob = async (id: string) => {
-    setSelectedJobId(id); setTaskStatuses({}); setDagForJob(null); setWorkflowName(null); setDagLoading(true)
+    setSelectedJobId(id); setTaskStatuses({}); setDagForJob(null); setWorkflowName(null); setDetailTab('execution'); setDagLoading(true)
     try {
       const job = await api.getJob(id)
       setSelectedJob(job)
@@ -360,7 +363,7 @@ export default function ExecutionDashboard() {
               <p style={{ fontSize: 12, color: colors.textMuted }}>Fetching DAG...</p>
             </div>
           </>
-        ) : selectedJobId && dagForJob ? (
+        ) : selectedJobId && (dagForJob || selectedJob?.workflow_id) ? (
           <>
             <div style={sectionHeader}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -369,26 +372,58 @@ export default function ExecutionDashboard() {
                   {selectedJobId.slice(0, 8)}...{selectedJob?.duration_ms ? ` · ${selectedJob.duration_ms}ms` : ''}
                 </span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ display: 'flex', gap: 2 }}>
+                  {(['execution', 'simulate', 'history'] as const).map((tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => setDetailTab(tab)}
+                      style={{
+                        background: 'none', border: 'none', color: detailTab === tab ? colors.textPrimary : colors.textMuted,
+                        fontSize: 11, fontWeight: 500, padding: '4px 8px', cursor: 'pointer',
+                        textTransform: 'capitalize', borderBottom: detailTab === tab ? `1px solid ${colors.textPrimary}` : 'none',
+                      }}
+                    >
+                      {tab === 'execution' ? 'Execution' : tab === 'simulate' ? 'Simulate' : 'History'}
+                    </button>
+                  ))}
+                </div>
                 <div style={{ width: 6, height: 6, borderRadius: '50%', background: statusDotColor }} />
                 <span style={{ fontSize: 11, color: colors.textMuted }}>{selectedJob?.status}</span>
               </div>
             </div>
-            <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-              <DAGVisualization dag={dagForJob} jobId={selectedJobId} taskStatuses={taskStatuses} onTaskStatusUpdate={setTaskStatuses} />
-            </div>
-            {selectedJob?.status === 'failed' && selectedJob.failure_analysis && (
-              <div style={{ padding: '0 16px 16px' }}>
-                <FailureAnalysisCard
-                  analysis={selectedJob.failure_analysis}
-                  onApplyFix={(patch) => {
-                    // TODO: PATCH workflow with fix_patch; for now just log
-                    console.info('Apply fix (not wired yet):', patch)
+            {detailTab === 'execution' && dagForJob && (
+              <>
+                <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+                  <DAGVisualization dag={dagForJob} jobId={selectedJobId} taskStatuses={taskStatuses} onTaskStatusUpdate={setTaskStatuses} />
+                </div>
+                {selectedJob?.status === 'failed' && selectedJob.failure_analysis && (
+                  <div style={{ padding: '0 16px 16px' }}>
+                    <FailureAnalysisCard
+                      analysis={selectedJob.failure_analysis}
+                      onApplyFix={(patch) => console.log('apply fix', patch)}
+                    />
+                  </div>
+                )}
+                <LiveLogPanel job={selectedJob} />
+              </>
+            )}
+            {detailTab === 'simulate' && selectedJob?.workflow_id && (
+              <div style={{ flex: 1, minHeight: 0, overflow: 'auto', padding: 16 }}>
+                <SimulationPanel
+                  workflowId={selectedJob.workflow_id}
+                  onRunForReal={async () => {
+                    await api.triggerJob(selectedJob!.workflow_id)
+                    // Refresh jobs - useJobs will pick up; user can select new job
                   }}
                 />
               </div>
             )}
-            <LiveLogPanel job={selectedJob} />
+            {detailTab === 'history' && selectedJob?.workflow_id && (
+              <div style={{ flex: 1, minHeight: 0, overflow: 'auto', padding: 16 }}>
+                <VersionHistory workflowId={selectedJob.workflow_id} />
+              </div>
+            )}
           </>
         ) : (
           <HeartbeatPanel />

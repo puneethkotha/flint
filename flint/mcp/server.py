@@ -388,6 +388,12 @@ async def stdio_server():
 
 def main():
     """Entry point: flint-mcp"""
+    import argparse
+    parser = argparse.ArgumentParser(
+        prog="flint-mcp",
+        description="Flint MCP Server — exposes Flint workflows as MCP tools.",
+    )
+    parser.parse_args()
     asyncio.run(stdio_server())
 
 
