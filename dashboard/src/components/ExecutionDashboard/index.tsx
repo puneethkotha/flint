@@ -159,7 +159,7 @@ function StatCards({ jobs }: { jobs: JobResponse[] }) {
     { label: 'Total Runs', value: jobs.length },
     { label: 'Completed', value: jobs.filter(j => j.status === 'completed').length },
     { label: 'Failed', value: jobs.filter(j => j.status === 'failed').length },
-    { label: 'Avg Duration', value: avgDuration > 0 ? `${avgDuration}ms` : '—' },
+    { label: 'Avg Duration', value: avgDuration > 0 ? `${avgDuration}ms` : '-' },
   ]
 
   return (
@@ -236,15 +236,15 @@ function LiveLogPanel({ job }: { job: JobResponse | null }) {
         {lines.map((te: TaskExecution) => (
           <div key={te.id}>
             {te.status === 'completed' ? (
-              <span style={{ color: '#22c55e' }}>✓ {te.task_id}</span>
+              <span style={{ color: '#22c55e' }}>Done {te.task_id}</span>
             ) : (
-              <span style={{ color: '#ef4444' }}>✗ {te.task_id}</span>
+              <span style={{ color: '#ef4444' }}>Failed {te.task_id}</span>
             )}
             {te.duration_ms != null && te.status === 'completed' && (
-              <span style={{ color: '#888', marginLeft: 8 }}>— {te.duration_ms}ms</span>
+              <span style={{ color: '#888', marginLeft: 8 }}>· {te.duration_ms}ms</span>
             )}
             {te.status === 'failed' && te.error && (
-              <span style={{ color: '#ef4444', marginLeft: 8 }}>— {te.error}</span>
+              <span style={{ color: '#ef4444', marginLeft: 8 }}>· {te.error}</span>
             )}
           </div>
         ))}

@@ -5,7 +5,7 @@ interface Props {
 }
 
 const TIPS = [
-  { title: 'Describe in plain English', body: 'Type what you want—fetch data, run SQL, call Claude. No YAML or config.' },
+  { title: 'Describe in plain English', body: 'Type what you want: fetch data, run SQL, call Claude. No YAML or config.' },
   { title: 'Create & Run', body: 'Click "Create & Run" to parse and execute. Or browse Templates for ready-made workflows.' },
   { title: 'Watch it run', body: 'In Dashboard, select a job to see the DAG and live logs as tasks complete.' },
 ]

@@ -102,7 +102,7 @@ export const AgentNode = memo(({ data, selected }: NodeProps<AgentNodeData>) => 
         }}
       >
         {/* Robot emoji + label */}
-        <div style={{ fontSize: 18, marginBottom: 4 }}>🤖</div>
+        <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', marginBottom: 4, textTransform: 'uppercase' }}>Agent</div>
         <div
           style={{
             fontSize: 11,

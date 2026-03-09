@@ -238,7 +238,7 @@ async def handle_get_job_status(job_id: str) -> str:
     if tasks:
         lines.append(f"\nNodes ({len(tasks)}):")
         for t in tasks:
-            icon = {"completed": "✓", "failed": "✗", "running": "⟳", "pending": "○"}.get(
+            icon = {"completed": "ok", "failed": "fail", "running": "...", "pending": "..."}.get(
                 t["status"], "?"
             )
             lines.append(f"  {icon} {t['task_id']} ({t['task_type']}) — {t['status']}")
@@ -247,7 +247,7 @@ async def handle_get_job_status(job_id: str) -> str:
 
     if data.get("failure_analysis"):
         fa = data["failure_analysis"]
-        lines.append(f"\n⚡ Flint thinks it knows what happened:")
+        lines.append(f"\nFailure analysis:")
         lines.append(f"  {fa.get('explanation', '')}")
         lines.append(f"  Suggested fix: {fa.get('suggested_fix', '')}")
 

@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react'
 import WorkflowCreator from './components/WorkflowCreator'
 import ExecutionDashboard from './components/ExecutionDashboard'
 import Templates from './components/Templates'
-import Intro from './components/Intro'
 import TutorialModal from './components/TutorialModal'
+import LoadingScreen, { shouldShowSplash } from './components/LoadingScreen'
 import { useTheme } from './theme'
 
 type Tab = 'create' | 'dashboard' | 'templates'
@@ -28,6 +28,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('create')
   const [visible, setVisible] = useState(true)
   const [templatePrefill, setTemplatePrefill] = useState<string | null>(null)
+  const [showSplash, setShowSplash] = useState(shouldShowSplash)
   const { colors } = useTheme()
   const apiStatus = useAPIStatus()
 
@@ -37,14 +38,7 @@ export default function App() {
     setTimeout(() => { setActiveTab('create'); setVisible(true) }, 150)
   }
 
-  // Show intro only once per session
-  const [showIntro, setShowIntro] = useState(() => !sessionStorage.getItem('flint-intro-seen'))
-  const handleIntroDone = () => {
-    sessionStorage.setItem('flint-intro-seen', '1')
-    setShowIntro(false)
-  }
-
-  // Show tutorial popup once per session, after intro (or on first load if intro skipped)
+  // Show tutorial popup once per session, after splash
   const [showTutorial, setShowTutorial] = useState(() => !sessionStorage.getItem('flint-tutorial-seen'))
   const handleTutorialClose = () => {
     sessionStorage.setItem('flint-tutorial-seen', '1')
@@ -61,6 +55,9 @@ export default function App() {
 
   return (
     <>
+      {showSplash && (
+        <LoadingScreen onComplete={() => setShowSplash(false)} />
+      )}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -163,8 +160,7 @@ export default function App() {
       `}</style>
 
       <div style={{ background: colors.pageBg, minHeight: '100vh', color: colors.textPrimary, display: 'flex', flexDirection: 'column', transition: 'background 0.2s' }}>
-        {showIntro && <Intro onDone={handleIntroDone} />}
-        {!showIntro && showTutorial && <TutorialModal onClose={handleTutorialClose} />}
+        {showTutorial && <TutorialModal onClose={handleTutorialClose} />}
         {/* Navbar */}
         <nav style={{
           height: 48, display: 'flex', alignItems: 'center',
@@ -177,9 +173,8 @@ export default function App() {
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'linear-gradient(90deg, #F59E0B 0%, transparent 50%)' }} />
 
           {/* Brand */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginRight: 20, flexShrink: 0 }}>
-            <span style={{ color: '#F59E0B', fontSize: 15, lineHeight: 1 }}>⚡</span>
-            <span style={{ fontFamily: 'ui-monospace, "Cascadia Code", monospace', fontWeight: 600, fontSize: 14, color: colors.textPrimary, letterSpacing: '-0.02em' }}>flint</span>
+          <div style={{ display: 'flex', alignItems: 'center', marginRight: 20, flexShrink: 0 }}>
+            <img src="/flint-logo.png" alt="Flint" width={36} height={36} style={{ display: 'block' }} />
           </div>
 
           {/* Tabs */}

@@ -158,5 +158,5 @@ class SqlPredictor(BasePredictor):
         if op == "SELECT" and "LIMIT" not in query.upper():
             warnings.append("SELECT without LIMIT may return large result sets in production")
         if op in ("UPDATE", "DELETE") and "WHERE" not in query.upper():
-            warnings.append("⚠ No WHERE clause — this will affect ALL rows")
+            warnings.append("No WHERE clause; this will affect ALL rows")
         return warnings

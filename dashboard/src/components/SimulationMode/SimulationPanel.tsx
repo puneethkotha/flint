@@ -16,6 +16,7 @@
  */
 
 import React, { useState, useCallback } from 'react'
+import { useTheme, type ThemeColors } from '../../theme'
 import { ConfidenceGauge }    from './ConfidenceGauge'
 import { NodeSimulationCard } from './NodeSimulationCard'
 import { RiskPanel }          from './RiskPanel'
@@ -81,6 +82,8 @@ interface Props {
 type Status = 'idle' | 'running' | 'done' | 'error'
 
 export const SimulationPanel: React.FC<Props> = ({ workflowId, onRunForReal }) => {
+  const { colors } = useTheme()
+  const styles = mkStyles(colors)
   const [status, setStatus]   = useState<Status>('idle')
   const [result, setResult]   = useState<SimResult | null>(null)
   const [error,  setError]    = useState<string | null>(null)
@@ -110,13 +113,13 @@ export const SimulationPanel: React.FC<Props> = ({ workflowId, onRunForReal }) =
   }, [workflowId])
 
   return (
-    <div style={styles.container}>
+    <div style={{ ...styles.container, background: colors.panelBg, borderColor: colors.panelBorder }}>
       {/* Header */}
       <div style={styles.header}>
         <div>
-          <div style={styles.title}>🔮 Simulation Mode</div>
-          <div style={styles.subtitle}>
-            Preview exactly what this workflow will do — without touching real systems.
+          <div style={{ ...styles.title, color: colors.textSecondary }}>Simulation Mode</div>
+          <div style={{ ...styles.subtitle, color: colors.textMuted }}>
+            Preview what this workflow will do without touching real systems.
           </div>
         </div>
         <button
@@ -127,24 +130,24 @@ export const SimulationPanel: React.FC<Props> = ({ workflowId, onRunForReal }) =
             opacity: status === 'running' ? 0.6 : 1,
           }}
         >
-          {status === 'running' ? '⟳  Simulating…' : '▶  Run Simulation'}
+          {status === 'running' ? 'Simulating…' : 'Run Simulation'}
         </button>
       </div>
 
       {/* Error */}
       {status === 'error' && (
-        <div style={styles.errorBox}>
-          ✗ Simulation failed: {error}
+        <div style={{ ...styles.errorBox, borderColor: colors.panelBorder, color: colors.textMuted }}>
+          Simulation failed: {error}
         </div>
       )}
 
       {/* Loading skeleton */}
       {status === 'running' && (
         <div style={styles.loadingBox}>
-          <div style={styles.loadingText}>
+          <div style={{ ...styles.loadingText, color: colors.textMuted }}>
             Predicting node outputs, analyzing risks, estimating costs…
           </div>
-          <div style={styles.loadingBar}>
+          <div style={{ ...styles.loadingBar, background: colors.divider }}>
             <div style={styles.loadingBarFill} />
           </div>
         </div>
@@ -162,74 +165,72 @@ export const SimulationPanel: React.FC<Props> = ({ workflowId, onRunForReal }) =
             />
 
             <div style={styles.metricCard}>
-              <div style={styles.metricValue}>
+              <div style={{ ...styles.metricValue, color: colors.textSecondary }}>
                 {result.predicted_duration_ms.toLocaleString()}
-                <span style={styles.metricUnit}>ms</span>
+                <span style={{ ...styles.metricUnit, color: colors.textMuted }}>ms</span>
               </div>
-              <div style={styles.metricLabel}>Predicted duration</div>
+              <div style={{ ...styles.metricLabel, color: colors.textMuted }}>Predicted duration</div>
             </div>
 
             <div style={styles.metricCard}>
-              <div style={styles.metricValue}>
-                <span style={{ color: result.critical_risk_count > 0 ? '#ef4444' : '#10b981' }}>
-                  {result.critical_risk_count}
-                </span>
+              <div style={{ ...styles.metricValue, color: colors.textSecondary }}>
+                {result.critical_risk_count}
                 {result.warning_count > 0 && (
-                  <span style={{ fontSize: 14, color: '#f59e0b', marginLeft: 6 }}>
-                    +{result.warning_count}⚠
+                  <span style={{ fontSize: 14, color: colors.textMuted, marginLeft: 6 }}>
+                    +{result.warning_count}
                   </span>
                 )}
               </div>
-              <div style={styles.metricLabel}>
+              <div style={{ ...styles.metricLabel, color: colors.textMuted }}>
                 {result.critical_risk_count > 0 ? 'Critical risks' : 'Risks clear'}
               </div>
             </div>
 
             <div style={styles.metricCard}>
-              <div style={styles.metricValue}>
+              <div style={{ ...styles.metricValue, color: colors.textSecondary }}>
                 ${result.cost_estimate.real_run_cost_usd.toFixed(4)}
               </div>
-              <div style={styles.metricLabel}>Estimated real cost</div>
-              <div style={{ fontSize: 10, color: '#475569', marginTop: 2 }}>
+              <div style={{ ...styles.metricLabel, color: colors.textMuted }}>Estimated real cost</div>
+              <div style={{ fontSize: 10, color: colors.textMuted, marginTop: 2 }}>
                 sim cost: ${result.cost_estimate.simulation_cost_usd.toFixed(4)}
               </div>
             </div>
 
             <div style={styles.metricCard}>
-              <div style={styles.metricValue}>
+              <div style={{ ...styles.metricValue, color: colors.textSecondary }}>
                 {result.high_confidence_nodes}/{result.total_nodes}
               </div>
-              <div style={styles.metricLabel}>High-confidence nodes</div>
+              <div style={{ ...styles.metricLabel, color: colors.textMuted }}>High-confidence nodes</div>
             </div>
           </div>
 
           {/* Safe-to-run banner */}
           {result.safe_to_run ? (
-            <div style={styles.safeBanner}>
-              ✓ No critical risks detected — safe to run
+            <div style={styles.banner}>
+              No critical risks detected. Safe to run.
               <button onClick={onRunForReal} style={styles.runRealBtn}>
-                Run for real →
+                Run for real
               </button>
             </div>
           ) : (
-            <div style={styles.unsafeBanner}>
-              ✗ {result.critical_risk_count} critical risk{result.critical_risk_count !== 1 ? 's' : ''} detected
-              — review before running
-              <span style={{ fontSize: 12, opacity: 0.8, marginLeft: 12 }}>
-                See Risks tab ↓
+            <div style={styles.banner}>
+              {result.critical_risk_count} critical risk{result.critical_risk_count !== 1 ? 's' : ''} detected. Review before running.
+              <span style={{ fontSize: 12, opacity: 0.8, marginLeft: 12, color: colors.textMuted }}>
+                See Risks tab
               </span>
             </div>
           )}
 
           {/* Tabs */}
-          <div style={styles.tabs}>
+          <div style={{ ...styles.tabs, borderColor: colors.panelBorder }}>
             {(['nodes', 'risks', 'cost'] as const).map(tab => (
               <button
                 key={tab}
                 onClick={() => setTab(tab)}
                 style={{
                   ...styles.tab,
-                  ...(activeTab === tab ? styles.tabActive : {}),
+                  color: activeTab === tab ? colors.textSecondary : colors.textMuted,
+                  borderBottomColor: activeTab === tab ? colors.textSecondary : 'transparent',
                 }}
               >
                 {tab === 'nodes' && `Nodes (${result.total_nodes})`}
@@ -250,13 +251,13 @@ export const SimulationPanel: React.FC<Props> = ({ workflowId, onRunForReal }) =
           {activeTab === 'risks' && <RiskPanel risks={result.risks} />}
           {activeTab === 'cost'  && <CostBreakdown cost={result.cost_estimate} />}
 
-          <div style={styles.footer}>
-            Simulation ID: <code style={{ color: '#64748b' }}>{result.simulation_id}</code>
+          <div style={{ ...styles.footer, color: colors.textMuted }}>
+            Simulation ID: <code style={{ color: colors.codeColor }}>{result.simulation_id}</code>
             {'  ·  '}
             Completed in {result.simulation_duration_ms}ms
             {result.calibration_accuracy != null && (
               <>{'  ·  '}
-                <span style={{ color: '#10b981' }}>
+                <span style={{ color: colors.textMuted }}>
                   Historical accuracy: {(result.calibration_accuracy * 100).toFixed(1)}%
                 </span>
               </>
@@ -277,11 +278,10 @@ export const SimulationPanel: React.FC<Props> = ({ workflowId, onRunForReal }) =
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const styles: Record<string, React.CSSProperties> = {
+const mkStyles = (colors: ThemeColors) => ({
   container: {
-    background: '#0a0a14',
-    borderRadius: 12,
-    border: '1px solid #1e293b',
+    borderRadius: 0,
+    border: '1px solid',
     padding: 24,
     fontFamily: 'Inter, system-ui, sans-serif',
   },
@@ -292,47 +292,41 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: 24,
   },
   title: {
-    fontSize: 20,
-    fontWeight: 700,
-    color: '#e2e8f0',
+    fontSize: 14,
+    fontWeight: 600,
     marginBottom: 4,
   },
   subtitle: {
-    fontSize: 13,
-    color: '#64748b',
+    fontSize: 12,
   },
   simBtn: {
-    background: 'linear-gradient(135deg, #7c3aed, #4f46e5)',
-    color: '#fff',
-    border: 'none',
-    borderRadius: 8,
-    padding: '10px 20px',
-    fontSize: 14,
-    fontWeight: 600,
+    background: colors.rowHover,
+    border: `1px solid ${colors.panelBorder}`,
+    color: colors.textSecondary,
+    borderRadius: 4,
+    padding: '8px 16px',
+    fontSize: 12,
+    fontWeight: 500,
     cursor: 'pointer',
     whiteSpace: 'nowrap',
   },
   errorBox: {
-    background: '#1c0a0a',
-    border: '1px solid #ef4444',
-    borderRadius: 8,
+    border: '1px solid',
+    borderRadius: 4,
     padding: '12px 16px',
-    color: '#ef4444',
-    fontSize: 13,
+    fontSize: 12,
     marginBottom: 16,
   },
   loadingBox: {
     padding: '32px 0',
-    textAlign: 'center',
+    textAlign: 'center' as const,
   },
   loadingText: {
-    fontSize: 13,
-    color: '#64748b',
+    fontSize: 12,
     marginBottom: 16,
   },
   loadingBar: {
-    height: 3,
-    background: '#1e293b',
+    height: 2,
     borderRadius: 2,
     overflow: 'hidden',
     maxWidth: 400,
@@ -340,110 +334,90 @@ const styles: Record<string, React.CSSProperties> = {
   },
   loadingBarFill: {
     height: '100%',
-    width: '40%',
-    background: 'linear-gradient(90deg, transparent, #7c3aed, transparent)',
+    width: '30%',
+    background: '#333',
     animation: 'shimmer 1.5s ease-in-out infinite',
   },
   metricsRow: {
     display: 'flex',
     gap: 12,
     marginBottom: 16,
-    flexWrap: 'wrap',
+    flexWrap: 'wrap' as const,
   },
   metricCard: {
-    background: '#0f172a',
-    border: '1px solid #1e293b',
-    borderRadius: 8,
+    background: colors.statCardBg,
+    border: `1px solid ${colors.panelBorder}`,
+    borderRadius: 4,
     padding: '12px 16px',
     flex: '1 1 120px',
-    minWidth: 110,
+    minWidth: 100,
   },
   metricValue: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: 700,
-    color: '#e2e8f0',
     marginBottom: 4,
   },
   metricUnit: {
     fontSize: 12,
-    color: '#64748b',
     fontWeight: 400,
     marginLeft: 2,
   },
   metricLabel: {
-    fontSize: 11,
-    color: '#64748b',
+    fontSize: 10,
     textTransform: 'uppercase',
     letterSpacing: '0.05em',
+    whiteSpace: 'nowrap' as const,
   },
-  safeBanner: {
-    background: '#022c22',
-    border: '1px solid #10b981',
-    borderRadius: 8,
+  banner: {
+    background: colors.rowAlt,
+    border: `1px solid ${colors.panelBorder}`,
+    borderRadius: 4,
     padding: '10px 16px',
-    color: '#34d399',
-    fontSize: 13,
-    fontWeight: 600,
+    color: colors.textMuted,
+    fontSize: 12,
+    fontWeight: 500,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 16,
   },
-  unsafeBanner: {
-    background: '#1c0a0a',
-    border: '1px solid #ef4444',
-    borderRadius: 8,
-    padding: '10px 16px',
-    color: '#ef4444',
-    fontSize: 13,
-    fontWeight: 600,
-    display: 'flex',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
   runRealBtn: {
-    background: '#10b981',
-    color: '#fff',
-    border: 'none',
-    borderRadius: 6,
-    padding: '6px 14px',
-    fontSize: 12,
-    fontWeight: 700,
+    background: colors.panelBorder,
+    color: colors.textSecondary,
+    border: `1px solid ${colors.divider}`,
+    borderRadius: 4,
+    padding: '6px 12px',
+    fontSize: 11,
+    fontWeight: 500,
     cursor: 'pointer',
   },
   tabs: {
     display: 'flex',
     gap: 4,
     marginBottom: 16,
-    borderBottom: '1px solid #1e293b',
+    borderBottom: '1px solid',
     paddingBottom: 0,
   },
   tab: {
     background: 'none',
     border: 'none',
-    borderBottom: '2px solid transparent',
-    color: '#64748b',
-    fontSize: 13,
+    borderBottom: '1px solid transparent',
+    fontSize: 12,
     fontWeight: 500,
-    padding: '8px 14px',
+    padding: '8px 12px',
     cursor: 'pointer',
     marginBottom: -1,
   },
-  tabActive: {
-    color: '#a78bfa',
-    borderBottomColor: '#7c3aed',
-  },
   nodeGrid: {
     display: 'flex',
-    flexDirection: 'column',
+    flexDirection: 'column' as const,
     gap: 10,
   },
   footer: {
     marginTop: 20,
     fontSize: 11,
-    color: '#334155',
-    textAlign: 'center',
+    textAlign: 'center' as const,
   },
-}
+})
 
 export default SimulationPanel

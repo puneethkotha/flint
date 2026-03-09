@@ -20,10 +20,10 @@ interface AgentReasoningTraceProps {
   agentDurationMs?: number
 }
 
-const TOOL_ICONS: Record<string, string> = {
-  web_search: '🔍',
-  http_fetch: '🌐',
-  python_exec: '🐍',
+const TOOL_LABELS: Record<string, string> = {
+  web_search: 'Search',
+  http_fetch: 'HTTP',
+  python_exec: 'Python',
 }
 
 export const AgentReasoningTrace: React.FC<AgentReasoningTraceProps> = ({
@@ -65,7 +65,7 @@ export const AgentReasoningTrace: React.FC<AgentReasoningTraceProps> = ({
           🧠 Agent reasoning trace ({trace.length} steps)
         </span>
         <span style={{ fontSize: 11, color: '#64748b' }}>
-          {expanded ? '▲ collapse' : '▼ expand'}
+          {expanded ? 'Collapse' : 'Expand'}
         </span>
       </button>
 
@@ -104,11 +104,11 @@ export const AgentReasoningTrace: React.FC<AgentReasoningTraceProps> = ({
                   fontWeight: 500,
                 }}
               >
-                <span>{TOOL_ICONS[step.tool] ?? '🔧'}</span>
+                <span>{TOOL_LABELS[step.tool] ?? 'Tool'}</span>
                 <span style={{ color: '#a78bfa' }}>{step.tool}</span>
                 <span style={{ color: '#475569', fontSize: 10 }}>({step.duration_ms}ms)</span>
                 <span style={{ color: '#475569', fontSize: 10 }}>
-                  {expandedStep === i ? '▲' : '▼'}
+                  {expandedStep === i ? '-' : '+'}
                 </span>
               </button>
 

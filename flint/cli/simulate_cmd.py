@@ -49,7 +49,7 @@ async def _run_simulation(workflow_id: str, base_url: str) -> dict | None:
             json={"include_calibration": True},
         )
         if resp.status_code == 404:
-            click.echo(f"✗ Workflow {workflow_id} not found", err=True)
+            click.echo(f"Workflow {workflow_id} not found", err=True)
             return None
         resp.raise_for_status()
         return resp.json()
@@ -68,7 +68,7 @@ def _print_simulation(result: dict) -> None:
 
     console.print()
     console.print(Panel(
-        f"[bold]🔮 Simulation: {result['workflow_name']}[/bold]\n"
+        f"[bold]Simulation: {result['workflow_name']}[/bold]\n"
         f"[dim]{result['confidence_summary']}[/dim]",
         border_style="purple",
     ))
@@ -105,9 +105,9 @@ def _print_simulation(result: dict) -> None:
         if any(r["level"] == "critical" for r in risks):
             risk_str = "[red]CRITICAL[/red]"
         elif any(r["level"] == "warning" for r in risks):
-            risk_str = "[yellow]⚠[/yellow]"
+            risk_str = "[yellow]warn[/yellow]"
         else:
-            risk_str = "[green]✓[/green]"
+            risk_str = "[green]ok[/green]"
 
         t.add_row(
             node["node_id"],
@@ -124,16 +124,16 @@ def _print_simulation(result: dict) -> None:
     warnings = [r for r in result["risks"] if r["level"] == "warning"]
 
     if critical:
-        console.print("\n[bold red]🚨 Critical Risks:[/bold red]")
+        console.print("\n[bold red]Critical Risks:[/bold red]")
         for r in critical:
-            console.print(f"  [red]✗[/red] [{r['node_id']}] {r['message']}")
+            console.print(f"  [red]x[/red] [{r['node_id']}] {r['message']}")
             console.print(f"     [dim]{r['detail']}[/dim]")
             console.print(f"     [cyan]Fix:[/cyan] {r['suggested_action']}")
 
     if warnings:
-        console.print("\n[bold yellow]⚠ Warnings:[/bold yellow]")
+        console.print("\n[bold yellow]Warnings:[/bold yellow]")
         for r in warnings:
-            console.print(f"  [yellow]⚠[/yellow] [{r['node_id']}] {r['message']}")
+            console.print(f"  [yellow]![/yellow] [{r['node_id']}] {r['message']}")
 
     # Cost
     cost = result["cost_estimate"]
@@ -151,13 +151,13 @@ def _print_simulation(result: dict) -> None:
     console.print()
     if safe:
         console.print(Panel(
-            "[bold green]✓ SAFE TO RUN[/bold green]\n"
+            "[bold green]SAFE TO RUN[/bold green]\n"
             "No critical risks detected. Simulation confidence is acceptable.",
             border_style="green",
         ))
     else:
         console.print(Panel(
-            f"[bold red]✗ DO NOT RUN YET[/bold red]\n"
+            f"[bold red]DO NOT RUN YET[/bold red]\n"
             f"{len(critical)} critical risk(s) detected.\n"
             "Fix the issues above before running for real.",
             border_style="red",
@@ -168,7 +168,7 @@ def _print_simulation(result: dict) -> None:
 def _print_plain(result: dict) -> None:
     """Fallback plain-text output (no rich)."""
     conf = int(result["overall_confidence"] * 100)
-    print(f"\n🔮 Simulation: {result['workflow_name']}")
+    print(f"\nSimulation: {result['workflow_name']}")
     print(f"Confidence: {conf}%  |  Safe: {'YES' if result['safe_to_run'] else 'NO'}")
     print(f"Predicted duration: {result['predicted_duration_ms']}ms")
     print(f"Estimated real cost: ${result['cost_estimate']['real_run_cost_usd']:.4f}")
@@ -234,7 +234,7 @@ def register_simulate_command(cli_group):
             if HAS_RICH:
                 console.print(f"✓ Job started: [cyan]{job['job_id']}[/cyan]")
             else:
-                print(f"✓ Job started: {job['job_id']}")
+                print(f"Job started: {job['job_id']}")
 
         elif auto_run and not result["safe_to_run"]:
             if HAS_RICH:

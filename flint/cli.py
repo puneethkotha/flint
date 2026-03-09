@@ -13,7 +13,7 @@ import click
 
 @click.group()
 def cli() -> None:
-    """⚡ Flint — Describe any workflow in plain English. Flint runs it reliably."""
+    """Flint — Describe any workflow in plain English. Flint runs it reliably."""
 
 
 @cli.command()
@@ -34,7 +34,7 @@ async def _run(description_or_path: str, api: str) -> None:
         dag = json.loads(path.read_text())
         payload: dict = {"dag": dag, "run_immediately": True}
     else:
-        click.echo(f"🧠 Parsing: {description_or_path[:80]}...")
+        click.echo(f"Parsing: {description_or_path[:80]}...")
         payload = {"description": description_or_path, "run_immediately": True}
 
     async with httpx.AsyncClient(timeout=120) as client:
@@ -44,12 +44,12 @@ async def _run(description_or_path: str, api: str) -> None:
             sys.exit(1)
         workflow = resp.json()
         wf_id = workflow["id"]
-        click.secho(f"✓ Workflow created: {workflow['name']} ({wf_id})", fg="green")
+        click.secho(f"Workflow created: {workflow['name']} ({wf_id})", fg="green")
 
         # Trigger if not already triggered
         trigger_resp = await client.post(f"{api}/api/v1/jobs/trigger/{wf_id}", json={})
         if trigger_resp.status_code != 200:
-            click.secho(f"✗ Trigger failed: {trigger_resp.text}", fg="red")
+            click.secho(f"Trigger failed: {trigger_resp.text}", fg="red")
             sys.exit(1)
         job = trigger_resp.json()
         job_id = str(job["job_id"])
@@ -63,7 +63,7 @@ async def _run(description_or_path: str, api: str) -> None:
 async def _stream_job_status(api: str, job_id: str) -> None:
     import httpx
 
-    click.echo("\n📊 Live Status:\n")
+    click.echo("\nLive Status:\n")
     seen_statuses: dict[str, str] = {}
     terminal_statuses = {"completed", "failed", "cancelled"}
 
@@ -87,7 +87,7 @@ async def _stream_job_status(api: str, job_id: str) -> None:
                 color = {"completed": "green", "failed": "red", "running": "blue"}.get(
                     status, "white"
                 )
-                icon = {"completed": "✓", "failed": "✗", "running": "⟳"}.get(status, "○")
+                icon = {"completed": "ok", "failed": "fail", "running": "..."}.get(status, "?")
                 click.secho(f"  {icon} {tid:<30} {status}", fg=color)
 
         job_status = job_data.get("status", "")
@@ -95,7 +95,7 @@ async def _stream_job_status(api: str, job_id: str) -> None:
             duration = job_data.get("duration_ms", 0)
             click.echo("")
             if job_status == "completed":
-                click.secho(f"✓ Job completed in {duration}ms", fg="green")
+                click.secho(f"Job completed in {duration}ms", fg="green")
             else:
                 click.secho(f"✗ Job {job_status}: {job_data.get('error', '')}", fg="red")
             break
@@ -117,7 +117,7 @@ async def _status(job_id: str, api: str) -> None:
     async with httpx.AsyncClient(timeout=10) as client:
         resp = await client.get(f"{api}/api/v1/jobs/{job_id}")
         if resp.status_code == 404:
-            click.secho("✗ Job not found", fg="red")
+            click.secho("Job not found", fg="red")
             sys.exit(1)
         data = resp.json()
 
@@ -184,18 +184,18 @@ def parse(description: str, api: str) -> None:
 async def _parse(description: str, api: str) -> None:
     import httpx
 
-    click.echo(f"🧠 Parsing: {description[:80]}...")
+    click.echo(f"Parsing: {description[:80]}...")
     async with httpx.AsyncClient(timeout=60) as client:
         resp = await client.post(
             f"{api}/api/v1/parse", json={"description": description}
         )
         if resp.status_code != 200:
-            click.secho(f"✗ Parse failed: {resp.text}", fg="red")
+            click.secho(f"Parse failed: {resp.text}", fg="red")
             sys.exit(1)
         data = resp.json()
 
     dag = data["dag"]
-    click.secho(f"\n✓ Parsed: {dag['name']}", fg="green")
+    click.secho(f"\nParsed: {dag['name']}", fg="green")
     click.echo(f"  Nodes: {data['node_count']}")
     click.echo(f"  Schedule: {dag.get('schedule') or 'manual'}")
     click.echo("\nTask Graph:")
@@ -204,7 +204,7 @@ async def _parse(description: str, api: str) -> None:
         click.echo(f"  [{node['type']:8}] {node['id']}{deps}")
 
     if data.get("warnings"):
-        click.echo("\n⚠ Warnings:")
+        click.echo("\nWarnings:")
         for w in data["warnings"]:
             click.secho(f"  {w}", fg="yellow")
 

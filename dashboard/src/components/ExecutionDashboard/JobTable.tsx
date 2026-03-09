@@ -43,11 +43,11 @@ function JobRow({ job, selected, index, onSelect }: {
         </span>
       </td>
       <td style={{ padding: '11px 16px', color: colors.textMuted, fontSize: 12 }}>
-        {job.duration_ms ? `${job.duration_ms}ms` : '—'}
+        {job.duration_ms ? `${job.duration_ms}ms` : '-'}
       </td>
       <td style={{ padding: '11px 16px', color: colors.textMuted, fontSize: 12 }}>{job.trigger_type}</td>
       <td style={{ padding: '11px 16px', color: colors.textMuted, fontSize: 11 }}>
-        {job.triggered_at ? new Date(job.triggered_at).toLocaleTimeString() : '—'}
+        {job.triggered_at ? new Date(job.triggered_at).toLocaleTimeString() : '-'}
       </td>
       <td style={{ padding: '11px 16px', textAlign: 'right' }}>
         <span style={{

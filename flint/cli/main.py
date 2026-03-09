@@ -72,12 +72,12 @@ def _print(msg: str, style: str = ""):
 
 
 def _error(msg: str):
-    _print(f"✗ {msg}", "bold red")
+    _print(msg, "bold red")
     sys.exit(1)
 
 
 def _success(msg: str):
-    _print(f"✓ {msg}", "bold green")
+    _print(msg, "bold green")
 
 
 def _info(msg: str):
@@ -186,7 +186,7 @@ async def _run_workflow(description: str, base_url: str, stream: bool, input_dat
             t.add_column("Type")
             t.add_column("Dependencies")
             for n in nodes:
-                t.add_row(n["id"], n.get("type", "?"), ", ".join(n.get("dependencies", [])) or "—")
+                t.add_row(n["id"], n.get("type", "?"), ", ".join(n.get("dependencies", [])) or "-")
             console.print(t)
 
         # Step 2: Trigger job
@@ -227,7 +227,7 @@ async def _stream_job(client: httpx.AsyncClient, job_id: str):
             key = f"{task['task_id']}-{task['status']}"
             if key not in seen_tasks:
                 seen_tasks.add(key)
-                icon = {"completed": "✓", "failed": "✗", "running": "⟳", "pending": "○"}.get(
+                icon = {"completed": "ok", "failed": "fail", "running": "...", "pending": "..."}.get(
                     task["status"], "?"
                 )
                 color = {"completed": "green", "failed": "red", "running": "yellow"}.get(
@@ -255,10 +255,10 @@ async def _stream_job(client: httpx.AsyncClient, job_id: str):
     if final_status == "completed":
         _success(f"Job completed in {data.get('duration_ms', '?')}ms")
     else:
-        _print(f"✗ Job failed", "bold red")
+        _print(f"Job failed", "bold red")
         if data.get("failure_analysis"):
             fa = data["failure_analysis"]
-            _print(f"\n⚡ Flint thinks it knows what happened:", "bold yellow")
+            _print(f"\nFailure analysis:", "bold yellow")
             _print(f"   {fa.get('explanation', '')}")
             _print(f"   Suggested fix: {fa.get('suggested_fix', '')}", "cyan")
 
@@ -361,14 +361,14 @@ async def _job_status(job_id: str, base_url: str):
         click.echo(f"Job {job_id}: {job_status.upper()}")
 
     for task in data.get("task_executions", []):
-        icon = {"completed": "✓", "failed": "✗", "running": "⟳", "pending": "○"}.get(
+        icon = {"completed": "ok", "failed": "fail", "running": "...", "pending": "..."}.get(
             task["status"], "?"
         )
         click.echo(f"  {icon} {task['task_id']} — {task['status']}")
 
     if data.get("failure_analysis"):
         fa = data["failure_analysis"]
-        _print(f"\n⚡ {fa.get('explanation', '')}", "yellow")
+        _print(f"\n{fa.get('explanation', '')}", "yellow")
         _print(f"   Fix: {fa.get('suggested_fix', '')}", "cyan")
 
 

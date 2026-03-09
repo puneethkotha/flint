@@ -23,7 +23,7 @@ function buildMetrics(jobs: JobResponse[]): DataPoint[] {
     const p95 = sorted[Math.floor(sorted.length * 0.95)] ?? 0
     return { time, throughput: data.count, p95: Math.round(p95) }
   })
-  if (result.length === 0) return [{ time: '—', throughput: 0, p95: 0 }]
+  if (result.length === 0) return [{ time: '-', throughput: 0, p95: 0 }]
   if (result.length === 1) return [...result, { ...result[0], time: '' }]
   return result
 }

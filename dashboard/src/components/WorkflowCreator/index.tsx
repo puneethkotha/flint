@@ -395,11 +395,11 @@ export default function WorkflowCreator({ initialDescription, onPrefillConsumed 
             )}
             {jobId && (
               <div style={{ border: '1px solid #1a2a1a', padding: '10px 12px', fontSize: 12, color: colors.textMuted, background: '#0a0f0a' }}>
-                Job queued <code style={{ color: colors.codeColor, fontSize: 11 }}>{jobId.slice(0, 8)}...</code> — view in Dashboard
+                Job queued <code style={{ color: colors.codeColor, fontSize: 11 }}>{jobId.slice(0, 8)}...</code>. View in Dashboard.
               </div>
             )}
             {warnings.map((w, i) => (
-              <p key={i} style={{ color: colors.textMuted, fontSize: 12, lineHeight: 1.5 }}>⚠ {w}</p>
+              <p key={i} style={{ color: colors.textMuted, fontSize: 12, lineHeight: 1.5 }}>Warning: {w}</p>
             ))}
           </div>
         )}

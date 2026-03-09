@@ -9,6 +9,7 @@
  */
 
 import React, { useState } from 'react'
+import { useTheme } from '../../theme'
 
 interface FailureAnalysis {
   explanation: string
@@ -39,6 +40,7 @@ export const FailureAnalysisCard: React.FC<FailureAnalysisCardProps> = ({
   analysis,
   onApplyFix,
 }) => {
+  const { colors } = useTheme()
   const [dismissed, setDismissed] = useState(false)
   const [showPatch, setShowPatch] = useState(false)
 
@@ -79,10 +81,9 @@ export const FailureAnalysisCard: React.FC<FailureAnalysisCardProps> = ({
 
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-        <span style={{ fontSize: 20 }}>⚡</span>
         <div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: '#a78bfa' }}>
-            Flint thinks it knows what happened
+          <div style={{ fontSize: 14, fontWeight: 700, color: colors.textSecondary }}>
+            Failure analysis
           </div>
           <div style={{ fontSize: 11, color: confidenceColor, marginTop: 2 }}>
             {CONFIDENCE_LABELS[analysis.confidence]}

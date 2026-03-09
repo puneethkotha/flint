@@ -253,7 +253,7 @@ async def benchmark_retry_efficiency() -> dict:
 def print_results(throughput: dict, corruption: dict, retry: dict) -> None:
     print("\n")
     print("╔══════════════════════════════════════════════════════════════╗")
-    print("║            ⚡ FLINT BENCHMARK RESULTS                       ║")
+    print("║            FLINT BENCHMARK RESULTS                          ║")
     print("╠══════════════════════════════════════════════════════════════╣")
     print("║  THROUGHPUT                                                  ║")
     print(f"║  Executions:    {throughput['total']:>8,}                                ║")
@@ -287,20 +287,20 @@ def print_results(throughput: dict, corruption: dict, retry: dict) -> None:
 
     print("\n  TARGETS:")
     print(f"  {'✓' if t1 else '✗'} Throughput ≥ 10,000 exec/min  ({throughput['throughput_per_min']:,.0f})")
-    print(f"  {'✓' if t2 else '✗'} p95 latency < 12ms            ({throughput['p95_ms']:.3f}ms)")
-    print(f"  {'✓' if t3 else '✗'} Corruption detection ≥ 90%    ({corruption['detection_rate_pct']:.1f}%)")
-    print(f"  {'✓' if t4 else '✗'} Retry reduction ≥ 63%         ({retry['reduction_pct']:.1f}%)")
+    print(f"  {'pass' if t2 else 'fail'} p95 latency < 12ms            ({throughput['p95_ms']:.3f}ms)")
+    print(f"  {'pass' if t3 else 'fail'} Corruption detection >= 90%    ({corruption['detection_rate_pct']:.1f}%)")
+    print(f"  {'pass' if t4 else 'fail'} Retry reduction >= 63%         ({retry['reduction_pct']:.1f}%)")
     print()
     all_pass = t1 and t2 and t3 and t4
     if all_pass:
         print("  🎉 ALL TARGETS MET")
     else:
-        print(f"  {'✓' if t1 and t2 and t3 and t4 else '⚡'} {sum([t1,t2,t3,t4])}/4 targets met")
+        print(f"  {sum([t1,t2,t3,t4])}/4 targets met")
     print()
 
 
 async def main() -> None:
-    print("\n⚡ FLINT BENCHMARK SUITE")
+    print("\nFLINT BENCHMARK SUITE")
     print("=" * 62)
     print("  Measuring: topology + gather + validation overhead")
     print("  Mode: fully in-memory, no DB/Redis/Kafka/HTTP")
