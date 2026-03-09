@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import WorkflowCreator from './components/WorkflowCreator'
 import ExecutionDashboard from './components/ExecutionDashboard'
+import Templates from './components/Templates'
 import Intro from './components/Intro'
+import TutorialModal from './components/TutorialModal'
 import { useTheme } from './theme'
 
-type Tab = 'create' | 'dashboard'
+type Tab = 'create' | 'dashboard' | 'templates'
 
 function useAPIStatus() {
   const [status, setStatus] = useState<'ok' | 'error' | 'checking'>('checking')
@@ -25,14 +27,28 @@ function useAPIStatus() {
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('create')
   const [visible, setVisible] = useState(true)
+  const [templatePrefill, setTemplatePrefill] = useState<string | null>(null)
   const { colors } = useTheme()
   const apiStatus = useAPIStatus()
+
+  const handleUseTemplate = (description: string) => {
+    setTemplatePrefill(description)
+    setVisible(false)
+    setTimeout(() => { setActiveTab('create'); setVisible(true) }, 150)
+  }
 
   // Show intro only once per session
   const [showIntro, setShowIntro] = useState(() => !sessionStorage.getItem('flint-intro-seen'))
   const handleIntroDone = () => {
     sessionStorage.setItem('flint-intro-seen', '1')
     setShowIntro(false)
+  }
+
+  // Show tutorial popup once per session, after intro (or on first load if intro skipped)
+  const [showTutorial, setShowTutorial] = useState(() => !sessionStorage.getItem('flint-tutorial-seen'))
+  const handleTutorialClose = () => {
+    sessionStorage.setItem('flint-tutorial-seen', '1')
+    setShowTutorial(false)
   }
 
   const switchTab = (tab: Tab) => {
@@ -148,6 +164,7 @@ export default function App() {
 
       <div style={{ background: colors.pageBg, minHeight: '100vh', color: colors.textPrimary, display: 'flex', flexDirection: 'column', transition: 'background 0.2s' }}>
         {showIntro && <Intro onDone={handleIntroDone} />}
+        {!showIntro && showTutorial && <TutorialModal onClose={handleTutorialClose} />}
         {/* Navbar */}
         <nav style={{
           height: 48, display: 'flex', alignItems: 'center',
@@ -169,6 +186,7 @@ export default function App() {
           <div style={{ display: 'flex', gap: 1, flex: 1, overflow: 'hidden' }}>
             {([
               { key: 'create' as Tab, label: 'Create Workflow' },
+              { key: 'templates' as Tab, label: 'Templates' },
               { key: 'dashboard' as Tab, label: 'Dashboard' },
             ]).map(({ key, label }) => (
               <button
@@ -212,7 +230,13 @@ export default function App() {
           className="flint-main"
           style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.15s ease' }}
         >
-          {activeTab === 'create' && <WorkflowCreator />}
+          {activeTab === 'create' && (
+            <WorkflowCreator
+              initialDescription={templatePrefill ?? undefined}
+              onPrefillConsumed={() => setTemplatePrefill(null)}
+            />
+          )}
+          {activeTab === 'templates' && <Templates onUseTemplate={handleUseTemplate} />}
           {activeTab === 'dashboard' && <ExecutionDashboard />}
         </main>
       </div>

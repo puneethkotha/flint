@@ -4,6 +4,7 @@ import JobTable from './JobTable'
 import MetricsCharts from './MetricsCharts'
 import DAGVisualization from '../DAGVisualization'
 import { api, JobResponse } from '../../api/client'
+import type { TaskExecution } from '../../api/client'
 import { useTheme } from '../../theme'
 
 function ShimmerBar({ color }: { color: string }) {
@@ -107,19 +108,14 @@ function HeartbeatPanel() {
         style={{ opacity: 0.9 }}
       />
 
-      {/* f + flame dot */}
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 3 }}>
-        <span style={{
-          fontSize: 20, fontWeight: 600,
-          color: colors.textPrimary,
-          fontFamily: 'Inter, sans-serif',
-          letterSpacing: '-0.02em',
-        }}>f</span>
-        <img
-          src="/flame.png"
-          alt=""
-          style={{ width: 7, height: 7, objectFit: 'contain', opacity: 0.85 }}
-        />
+      {/* Ready text */}
+      <div style={{ textAlign: 'center' }}>
+        <p style={{ fontSize: 20, fontWeight: 500, color: colors.textPrimary, letterSpacing: '-0.02em', marginBottom: 6 }}>
+          Flint is ready.
+        </p>
+        <p style={{ fontSize: 12, color: colors.textMuted }}>
+          Select a job to visualize its execution graph
+        </p>
       </div>
 
       {/* Health stats */}
@@ -184,6 +180,84 @@ function StatCards({ jobs }: { jobs: JobResponse[] }) {
   )
 }
 
+function LiveLogPanel({ job }: { job: JobResponse | null }) {
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  // Sort by completed_at so we show in completion order; pending stay at end
+  const lines = React.useMemo(() => {
+    if (!job?.task_executions?.length) return []
+    const completed = job.task_executions
+      .filter(te => te.status === 'completed' || te.status === 'failed')
+      .sort((a, b) => {
+        const aTime = a.completed_at ? new Date(a.completed_at).getTime() : 0
+        const bTime = b.completed_at ? new Date(b.completed_at).getTime() : 0
+        return aTime - bTime
+      })
+    return completed
+  }, [job?.task_executions])
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
+  }, [lines.length, job?.status])
+
+  if (!job) return null
+
+  const isDone = job.status === 'completed' || job.status === 'failed'
+
+  return (
+    <div
+      style={{
+        background: '#0a0a0a',
+        borderTop: '1px solid #1a1a1a',
+        flexShrink: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        maxHeight: 200,
+        minHeight: 120,
+      }}
+    >
+      <div style={{ padding: '6px 12px', borderBottom: '1px solid #1a1a1a', fontSize: 10, color: '#555', fontFamily: 'ui-monospace, monospace', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+        Live log
+      </div>
+      <div
+        ref={scrollRef}
+        style={{
+          flex: 1,
+          overflow: 'auto',
+          padding: 10,
+          fontFamily: 'ui-monospace, "Cascadia Code", monospace',
+          fontSize: 12,
+          lineHeight: 1.6,
+        }}
+      >
+        {lines.map((te: TaskExecution) => (
+          <div key={te.id}>
+            {te.status === 'completed' ? (
+              <span style={{ color: '#22c55e' }}>✓ {te.task_id}</span>
+            ) : (
+              <span style={{ color: '#ef4444' }}>✗ {te.task_id}</span>
+            )}
+            {te.duration_ms != null && te.status === 'completed' && (
+              <span style={{ color: '#888', marginLeft: 8 }}>— {te.duration_ms}ms</span>
+            )}
+            {te.status === 'failed' && te.error && (
+              <span style={{ color: '#ef4444', marginLeft: 8 }}>— {te.error}</span>
+            )}
+          </div>
+        ))}
+        {job.status === 'running' && lines.length === 0 && (
+          <span style={{ color: '#888' }}>Waiting for tasks...</span>
+        )}
+        {isDone && job.duration_ms != null && (
+          <div style={{ marginTop: 8, color: '#888', paddingTop: 6, borderTop: '1px solid #1a1a1a' }}>
+            Total: {job.duration_ms}ms
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export default function ExecutionDashboard() {
   const { colors } = useTheme()
   const { jobs, loading } = useJobs(5000)
@@ -193,6 +267,22 @@ export default function ExecutionDashboard() {
   const [dagLoading, setDagLoading] = useState(false)
   const [taskStatuses, setTaskStatuses] = useState<Record<string, string>>({})
   const [workflowName, setWorkflowName] = useState<string | null>(null)
+
+  // Poll job while queued or running so we get live task_executions and status
+  useEffect(() => {
+    if (!selectedJobId || !selectedJob) return
+    if (selectedJob.status !== 'running' && selectedJob.status !== 'queued') return
+    const interval = setInterval(async () => {
+      try {
+        const job = await api.getJob(selectedJobId)
+        setSelectedJob(job)
+        const statuses: Record<string, string> = {}
+        job.task_executions.forEach(te => { statuses[te.task_id] = te.status })
+        setTaskStatuses(statuses)
+      } catch { /* ignore */ }
+    }, 1500)
+    return () => clearInterval(interval)
+  }, [selectedJobId, selectedJob?.status])
 
   const handleSelectJob = async (id: string) => {
     setSelectedJobId(id); setTaskStatuses({}); setDagForJob(null); setWorkflowName(null); setDagLoading(true)
@@ -283,9 +373,10 @@ export default function ExecutionDashboard() {
                 <span style={{ fontSize: 11, color: colors.textMuted }}>{selectedJob?.status}</span>
               </div>
             </div>
-            <div style={{ flex: 1 }}>
+            <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
               <DAGVisualization dag={dagForJob} jobId={selectedJobId} taskStatuses={taskStatuses} onTaskStatusUpdate={setTaskStatuses} />
             </div>
+            <LiveLogPanel job={selectedJob} />
           </>
         ) : (
           <HeartbeatPanel />

@@ -38,7 +38,21 @@ async def create_workflow(
     else:
         dag = body.dag.model_dump()  # type: ignore[union-attr]
 
+    if body.schedule is not None:
+        dag["schedule"] = body.schedule
+        dag["timezone"] = body.timezone
+
     workflow = await repo.create(dag)
+
+    if workflow.schedule:
+        from flint.engine.scheduler import schedule_workflow
+        schedule_workflow(
+            str(workflow.id),
+            workflow.schedule,
+            workflow.timezone or "UTC",
+            executor=executor,
+            db_pool=pool,
+        )
     logger.info("workflow_created", workflow_id=str(workflow.id))
 
     if body.run_immediately:

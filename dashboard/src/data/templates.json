@@ -1,0 +1,164 @@
+{
+  "templates": [
+    {
+      "id": "github-stars-tracker",
+      "title": "GitHub Stars Tracker",
+      "description": "Fetch my starred GitHub repos, get the README for each repo, summarize each with Claude, and post a daily digest to Slack.",
+      "category": "Data Pipelines",
+      "tags": ["HTTP", "LLM"],
+      "estimatedRuntime": "2–5 min"
+    },
+    {
+      "id": "hacker-news-digest",
+      "title": "Hacker News Digest",
+      "description": "Scrape Hacker News front page, fetch top 10 stories, summarize each with Claude, and email me the digest every morning at 8am.",
+      "category": "Data Pipelines",
+      "tags": ["HTTP", "LLM"],
+      "estimatedRuntime": "1–3 min"
+    },
+    {
+      "id": "arxiv-paper-summarizer",
+      "title": "ArXiv Paper Summarizer",
+      "description": "Fetch latest ArXiv papers for machine learning, extract abstracts, summarize with Claude, and post the list to a Slack channel.",
+      "category": "Research",
+      "tags": ["HTTP", "LLM"],
+      "estimatedRuntime": "3–6 min"
+    },
+    {
+      "id": "slack-standup-bot",
+      "title": "Slack Standup Bot",
+      "description": "Every morning at 9am, post a standup reminder in Slack, collect replies from the team, summarize with Claude, and post the standup summary to the channel.",
+      "category": "DevOps",
+      "tags": ["HTTP", "LLM"],
+      "estimatedRuntime": "2–4 min"
+    },
+    {
+      "id": "pagerduty-to-jira",
+      "title": "PagerDuty Alert → Jira Ticket",
+      "description": "When a PagerDuty alert fires, create a Jira ticket with the incident title and link, assign to the on-call engineer, and post the ticket link in Slack.",
+      "category": "DevOps",
+      "tags": ["HTTP", "WEBHOOK"],
+      "estimatedRuntime": "< 1 min"
+    },
+    {
+      "id": "stock-price-monitor",
+      "title": "Stock Price Monitor",
+      "description": "Every hour fetch stock prices from a market API for a watchlist, compare to thresholds, and send an email alert if any stock moves more than 5%.",
+      "category": "Finance",
+      "tags": ["HTTP"],
+      "estimatedRuntime": "< 1 min"
+    },
+    {
+      "id": "reddit-sentiment-pipeline",
+      "title": "Reddit Sentiment Pipeline",
+      "description": "Fetch top posts from selected subreddits, run sentiment analysis with Claude on comments, aggregate scores, and store results in Postgres for a dashboard.",
+      "category": "AI Pipelines",
+      "tags": ["HTTP", "LLM", "SQL"],
+      "estimatedRuntime": "4–8 min"
+    },
+    {
+      "id": "daily-weather-calendar",
+      "title": "Daily Weather + Calendar Summary",
+      "description": "Fetch today's weather from a weather API and my calendar events, summarize with Claude into a single morning brief, and send by email.",
+      "category": "Data Pipelines",
+      "tags": ["HTTP", "LLM"],
+      "estimatedRuntime": "1–2 min"
+    },
+    {
+      "id": "invoice-pdf-to-spreadsheet",
+      "title": "Invoice PDF to Spreadsheet",
+      "description": "Watch a folder for new PDF invoices, extract line items and totals with Claude, and append rows to a Google Sheet or CSV.",
+      "category": "Finance",
+      "tags": ["HTTP", "LLM"],
+      "estimatedRuntime": "1–3 min"
+    },
+    {
+      "id": "twitter-follower-report",
+      "title": "Twitter/X Follower Growth Report",
+      "description": "Fetch follower count and recent engagement from Twitter API, compute week-over-week growth, and post a short report to Slack every Monday.",
+      "category": "Data Pipelines",
+      "tags": ["HTTP"],
+      "estimatedRuntime": "1–2 min"
+    },
+    {
+      "id": "crm-lead-enrichment",
+      "title": "CRM Lead Enrichment",
+      "description": "Pull new leads from CRM that lack company info, fetch company details from a data API, summarize with Claude, and write enriched data back to CRM.",
+      "category": "Data Pipelines",
+      "tags": ["HTTP", "LLM"],
+      "estimatedRuntime": "2–4 min"
+    },
+    {
+      "id": "code-review-summarizer",
+      "title": "GitHub PR Code Review Summarizer",
+      "description": "Fetch open pull requests from GitHub, get diff and comments, summarize review feedback with Claude, and post the summary as a PR comment.",
+      "category": "DevOps",
+      "tags": ["HTTP", "LLM"],
+      "estimatedRuntime": "2–5 min"
+    },
+    {
+      "id": "meeting-notes-to-actions",
+      "title": "Meeting Notes to Action Items",
+      "description": "Take raw meeting transcript or notes, extract action items and owners with Claude, and create tasks in Jira or Asana with due dates.",
+      "category": "AI Pipelines",
+      "tags": ["LLM"],
+      "estimatedRuntime": "1–2 min"
+    },
+    {
+      "id": "support-ticket-classifier",
+      "title": "Support Ticket Classifier and Router",
+      "description": "Fetch new support tickets from Zendesk, classify urgency and category with Claude, assign to the right team, and post a summary to Slack.",
+      "category": "AI Pipelines",
+      "tags": ["HTTP", "LLM"],
+      "estimatedRuntime": "1–3 min"
+    },
+    {
+      "id": "db-backup-verification",
+      "title": "Database Backup Verification",
+      "description": "Run a Postgres backup job, verify the backup file exists and checksum, run a quick restore test to a staging DB, and notify Slack on success or failure.",
+      "category": "DevOps",
+      "tags": ["SQL"],
+      "estimatedRuntime": "5–15 min"
+    },
+    {
+      "id": "api-rate-limit-monitor",
+      "title": "API Rate Limit Monitor and Alert",
+      "description": "Every 5 minutes call our external API, check response headers for rate limit remaining, and send a PagerDuty alert if below 10% or post warning to Slack.",
+      "category": "DevOps",
+      "tags": ["HTTP", "WEBHOOK"],
+      "estimatedRuntime": "< 1 min"
+    },
+    {
+      "id": "research-citation-extractor",
+      "title": "Research Paper Citation Extractor",
+      "description": "Given a list of paper DOIs, fetch metadata and full text where available, extract citations with Claude, and output a structured citation graph to JSON.",
+      "category": "Research",
+      "tags": ["HTTP", "LLM"],
+      "estimatedRuntime": "5–10 min"
+    },
+    {
+      "id": "expense-report-categorizer",
+      "title": "Expense Report Categorizer",
+      "description": "Pull uncategorized expenses from our accounting API, classify each into the right category and project with Claude, and push categorized data back.",
+      "category": "Finance",
+      "tags": ["HTTP", "LLM"],
+      "estimatedRuntime": "2–4 min"
+    },
+    {
+      "id": "log-anomaly-detector",
+      "title": "Log Anomaly Detector",
+      "description": "Fetch recent application logs from our log API, sample and summarize with Claude to detect anomalies or errors, and create a Jira ticket if critical.",
+      "category": "DevOps",
+      "tags": ["HTTP", "LLM"],
+      "estimatedRuntime": "2–5 min"
+    },
+    {
+      "id": "newsletter-digest",
+      "title": "RSS Newsletter Digest",
+      "description": "Fetch articles from configured RSS feeds, summarize top 5 with Claude, format as a newsletter, and send via SendGrid or Mailgun to a mailing list.",
+      "category": "Data Pipelines",
+      "tags": ["HTTP", "LLM"],
+      "estimatedRuntime": "2–4 min"
+    }
+  ]
+}
