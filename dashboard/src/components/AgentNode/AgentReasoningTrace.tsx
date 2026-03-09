@@ -62,7 +62,7 @@ export const AgentReasoningTrace: React.FC<AgentReasoningTraceProps> = ({
         }}
       >
         <span style={{ fontSize: 13, fontWeight: 600 }}>
-          🧠 Agent reasoning trace ({trace.length} steps)
+          Agent reasoning trace ({trace.length} steps)
         </span>
         <span style={{ fontSize: 11, color: '#64748b' }}>
           {expanded ? 'Collapse' : 'Expand'}
@@ -74,8 +74,8 @@ export const AgentReasoningTrace: React.FC<AgentReasoningTraceProps> = ({
           {/* Stats row */}
           {(totalTokens || agentDurationMs) && (
             <div style={{ display: 'flex', gap: 16, marginBottom: 12, fontSize: 11, color: '#64748b' }}>
-              {totalTokens && <span>🪙 {totalTokens.toLocaleString()} tokens</span>}
-              {agentDurationMs && <span>⏱ {agentDurationMs}ms total</span>}
+              {totalTokens && <span>{totalTokens.toLocaleString()} tokens</span>}
+              {agentDurationMs && <span>{agentDurationMs}ms total</span>}
             </div>
           )}
 

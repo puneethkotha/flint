@@ -16,14 +16,27 @@ class TaskExecRepository:
     def __init__(self, pool: Pool) -> None:
         self.pool = pool
 
-    async def list_for_job(self, job_id: uuid.UUID) -> list[TaskExecution]:
+    async def list_for_job(
+        self,
+        job_id: uuid.UUID,
+        search: str | None = None,
+    ) -> list[TaskExecution]:
         async with self.pool.acquire() as conn:
-            rows = await conn.fetch(
-                """SELECT * FROM task_executions
-                   WHERE job_id=$1
-                   ORDER BY started_at NULLS LAST, attempt_number""",
-                job_id,
-            )
+            if search and search.strip():
+                q = "%" + search.strip().replace("%", "\\%").replace("_", "\\_") + "%"
+                rows = await conn.fetch(
+                    """SELECT * FROM task_executions
+                       WHERE job_id=$1 AND (task_id ILIKE $2 OR error ILIKE $2)
+                       ORDER BY started_at NULLS LAST, attempt_number""",
+                    job_id, q,
+                )
+            else:
+                rows = await conn.fetch(
+                    """SELECT * FROM task_executions
+                       WHERE job_id=$1
+                       ORDER BY started_at NULLS LAST, attempt_number""",
+                    job_id,
+                )
         return [TaskExecution.from_record(r) for r in rows]
 
     async def get_latest(

@@ -88,6 +88,52 @@ CREATE INDEX IF NOT EXISTS idx_wv_workflow_id ON workflow_versions(workflow_id);
 -- Phase 3c: failure_analysis on jobs
 ALTER TABLE jobs ADD COLUMN IF NOT EXISTS failure_analysis JSONB;
 
+-- Phase 4a: Users and OAuth
+CREATE TABLE IF NOT EXISTS users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    email TEXT NOT NULL,
+    name TEXT,
+    avatar_url TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT uq_users_email UNIQUE (email)
+);
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+
+CREATE TABLE IF NOT EXISTS auth_providers (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    provider TEXT NOT NULL,
+    provider_user_id TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT uq_auth_provider UNIQUE (provider, provider_user_id)
+);
+CREATE INDEX IF NOT EXISTS idx_auth_providers_user ON auth_providers(user_id);
+
+-- Phase 4a2: user_id on workflows
+ALTER TABLE workflows ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES users(id) ON DELETE SET NULL;
+
+-- Phase 4: workflow_secrets and webhook_url
+ALTER TABLE workflows ADD COLUMN IF NOT EXISTS workflow_secrets JSONB DEFAULT '{}';
+ALTER TABLE workflows ADD COLUMN IF NOT EXISTS webhook_url TEXT;
+
+-- Phase 4b: Audit logs for compliance
+CREATE TABLE IF NOT EXISTS audit_logs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    actor_id TEXT,
+    actor_type TEXT DEFAULT 'api_key',
+    action TEXT NOT NULL,
+    resource_type TEXT NOT NULL,
+    resource_id TEXT,
+    details JSONB DEFAULT '{}',
+    ip_address TEXT,
+    trace_id TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_audit_created_at ON audit_logs(created_at);
+CREATE INDEX IF NOT EXISTS idx_audit_resource ON audit_logs(resource_type, resource_id);
+CREATE INDEX IF NOT EXISTS idx_audit_action ON audit_logs(action);
+
 -- Phase 5a: Marketplace
 CREATE TABLE IF NOT EXISTS marketplace_workflows (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

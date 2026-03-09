@@ -54,9 +54,15 @@ export interface ParseResponse {
   warnings: string[]
 }
 
+function getAuthHeaders(): Record<string, string> {
+  const token = typeof localStorage !== 'undefined' ? localStorage.getItem('flint_token') : null
+  if (token) return { Authorization: `Bearer ${token}` }
+  return {}
+}
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), ...options?.headers } as HeadersInit,
     ...options,
   })
   if (!res.ok) {
@@ -102,4 +108,17 @@ export const api = {
     request<{ status: string; version: string; components: Record<string, { status: string }> }>(
       '/health'
     ),
+
+  getSuggestions: () =>
+    request<{ suggestions: string[] }>('/suggestions'),
+
+  runDemo: (description: string) =>
+    request<{
+      status: string
+      duration_ms: number
+      error: string | null
+      task_results: Record<string, { status: string; output?: unknown; error?: string }>
+      output_data: Record<string, unknown>
+      dag: Record<string, unknown>
+    }>('/demo/run', { method: 'POST', body: JSON.stringify({ description }) }),
 }

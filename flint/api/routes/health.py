@@ -5,9 +5,9 @@ from __future__ import annotations
 import time
 from datetime import datetime, timezone
 
-from fastapi import APIRouter
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Request
 
+from flint.api.limiter import limiter
 from flint.api.schemas import ComponentHealth, HealthResponse
 from flint import __version__
 
@@ -15,7 +15,8 @@ router = APIRouter()
 
 
 @router.get("/health", response_model=HealthResponse)
-async def health_check() -> HealthResponse:
+@limiter.exempt
+async def health_check(request: Request) -> HealthResponse:
     """Check health of all system components."""
     components: dict[str, ComponentHealth] = {}
     overall_ok = True

@@ -309,6 +309,7 @@ export default function ExecutionDashboard() {
   const panel: React.CSSProperties = {
     background: colors.panelBg,
     border: `1px solid ${colors.panelBorder}`,
+    borderRadius: 12,
     overflow: 'hidden',
     transition: 'background 0.2s, border-color 0.2s',
   }

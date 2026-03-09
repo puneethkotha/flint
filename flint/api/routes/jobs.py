@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from typing import Annotated
 
 import structlog
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
 
 from flint.api.dependencies import get_db_pool, get_executor
@@ -20,6 +20,7 @@ from flint.api.schemas import (
     TriggerJobRequest,
     TriggerJobResponse,
 )
+from flint.storage.audit import get_client_ip, get_trace_id, log_audit
 from flint.storage.repositories.job_repo import JobRepository
 from flint.storage.repositories.task_exec_repo import TaskExecRepository
 
@@ -29,6 +30,7 @@ router = APIRouter()
 
 @router.post("/jobs/trigger/{workflow_id}", response_model=TriggerJobResponse)
 async def trigger_job(
+    request: Request,
     workflow_id: uuid.UUID,
     body: TriggerJobRequest,
     pool: Annotated[object, Depends(get_db_pool)],
@@ -38,7 +40,9 @@ async def trigger_job(
     from flint.storage.repositories.workflow_repo import WorkflowRepository
 
     wf_repo = WorkflowRepository(pool)  # type: ignore[arg-type]
-    workflow = await wf_repo.get(workflow_id)
+    user_id = getattr(request.state, "user", None)
+    uid = uuid.UUID(user_id["sub"]) if user_id else None
+    workflow = await wf_repo.get(workflow_id, user_id=uid)
     if workflow is None:
         raise HTTPException(status_code=404, detail="Workflow not found")
 
@@ -74,6 +78,15 @@ async def trigger_job(
         )
 
     logger.info("job_triggered", job_id=job_id, workflow_id=str(workflow_id))
+    await log_audit(
+        pool,
+        "job.trigger",
+        "job",
+        job_id,
+        details={"workflow_id": str(workflow_id), "trigger_type": "manual"},
+        ip_address=get_client_ip(request),
+        trace_id=get_trace_id(request),
+    )
 
     asyncio.create_task(
         executor.execute_dag(workflow.dag_json, job_id)  # type: ignore[attr-defined]
@@ -88,15 +101,32 @@ async def trigger_job(
 
 @router.get("/jobs/{job_id}", response_model=JobResponse)
 async def get_job(
+    request: Request,
     job_id: uuid.UUID,
     pool: Annotated[object, Depends(get_db_pool)],
 ) -> JobResponse:
+    """Get job status and task execution details by job ID. When authenticated, job must belong to user's workflow."""
     job_repo = JobRepository(pool)  # type: ignore[arg-type]
     task_repo = TaskExecRepository(pool)  # type: ignore[arg-type]
+    user_id = getattr(request.state, "user", None)
+    uid = uuid.UUID(user_id["sub"]) if user_id else None
 
     job = await job_repo.get(job_id)
     if job is None:
         raise HTTPException(status_code=404, detail="Job not found")
+    async with pool.acquire() as conn:  # type: ignore[attr-defined]
+        row = await conn.fetchrow(
+            "SELECT user_id FROM workflows WHERE id=$1",
+            job.workflow_id,
+        )
+        if not row:
+            raise HTTPException(status_code=404, detail="Job not found")
+        if uid:
+            if row["user_id"] != uid:
+                raise HTTPException(status_code=404, detail="Job not found")
+        else:
+            if row["user_id"] is not None:
+                raise HTTPException(status_code=404, detail="Job not found")
 
     task_execs = await task_repo.list_for_job(job_id)
 
@@ -136,14 +166,23 @@ async def get_job(
 
 @router.get("/jobs", response_model=JobListResponse)
 async def list_jobs(
+    request: Request,
     pool: Annotated[object, Depends(get_db_pool)],
     workflow_id: uuid.UUID | None = None,
     limit: int = 50,
     offset: int = 0,
+    search: str | None = Query(None, description="Search by job ID or workflow name"),
 ) -> JobListResponse:
+    """List jobs with optional filter by workflow ID and search. When authenticated, only user's jobs."""
     job_repo = JobRepository(pool)  # type: ignore[arg-type]
+    user_id = getattr(request.state, "user", None)
+    uid = uuid.UUID(user_id["sub"]) if user_id else None
     jobs, total = await job_repo.list(
-        workflow_id=workflow_id, limit=limit, offset=offset
+        workflow_id=workflow_id,
+        limit=limit,
+        offset=offset,
+        search=search,
+        user_id=uid,
     )
     return JobListResponse(
         jobs=[
@@ -168,15 +207,36 @@ async def list_jobs(
 
 @router.get("/jobs/{job_id}/logs")
 async def get_job_logs(
+    request: Request,
     job_id: uuid.UUID,
     pool: Annotated[object, Depends(get_db_pool)],
     stream: bool = Query(False),
+    search: str | None = Query(None, description="Filter by task_id or error content"),
 ) -> StreamingResponse:
-    """Return job logs. With ?stream=true uses SSE."""
+    """Return job logs. With ?stream=true uses SSE. Use ?search= to filter by task_id or error."""
     task_repo = TaskExecRepository(pool)  # type: ignore[arg-type]
+    job_repo = JobRepository(pool)  # type: ignore[arg-type]
+
+    job = await job_repo.get(job_id)
+    if job is None:
+        raise HTTPException(status_code=404, detail="Job not found")
+    async with pool.acquire() as conn:  # type: ignore[attr-defined]
+        row = await conn.fetchrow(
+            "SELECT user_id FROM workflows WHERE id=$1",
+            job.workflow_id,
+        )
+        if not row:
+            raise HTTPException(status_code=404, detail="Job not found")
+        uid = uuid.UUID(request.state.user["sub"]) if getattr(request.state, "user", None) else None
+        if uid:
+            if row["user_id"] != uid:
+                raise HTTPException(status_code=404, detail="Job not found")
+        else:
+            if row["user_id"] is not None:
+                raise HTTPException(status_code=404, detail="Job not found")
 
     async def generate_logs() -> object:
-        task_execs = await task_repo.list_for_job(job_id)
+        task_execs = await task_repo.list_for_job(job_id, search=search)
         for te in task_execs:
             log_entry = {
                 "task_id": te.task_id,

@@ -69,21 +69,24 @@ export default function Templates({ onUseTemplate }: { onUseTemplate: (descripti
           <div
             key={t.id}
             style={{
-              background: colors.panelBg,
-              border: `1px solid ${colors.panelBorder}`,
+              background: 'rgba(15, 15, 15, 0.5)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
+              border: '1px solid rgba(255,255,255,0.08)',
               borderRadius: 8,
               padding: 16,
               display: 'flex',
               flexDirection: 'column',
               gap: 12,
               minHeight: 0,
+              minWidth: 0,
             }}
           >
-            <div>
+            <div style={{ minWidth: 0 }}>
               <h3 style={{ fontSize: 14, fontWeight: 600, color: colors.textPrimary, marginBottom: 6, lineHeight: 1.3 }}>
                 {t.title}
               </h3>
-              <p style={{ fontSize: 12, color: colors.textMuted, lineHeight: 1.45 }}>
+              <p style={{ fontSize: 12, color: colors.textMuted, lineHeight: 1.45, overflowWrap: 'break-word', wordBreak: 'break-word' }}>
                 {t.description}
               </p>
             </div>
@@ -108,12 +111,12 @@ export default function Templates({ onUseTemplate }: { onUseTemplate: (descripti
             </div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto', paddingTop: 4 }}>
               <span style={{ fontSize: 11, color: colors.textMuted, fontFamily: 'ui-monospace, monospace' }}>
-                ~{t.estimatedRuntime}
+                {t.estimatedRuntime}
               </span>
               <button
                 onClick={() => onUseTemplate(t.description)}
                 style={{
-                  background: colors.textPrimary,
+                  background: '#b0b0b0',
                   color: colors.pageBg,
                   border: 'none',
                   fontSize: 12,
@@ -121,10 +124,9 @@ export default function Templates({ onUseTemplate }: { onUseTemplate: (descripti
                   padding: '8px 14px',
                   borderRadius: 6,
                   cursor: 'pointer',
-                  transition: 'opacity 0.15s',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.opacity = '0.9' }}
-                onMouseLeave={e => { e.currentTarget.style.opacity = '1' }}
+                onMouseEnter={e => { e.currentTarget.style.background = '#c4c4c4' }}
+                onMouseLeave={e => { e.currentTarget.style.background = '#b0b0b0' }}
               >
                 Use Template
               </button>

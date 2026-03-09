@@ -1,16 +1,26 @@
-import React from 'react'
+import React, { useState } from 'react'
 
 interface Props {
   onClose: () => void
 }
 
 const TIPS = [
-  { title: 'Describe in plain English', body: 'Type what you want: fetch data, run SQL, call Claude. No YAML or config.' },
-  { title: 'Create & Run', body: 'Click "Create & Run" to parse and execute. Or browse Templates for ready-made workflows.' },
-  { title: 'Watch it run', body: 'In Dashboard, select a job to see the DAG and live logs as tasks complete.' },
+  { title: 'Create workflow', body: 'Type what you want: fetch data, run SQL, call Claude. Click Create & Run to execute.' },
+  { title: 'Agent', body: 'Chat with the AI to design and run workflows. Tell it what to automate and it builds it for you.' },
+  { title: 'Templates', body: 'Browse ready-made workflows and use them as starting points.' },
+  { title: 'Dashboard', body: 'View jobs, live logs, and DAG status as tasks complete.' },
+  { title: 'Simulate', body: 'Preview costs and confidence before running a workflow for real.' },
 ]
 
+const PER_PAGE = 3
+
 export default function TutorialModal({ onClose }: Props) {
+  const [page, setPage] = useState(0)
+  const start = page * PER_PAGE
+  const visibleTips = TIPS.slice(start, start + PER_PAGE)
+  const hasNext = start + PER_PAGE < TIPS.length
+  const isLast = !hasNext
+
   return (
     <div
       style={{
@@ -39,11 +49,11 @@ export default function TutorialModal({ onClose }: Props) {
           Quick start
         </h2>
         <p style={{ fontSize: 13, color: '#888', marginBottom: 24, lineHeight: 1.5 }}>
-          Here's how Flint works:
+          What you can do:
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 28 }}>
-          {TIPS.map((tip, i) => (
-            <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+          {visibleTips.map((tip, i) => (
+            <div key={start + i} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
               <span style={{
                 width: 20, height: 20, borderRadius: '50%',
                 background: '#F59E0B', color: '#080808',
@@ -51,7 +61,7 @@ export default function TutorialModal({ onClose }: Props) {
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 flexShrink: 0,
               }}>
-                {i + 1}
+                {start + i + 1}
               </span>
               <div>
                 <div style={{ fontSize: 13, fontWeight: 500, color: '#f5f5f5', marginBottom: 2 }}>{tip.title}</div>
@@ -60,21 +70,33 @@ export default function TutorialModal({ onClose }: Props) {
             </div>
           ))}
         </div>
-        <button
-          onClick={onClose}
-          style={{
-            width: '100%',
-            padding: '12px 16px',
-            background: '#f5f5f5',
-            color: '#080808',
-            border: 'none',
-            fontSize: 13,
-            fontWeight: 600,
-            cursor: 'pointer',
-          }}
-        >
-          Got it
-        </button>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <div style={{ flex: 1, display: 'flex', gap: 4, justifyContent: 'center' }}>
+            {Array.from({ length: Math.ceil(TIPS.length / PER_PAGE) }).map((_, i) => (
+              <div
+                key={i}
+                style={{
+                  width: 6, height: 6, borderRadius: '50%',
+                  background: i === page ? '#F59E0B' : '#333',
+                }}
+              />
+            ))}
+          </div>
+          <button
+            onClick={isLast ? onClose : () => setPage(p => p + 1)}
+            style={{
+              padding: '12px 24px',
+              background: '#f5f5f5',
+              color: '#080808',
+              border: 'none',
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            {isLast ? 'Got it' : 'Next'}
+          </button>
+        </div>
       </div>
     </div>
   )

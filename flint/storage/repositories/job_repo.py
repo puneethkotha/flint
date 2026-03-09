@@ -28,23 +28,38 @@ class JobRepository:
         workflow_id: uuid.UUID | None = None,
         limit: int = 50,
         offset: int = 0,
+        search: str | None = None,
+        user_id: uuid.UUID | None = None,
     ) -> tuple[list[Job], int]:
         async with self.pool.acquire() as conn:
+            parts: list[str] = []
+            args: list = []
             if workflow_id:
-                rows = await conn.fetch(
-                    """SELECT * FROM jobs WHERE workflow_id=$1
-                       ORDER BY triggered_at DESC LIMIT $2 OFFSET $3""",
-                    workflow_id, limit, offset,
-                )
-                total = await conn.fetchval(
-                    "SELECT COUNT(*) FROM jobs WHERE workflow_id=$1", workflow_id
-                )
+                parts.append("j.workflow_id=$1")
+                args.append(workflow_id)
+            if user_id:
+                n = len(args) + 1
+                parts.append(f"j.workflow_id IN (SELECT id FROM workflows WHERE user_id=${n})")
+                args.append(user_id)
             else:
-                rows = await conn.fetch(
-                    "SELECT * FROM jobs ORDER BY triggered_at DESC LIMIT $1 OFFSET $2",
-                    limit, offset,
+                parts.append("j.workflow_id IN (SELECT id FROM workflows WHERE user_id IS NULL)")
+            if search and search.strip():
+                q = "%" + search.strip().replace("%", "\\%").replace("_", "\\_") + "%"
+                n = len(args) + 1
+                parts.append(
+                    f"(j.id::text ILIKE ${n} OR j.workflow_id IN "
+                    f"(SELECT w.id FROM workflows w WHERE w.name ILIKE ${n}))"
                 )
-                total = await conn.fetchval("SELECT COUNT(*) FROM jobs")
+                args.append(q)
+            where_sql = " AND ".join(parts) if parts else "TRUE"
+            # Use alias j for jobs to avoid ambiguity when subquery references workflows
+            count_sql = f"SELECT COUNT(*) FROM jobs j WHERE {where_sql}"
+            list_sql = (
+                f"SELECT j.* FROM jobs j WHERE {where_sql} "
+                f"ORDER BY j.triggered_at DESC LIMIT ${len(args) + 1} OFFSET ${len(args) + 2}"
+            )
+            total = await conn.fetchval(count_sql, *args)
+            rows = await conn.fetch(list_sql, *args, limit, offset)
         return [Job.from_record(r) for r in rows], int(total or 0)
 
     async def update_status(

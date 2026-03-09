@@ -1,6 +1,8 @@
-import React, { createContext, useContext, useEffect } from 'react'
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
 
-export type Theme = 'dark'
+const THEME_KEY = 'flint-theme'
+
+export type Theme = 'dark' | 'light'
 
 export interface ThemeColors {
   pageBg: string
@@ -40,6 +42,25 @@ const DARK: ThemeColors = {
   codeColor:     '#888',
 }
 
+const LIGHT: ThemeColors = {
+  pageBg:        '#fafafa',
+  panelBg:       '#ffffff',
+  panelBorder:   '#e5e5e5',
+  inputBg:       '#f5f5f5',
+  rowAlt:        '#fafafa',
+  rowHover:      '#f5f5f5',
+  rowSelected:   '#eeeeee',
+  textPrimary:   '#171717',
+  textSecondary: '#525252',
+  textMuted:     '#737373',
+  textDisabled:  '#a3a3a3',
+  divider:       '#e5e5e5',
+  handle:        '#d4d4d4',
+  navBg:         '#fafafa',
+  statCardBg:    '#ffffff',
+  codeColor:     '#525252',
+}
+
 interface ThemeCtx {
   theme: Theme
   colors: ThemeColors
@@ -53,15 +74,28 @@ const ThemeContext = createContext<ThemeCtx>({
 })
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  useEffect(() => {
-    document.body.style.background = '#080808'
-    document.body.style.color = '#f5f5f5'
-    // Remove any stale light preference from a previous session
-    localStorage.removeItem('flint-theme')
+  const [theme, setTheme] = useState<Theme>(() => {
+    const s = localStorage.getItem(THEME_KEY)
+    return (s === 'light' ? 'light' : 'dark') as Theme
+  })
+
+  const colors = theme === 'light' ? LIGHT : DARK
+
+  const toggle = useCallback(() => {
+    setTheme(t => {
+      const next = t === 'dark' ? 'light' : 'dark'
+      localStorage.setItem(THEME_KEY, next)
+      return next
+    })
   }, [])
 
+  useEffect(() => {
+    document.body.style.background = colors.pageBg
+    document.body.style.color = colors.textPrimary
+  }, [colors.pageBg, colors.textPrimary])
+
   return (
-    <ThemeContext.Provider value={{ theme: 'dark', colors: DARK, toggle: () => {} }}>
+    <ThemeContext.Provider value={{ theme, colors, toggle }}>
       {children}
     </ThemeContext.Provider>
   )

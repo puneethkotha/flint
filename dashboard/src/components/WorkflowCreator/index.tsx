@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { api } from '../../api/client'
 import DAGVisualization from '../DAGVisualization'
+import RunChoiceModal, { getLastDemo, setLastDemo, clearLastDemo } from '../RunChoiceModal'
 import { useTheme } from '../../theme'
+import { useAuth } from '../../context/AuthContext'
+import { recordUserEvent } from '../../utils/userAnalytics'
 
 const TYPEWRITER_PLACEHOLDERS = [
   'Fetch top HN stories, summarize with Claude, post to Slack...',
@@ -92,10 +95,12 @@ function useTypewriter(strings: string[], enabled: boolean) {
 interface WorkflowCreatorProps {
   initialDescription?: string
   onPrefillConsumed?: () => void
+  onOpenLoginPage?: () => void
 }
 
-export default function WorkflowCreator({ initialDescription, onPrefillConsumed }: WorkflowCreatorProps) {
+export default function WorkflowCreator({ initialDescription, onPrefillConsumed, onOpenLoginPage }: WorkflowCreatorProps) {
   const { colors } = useTheme()
+  const { user } = useAuth()
   const [description, setDescription] = useState('')
   const [dag, setDag] = useState<Record<string, unknown> | null>(null)
   const [warnings, setWarnings] = useState<string[]>([])
@@ -104,6 +109,9 @@ export default function WorkflowCreator({ initialDescription, onPrefillConsumed 
   const [error, setError] = useState<string | null>(null)
   const [jobId, setJobId] = useState<string | null>(null)
   const [taskStatuses, setTaskStatuses] = useState<Record<string, string>>({})
+  const [showRunChoiceModal, setShowRunChoiceModal] = useState(false)
+  const [lastDemoToSave, setLastDemoToSave] = useState<{ dag: Record<string, unknown>; description: string } | null>(null)
+  const [savingDemo, setSavingDemo] = useState(false)
   const [focused, setFocused] = useState(false)
   const [scheduleMode, setScheduleMode] = useState<ScheduleMode>('once')
   const [cronPresetKey, setCronPresetKey] = useState('daily-9')
@@ -120,8 +128,22 @@ export default function WorkflowCreator({ initialDescription, onPrefillConsumed 
     }
   }, [initialDescription, onPrefillConsumed])
 
+  // When user logs in, check for unsaved demo
+  useEffect(() => {
+    if (user) {
+      const last = getLastDemo()
+      if (last) setLastDemoToSave(last)
+    }
+  }, [user])
+
   const handlePreview = async () => {
     if (!description.trim()) return
+    if (user) {
+      recordUserEvent(user.id, user.name || user.email, {
+        type: 'workflow_preview',
+        data: { descriptionPreview: description.slice(0, 200) },
+      })
+    }
     setLoading(true); setPhase('parsing'); setError(null)
     try {
       const result = await api.parseWorkflow(description)
@@ -132,6 +154,10 @@ export default function WorkflowCreator({ initialDescription, onPrefillConsumed 
 
   const handleCreateAndRun = async () => {
     if (!description.trim()) return
+    if (!user) {
+      setShowRunChoiceModal(true)
+      return
+    }
     setLoading(true); setPhase('parsing'); setError(null)
     try {
       const isRecurring = scheduleMode === 'recurring'
@@ -145,6 +171,10 @@ export default function WorkflowCreator({ initialDescription, onPrefillConsumed 
         timezone: 'UTC',
       }
       const wf = await api.createWorkflow(payload)
+      recordUserEvent(user.id, user.name || user.email, {
+        type: 'workflow_created',
+        data: { workflowId: wf.id, descriptionPreview: description.slice(0, 200), scheduleMode },
+      })
       setCreatedWorkflowId(wf.id)
       if (scheduleMode === 'once') {
         setPhase('running')
@@ -153,6 +183,56 @@ export default function WorkflowCreator({ initialDescription, onPrefillConsumed 
       }
     } catch (e) { setError(e instanceof Error ? e.message : 'Failed to create workflow') }
     finally { setLoading(false); setPhase('idle') }
+  }
+
+  const handleTryDemo = async () => {
+    if (!description.trim()) return
+    if (user) {
+      recordUserEvent(user.id, user.name || user.email, {
+        type: 'demo_run',
+        data: { descriptionPreview: description.slice(0, 200) },
+      })
+    }
+    setShowRunChoiceModal(false)
+    setLoading(true); setPhase('running'); setError(null); setJobId(null)
+    try {
+      const result = await api.runDemo(description)
+      setDag(result.dag)
+      setTaskStatuses(
+        Object.fromEntries(
+          Object.entries(result.task_results).map(([k, v]) => [k, v.status])
+        )
+      )
+      setLastDemo(result.dag, description)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Demo run failed')
+    } finally {
+      setLoading(false)
+      setPhase('idle')
+    }
+  }
+
+  const handleSaveDemo = async () => {
+    if (!lastDemoToSave || !user) return
+    setSavingDemo(true)
+    setError(null)
+    try {
+      const wf = await api.createWorkflow({
+        dag: lastDemoToSave.dag,
+        run_immediately: false,
+        schedule: null,
+        timezone: 'UTC',
+      })
+      setCreatedWorkflowId(wf.id)
+      setDag(lastDemoToSave.dag)
+      setDescription(lastDemoToSave.description)
+      clearLastDemo()
+      setLastDemoToSave(null)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to save workflow')
+    } finally {
+      setSavingDemo(false)
+    }
   }
 
   // Cmd+Enter / Ctrl+Enter to run
@@ -180,11 +260,69 @@ export default function WorkflowCreator({ initialDescription, onPrefillConsumed 
     : 'Create workflow'
 
   return (
-    <div className="flint-split">
+    <div className="flint-split" style={{ position: 'relative' }}>
+      {showRunChoiceModal && (
+        <RunChoiceModal
+          onOpenLoginPage={() => { setShowRunChoiceModal(false); onOpenLoginPage?.() }}
+          onTryDemo={handleTryDemo}
+          showTryDemo={scheduleMode === 'once'}
+          onCancel={() => setShowRunChoiceModal(false)}
+        />
+      )}
+      {lastDemoToSave && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 64,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 100,
+            background: colors.panelBg,
+            border: `1px solid ${colors.panelBorder}`,
+            padding: '12px 20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+          }}
+        >
+          <span style={{ fontSize: 13, color: colors.textPrimary }}>Save your demo workflow to your account?</span>
+          <button
+            onClick={handleSaveDemo}
+            disabled={savingDemo}
+            style={{
+              padding: '6px 14px',
+              background: colors.textPrimary,
+              color: colors.pageBg,
+              border: 'none',
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: savingDemo ? 'not-allowed' : 'pointer',
+              opacity: savingDemo ? 0.7 : 1,
+            }}
+          >
+            {savingDemo ? 'Saving...' : 'Save'}
+          </button>
+          <button
+            onClick={() => { clearLastDemo(); setLastDemoToSave(null) }}
+            style={{
+              padding: '6px 10px',
+              background: 'none',
+              border: 'none',
+              color: colors.textMuted,
+              fontSize: 12,
+              cursor: 'pointer',
+            }}
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
       {/* Left panel */}
       <div style={{
         background: colors.panelBg,
         border: `1px solid ${colors.panelBorder}`,
+        borderRadius: 12,
         display: 'flex', flexDirection: 'column', overflow: 'hidden',
         transition: 'background 0.2s, border-color 0.2s',
       }}>
@@ -205,7 +343,7 @@ export default function WorkflowCreator({ initialDescription, onPrefillConsumed 
             <h1 style={{ fontSize: 28, fontWeight: 600, color: colors.textPrimary, letterSpacing: '-0.03em', lineHeight: 1.15, marginBottom: 8 }} className="flint-heading">
               What should Flint run?
             </h1>
-            <p style={{ fontSize: 14, color: colors.textMuted, fontWeight: 400 }}>Plain English. No YAML.</p>
+            <p style={{ fontSize: 14, color: colors.textMuted, fontWeight: 400 }}>Describe your workflow in natural language.</p>
           </div>
 
           {/* Textarea */}
@@ -466,6 +604,7 @@ export default function WorkflowCreator({ initialDescription, onPrefillConsumed 
         style={{
           background: colors.panelBg,
           border: `1px solid ${colors.panelBorder}`,
+          borderRadius: 12,
           overflow: 'hidden', position: 'relative',
           transition: 'background 0.2s, border-color 0.2s',
         }}

@@ -88,6 +88,24 @@ class DAGExecutor:
         context: dict[str, Any] = {}  # task_id → output dict
         self._is_shadow = is_shadow
 
+        # Inject workflow secrets into context for {{secrets.KEY}} template substitution
+        if not is_shadow and self.db_pool:
+            try:
+                async with self.db_pool.acquire() as conn:
+                    row = await conn.fetchrow(
+                        "SELECT w.workflow_secrets FROM workflows w "
+                        "JOIN jobs j ON j.workflow_id = w.id WHERE j.id = $1",
+                        uuid.UUID(job_id),
+                    )
+                    if row and row.get("workflow_secrets"):
+                        secrets = row["workflow_secrets"]
+                        if isinstance(secrets, str):
+                            import json as _json
+                            secrets = _json.loads(secrets) if secrets else {}
+                        context["secrets"] = secrets
+            except Exception as exc:
+                logger.warning("secrets_load_skip", job_id=job_id, error=str(exc))
+
         logger.info(
             "dag_execution_start",
             job_id=job_id,
@@ -214,6 +232,15 @@ class DAGExecutor:
                         ),
                         failure_analysis=failure_analysis_data,
                     )
+                    await self._fire_webhook_if_needed(
+                        job_id, "failed",
+                        error=next(
+                            (r.error for r in task_results.values() if r.status == "failed"),
+                            None,
+                        ),
+                        duration_ms=duration_ms,
+                        output_data=self._collect_outputs(task_results),
+                    )
                     # Self-healing: check if workflow has failed 3x in a row, propose fix, shadow-run, promote
                     if self.db_pool:
                         try:
@@ -242,6 +269,11 @@ class DAGExecutor:
         if not self._is_shadow:
             await self._update_job_status(
                 job_id, "completed", output_data=output_data, duration_ms=duration_ms
+            )
+            await self._fire_webhook_if_needed(
+                job_id, "completed",
+                duration_ms=duration_ms,
+                output_data=output_data,
             )
         logger.info("dag_execution_complete", job_id=job_id, duration_ms=duration_ms)
 
@@ -352,6 +384,47 @@ class DAGExecutor:
                         )
         except Exception as exc:
             logger.warning("job_status_update_failed", job_id=job_id, error=str(exc))
+
+    async def _fire_webhook_if_needed(
+        self,
+        job_id: str,
+        status: str,
+        *,
+        error: str | None = None,
+        duration_ms: int | None = None,
+        output_data: dict[str, Any] | None = None,
+    ) -> None:
+        """Fetch workflow webhook_url and fire callback if set. Non-blocking."""
+        if self.db_pool is None:
+            return
+        try:
+            from flint.engine.webhook import fire_webhook
+            async with self.db_pool.acquire() as conn:
+                row = await conn.fetchrow(
+                    "SELECT workflow_id FROM jobs WHERE id=$1",
+                    uuid.UUID(job_id),
+                )
+                if not row:
+                    return
+                workflow_id = row["workflow_id"]
+                wf_row = await conn.fetchrow(
+                    "SELECT webhook_url FROM workflows WHERE id=$1",
+                    workflow_id,
+                )
+                if not wf_row or not wf_row["webhook_url"]:
+                    return
+                webhook_url = wf_row["webhook_url"]
+            await fire_webhook(
+                webhook_url,
+                uuid.UUID(job_id),
+                workflow_id,
+                status,
+                error=error,
+                duration_ms=duration_ms,
+                output_data=output_data,
+            )
+        except Exception as exc:
+            logger.warning("webhook_fire_failed", job_id=job_id, error=str(exc))
 
     async def _update_task_status(
         self,

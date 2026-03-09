@@ -21,6 +21,8 @@ class Workflow:
     updated_at: datetime | None = None
     status: str = "active"
     version: int = 1
+    workflow_secrets: dict[str, Any] = field(default_factory=dict)
+    webhook_url: str | None = None
 
     @classmethod
     def from_record(cls, record: Any) -> "Workflow":
@@ -29,6 +31,11 @@ class Workflow:
         dag = record["dag_json"]
         if isinstance(dag, str):
             dag = json.loads(dag)
+        secrets = record.get("workflow_secrets")
+        if isinstance(secrets, str):
+            secrets = json.loads(secrets) if secrets else {}
+        elif secrets is None:
+            secrets = {}
         return cls(
             id=record["id"],
             name=record["name"],
@@ -41,6 +48,8 @@ class Workflow:
             updated_at=record["updated_at"],
             status=record["status"],
             version=record["version"],
+            workflow_secrets=secrets,
+            webhook_url=record.get("webhook_url"),
         )
 
 

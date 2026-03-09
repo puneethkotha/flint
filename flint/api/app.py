@@ -7,13 +7,21 @@ from collections.abc import AsyncGenerator
 from pathlib import Path
 
 import structlog
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.staticfiles import StaticFiles
 
+from flint.api.dependencies import verify_api_key
+from flint.api.limiter import limiter
 from flint.config import get_settings
 from flint.observability.logging import configure_logging
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
 logger = structlog.get_logger(__name__)
+
+# API key required for all /api/v1/* except /health
+API_DEPS = [Depends(verify_api_key)]
 
 
 @asynccontextmanager
@@ -101,7 +109,27 @@ def create_app() -> FastAPI:
         docs_url="/docs",
         redoc_url="/redoc",
         lifespan=lifespan,
+        openapi_tags=[
+            {"name": "health", "description": "System health checks. No API key required."},
+            {"name": "workflows", "description": "Create, list, get, and delete workflows."},
+            {"name": "jobs", "description": "Trigger workflows and monitor job execution status."},
+            {"name": "parse", "description": "Parse plain English workflow descriptions into DAG JSON."},
+            {"name": "versions", "description": "Workflow version history and diff between versions."},
+            {"name": "marketplace", "description": "Browse, publish, fork, and star community workflows."},
+            {"name": "benchmarks", "description": "Performance benchmarks and live Flint statistics."},
+            {"name": "simulation", "description": "Simulate workflow runs with confidence scores and cost estimates."},
+            {"name": "agent", "description": "Conversational AI agent that builds, deploys, and runs workflows from plain English."},
+            {"name": "metrics", "description": "Prometheus metrics for monitoring."},
+            {"name": "websocket", "description": "Real-time job status updates via WebSocket."},
+            {"name": "export_import", "description": "Export/import workflows for backup and migration."},
+            {"name": "audit", "description": "Audit logs for compliance and trust."},
+        ],
     )
+
+    # Rate limiting: 60/minute per IP for /api/v1/*, exempt /health
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+    app.add_middleware(SlowAPIMiddleware)
 
     # Middleware
     from flint.api.middleware import RequestLoggingMiddleware, setup_cors
@@ -116,24 +144,79 @@ def create_app() -> FastAPI:
         return RedirectResponse(url="/docs")
 
     # API routes
-    from flint.api.routes import health, jobs, metrics, parse, workflows, versions, marketplace, benchmarks, simulation
+    from flint.api.routes import (
+        health,
+        jobs,
+        metrics,
+        parse,
+        workflows,
+        versions,
+        marketplace,
+        benchmarks,
+        simulation,
+        export_import,
+        audit,
+        auth,
+        agent,
+        demo,
+        suggestions,
+    )
     from flint.api.routes.websocket import router as ws_router
 
     app.include_router(health.router, prefix="/api/v1", tags=["health"])
-    app.include_router(versions.router, prefix="/api/v1", tags=["versions"])
-    app.include_router(marketplace.router, prefix="/api/v1", tags=["marketplace"])
-    app.include_router(benchmarks.router, prefix="/api/v1", tags=["benchmarks"])
-    app.include_router(simulation.router, prefix="/api/v1", tags=["simulation"])
-    app.include_router(metrics.router, prefix="/api/v1", tags=["metrics"])
-    app.include_router(workflows.router, prefix="/api/v1", tags=["workflows"])
-    app.include_router(jobs.router, prefix="/api/v1", tags=["jobs"])
-    app.include_router(parse.router, prefix="/api/v1", tags=["parse"])
+    app.include_router(versions.router, prefix="/api/v1", tags=["versions"], dependencies=API_DEPS)
+    app.include_router(marketplace.router, prefix="/api/v1", tags=["marketplace"], dependencies=API_DEPS)
+    app.include_router(benchmarks.router, prefix="/api/v1", tags=["benchmarks"], dependencies=API_DEPS)
+    app.include_router(simulation.router, prefix="/api/v1", tags=["simulation"], dependencies=API_DEPS)
+    app.include_router(auth.router, prefix="/api/v1", tags=["auth"])
+    app.include_router(demo.router, prefix="/api/v1", tags=["demo"])  # No API_DEPS: anonymous demo
+    app.include_router(suggestions.router, prefix="/api/v1", tags=["suggestions"])  # No API_DEPS: works anonym + auth
+    app.include_router(agent.router, prefix="/api/v1", tags=["agent"], dependencies=API_DEPS)
+    app.include_router(metrics.router, prefix="/api/v1", tags=["metrics"], dependencies=API_DEPS)
+    app.include_router(workflows.router, prefix="/api/v1", tags=["workflows"], dependencies=API_DEPS)
+    app.include_router(jobs.router, prefix="/api/v1", tags=["jobs"], dependencies=API_DEPS)
+    app.include_router(parse.router, prefix="/api/v1", tags=["parse"], dependencies=API_DEPS)
+    app.include_router(export_import.router, prefix="/api/v1", tags=["export_import"], dependencies=API_DEPS)
+    app.include_router(audit.router, prefix="/api/v1", tags=["audit"], dependencies=API_DEPS)
     app.include_router(ws_router, prefix="/ws", tags=["websocket"])
 
     # Serve React dashboard static files if built
     dashboard_dist = Path(__file__).parent.parent.parent / "dashboard" / "dist"
     if dashboard_dist.exists():
         app.mount("/", StaticFiles(directory=str(dashboard_dist), html=True), name="dashboard")
+
+    # Customize OpenAPI to document API key auth (X-API-Key or Authorization: Bearer)
+    _openapi = app.openapi
+
+    def custom_openapi():
+        schema = _openapi()
+        schema.setdefault("components", {})["securitySchemes"] = {
+            "ApiKeyAuth": {
+                "type": "apiKey",
+                "in": "header",
+                "name": "X-API-Key",
+                "description": "API key. Alternatively use Authorization: Bearer <key>.",
+            },
+        }
+        for path, methods in schema.get("paths", {}).items():
+            if path == "/api/v1/health" or path.startswith("/api/v1/auth"):
+                continue
+            if path.startswith("/api/v1/"):
+                for method in methods.values():
+                    if isinstance(method, dict) and "security" not in method:
+                        method["security"] = [{"ApiKeyAuth": []}]
+        return schema
+
+    app.openapi = custom_openapi
+
+    # Distributed tracing (optional). Set OTEL_ENABLED=true and OTEL_EXPORTER_OTLP_ENDPOINT.
+    if settings.otel_enabled and settings.otel_exporter_otlp_endpoint:
+        from flint.observability.otel import setup_otel
+        setup_otel(
+            app,
+            service_name=settings.otel_service_name,
+            otlp_endpoint=settings.otel_exporter_otlp_endpoint.strip(),
+        )
 
     return app
 

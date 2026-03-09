@@ -32,6 +32,13 @@ class Settings(BaseSettings):
     kafka_bootstrap_servers: str = "localhost:9092"
 
     # App
+    flint_api_key: str = ""  # Optional; blank = no auth required
+    # OAuth (Google, GitHub). Set to enable "Sign in with Google/GitHub".
+    google_client_id: str = ""
+    google_client_secret: str = ""
+    github_client_id: str = ""
+    github_client_secret: str = ""
+    auth_redirect_base_url: str = ""  # Frontend URL for post-login redirect, e.g. https://flint-dashboard.vercel.app
     flint_env: Literal["development", "production"] = "development"
     flint_port: int = 8000
     flint_log_level: str = "INFO"
@@ -44,6 +51,11 @@ class Settings(BaseSettings):
 
     # WebSocket
     ws_heartbeat_interval: int = 30
+
+    # Distributed tracing (OpenTelemetry). Optional; install [observability] extra.
+    otel_enabled: bool = False
+    otel_service_name: str = "flint"
+    otel_exporter_otlp_endpoint: str = ""  # e.g. http://localhost:4317
 
     @field_validator("database_url")
     @classmethod

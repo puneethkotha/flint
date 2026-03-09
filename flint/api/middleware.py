@@ -21,6 +21,7 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         trace_id = str(uuid.uuid4())[:8]
         start = time.monotonic()
 
+        request.state.trace_id = trace_id
         structlog.contextvars.bind_contextvars(
             trace_id=trace_id,
             method=request.method,
