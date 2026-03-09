@@ -44,6 +44,9 @@ async def create_workflow(
 
     workflow = await repo.create(dag)
 
+    from flint.api.routes.versions import save_workflow_version
+    await save_workflow_version(pool, workflow.id, workflow.dag_json, change_summary="Initial version")
+
     if workflow.schedule:
         from flint.engine.scheduler import schedule_workflow
         schedule_workflow(

@@ -13,6 +13,13 @@ export interface WorkflowResponse {
   updated_at: string
 }
 
+export interface FailureAnalysis {
+  explanation: string
+  suggested_fix: string
+  fix_patch?: Record<string, unknown> | null
+  confidence: 'high' | 'medium' | 'low'
+}
+
 export interface JobResponse {
   id: string
   workflow_id: string
@@ -24,6 +31,7 @@ export interface JobResponse {
   duration_ms: number | null
   error: string | null
   task_executions: TaskExecution[]
+  failure_analysis?: FailureAnalysis | null
 }
 
 export interface TaskExecution {

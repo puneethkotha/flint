@@ -3,6 +3,7 @@ import { useJobs } from '../../hooks/useFlintAPI'
 import JobTable from './JobTable'
 import MetricsCharts from './MetricsCharts'
 import DAGVisualization from '../DAGVisualization'
+import FailureAnalysisCard from '../FailureAnalysis/FailureAnalysisCard'
 import { api, JobResponse } from '../../api/client'
 import type { TaskExecution } from '../../api/client'
 import { useTheme } from '../../theme'
@@ -376,6 +377,17 @@ export default function ExecutionDashboard() {
             <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
               <DAGVisualization dag={dagForJob} jobId={selectedJobId} taskStatuses={taskStatuses} onTaskStatusUpdate={setTaskStatuses} />
             </div>
+            {selectedJob?.status === 'failed' && selectedJob.failure_analysis && (
+              <div style={{ padding: '0 16px 16px' }}>
+                <FailureAnalysisCard
+                  analysis={selectedJob.failure_analysis}
+                  onApplyFix={(patch) => {
+                    // TODO: PATCH workflow with fix_patch; for now just log
+                    console.info('Apply fix (not wired yet):', patch)
+                  }}
+                />
+              </div>
+            )}
             <LiveLogPanel job={selectedJob} />
           </>
         ) : (

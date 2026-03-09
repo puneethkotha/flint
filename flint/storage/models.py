@@ -45,6 +45,34 @@ class Workflow:
 
 
 @dataclass
+class WorkflowVersion:
+    """Immutable snapshot of a workflow definition at each save."""
+    id: uuid.UUID
+    workflow_id: uuid.UUID
+    version_number: int
+    definition: dict[str, Any]
+    change_summary: str | None = None
+    created_at: datetime | None = None
+    avg_execution_ms: int | None = None
+
+    @classmethod
+    def from_record(cls, record: Any) -> "WorkflowVersion":
+        import json
+        defn = record["definition"]
+        if isinstance(defn, str):
+            defn = json.loads(defn)
+        return cls(
+            id=record["id"],
+            workflow_id=record["workflow_id"],
+            version_number=record["version_number"],
+            definition=defn,
+            change_summary=record.get("change_summary"),
+            created_at=record.get("created_at"),
+            avg_execution_ms=record.get("avg_execution_ms"),
+        )
+
+
+@dataclass
 class Job:
     id: uuid.UUID
     workflow_id: uuid.UUID
@@ -58,6 +86,7 @@ class Job:
     output_data: dict[str, Any] = field(default_factory=dict)
     error: str | None = None
     idempotency_key: str | None = None
+    failure_analysis: dict[str, Any] | None = None
 
     @classmethod
     def from_record(cls, record: Any) -> "Job":
@@ -81,6 +110,7 @@ class Job:
             output_data=parse_json(record["output_data"]),
             error=record["error"],
             idempotency_key=record["idempotency_key"],
+            failure_analysis=record.get("failure_analysis"),
         )
 
 

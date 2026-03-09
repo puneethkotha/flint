@@ -71,6 +71,39 @@ CREATE TABLE IF NOT EXISTS corruption_events (
     severity TEXT DEFAULT 'error',
     action_taken TEXT
 );
+
+-- Phase 3b: Workflow version history
+CREATE TABLE IF NOT EXISTS workflow_versions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    workflow_id UUID NOT NULL REFERENCES workflows(id) ON DELETE CASCADE,
+    version_number INTEGER NOT NULL,
+    definition JSONB NOT NULL,
+    change_summary TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    avg_execution_ms INTEGER,
+    CONSTRAINT uq_workflow_version UNIQUE (workflow_id, version_number)
+);
+CREATE INDEX IF NOT EXISTS idx_wv_workflow_id ON workflow_versions(workflow_id);
+
+-- Phase 3c: failure_analysis on jobs
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS failure_analysis JSONB;
+
+-- Phase 5a: Marketplace
+CREATE TABLE IF NOT EXISTS marketplace_workflows (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name TEXT NOT NULL,
+    description TEXT NOT NULL DEFAULT '',
+    author TEXT NOT NULL,
+    tags TEXT[] NOT NULL DEFAULT '{}',
+    readme TEXT NOT NULL DEFAULT '',
+    dag_json JSONB NOT NULL,
+    star_count INTEGER NOT NULL DEFAULT 0,
+    fork_count INTEGER NOT NULL DEFAULT 0,
+    run_count INTEGER NOT NULL DEFAULT 0,
+    avg_duration_ms INTEGER,
+    published_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT uq_marketplace_name_author UNIQUE (name, author)
+);
 """
 
 

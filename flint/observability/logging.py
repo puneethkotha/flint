@@ -41,3 +41,8 @@ def configure_logging(log_level: str = "INFO") -> None:
     # Silence noisy libraries
     for noisy in ("asyncio", "aiokafka", "apscheduler", "httpx"):
         logging.getLogger(noisy).setLevel(logging.WARNING)
+
+
+def get_logger(name: str) -> structlog.BoundLogger:
+    """Return a structlog logger bound to the given module name."""
+    return structlog.get_logger(name)

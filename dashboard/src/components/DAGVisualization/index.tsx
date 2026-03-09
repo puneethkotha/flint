@@ -10,10 +10,11 @@ import ReactFlow, {
   BackgroundVariant,
 } from 'reactflow'
 import TaskNode, { TaskNodeData } from './TaskNode'
+import AgentNode from '../AgentNode/AgentNode'
 import { useWebSocket } from '../../hooks/useWebSocket'
 import { useTheme } from '../../theme'
 
-const nodeTypes = { taskNode: TaskNode }
+const nodeTypes = { taskNode: TaskNode, AGENT: AgentNode }
 
 interface DAGNode {
   id: string
@@ -74,10 +75,14 @@ export default function DAGVisualization({ dag, jobId, taskStatuses, onTaskStatu
   const buildNodes = useCallback((): Node<TaskNodeData>[] =>
     dagNodes.map(n => {
       const pos = positions.find(p => p.id === n.id) ?? { x: 0, y: 0 }
+      const nodeType = n.type === 'AGENT' ? 'AGENT' : 'taskNode'
+      const data = nodeType === 'AGENT'
+        ? { label: n.name || n.id, type: n.type, status: taskStatuses[n.id] || 'pending', config: (n as { config?: unknown }).config, metadata: (n as { metadata?: unknown }).metadata }
+        : { label: n.name || n.id, type: n.type, status: taskStatuses[n.id] || 'pending' }
       return {
-        id: n.id, type: 'taskNode',
+        id: n.id, type: nodeType,
         position: { x: pos.x, y: pos.y },
-        data: { label: n.name || n.id, type: n.type, status: taskStatuses[n.id] || 'pending' },
+        data,
       }
     }), [dagNodes, taskStatuses, positions])
 

@@ -105,10 +105,13 @@ def create_app() -> FastAPI:
         return RedirectResponse(url="/docs")
 
     # API routes
-    from flint.api.routes import health, jobs, metrics, parse, workflows
+    from flint.api.routes import health, jobs, metrics, parse, workflows, versions, marketplace, benchmarks
     from flint.api.routes.websocket import router as ws_router
 
     app.include_router(health.router, prefix="/api/v1", tags=["health"])
+    app.include_router(versions.router, prefix="/api/v1", tags=["versions"])
+    app.include_router(marketplace.router, prefix="/api/v1", tags=["marketplace"])
+    app.include_router(benchmarks.router, prefix="/api/v1", tags=["benchmarks"])
     app.include_router(metrics.router, prefix="/api/v1", tags=["metrics"])
     app.include_router(workflows.router, prefix="/api/v1", tags=["workflows"])
     app.include_router(jobs.router, prefix="/api/v1", tags=["jobs"])

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field, field_validator
 class TaskNodeSchema(BaseModel):
     id: str
     name: str = ""
-    type: str
+    type: Literal["http", "shell", "python", "sql", "llm", "webhook", "AGENT"]
     depends_on: list[str] = Field(default_factory=list)
     timeout_seconds: int = 300
     config: dict[str, Any] = Field(default_factory=dict)
@@ -110,6 +110,7 @@ class JobResponse(BaseModel):
     output_data: dict[str, Any]
     error: str | None
     task_executions: list[TaskExecutionResponse] = Field(default_factory=list)
+    failure_analysis: dict[str, Any] | None = None
 
 
 class JobListResponse(BaseModel):

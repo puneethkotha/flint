@@ -112,6 +112,7 @@ async def get_job(
         input_data=job.input_data,
         output_data=job.output_data,
         error=job.error,
+        failure_analysis=job.failure_analysis,
         task_executions=[
             TaskExecutionResponse(
                 id=te.id,

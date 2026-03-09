@@ -1,0 +1,64 @@
+# Auto-publish to PyPI on version tag push
+# Trigger: git tag v1.2.3 && git push origin v1.2.3
+
+name: Publish to PyPI
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  id-token: write   # for PyPI trusted publishing (OIDC)
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: pypi  # set up in GitHub repo settings → Environments
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install build tools
+        run: pip install build hatchling twine
+
+      - name: Extract version from tag
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+
+      - name: Verify version matches pyproject.toml
+        run: |
+          PKG_VERSION=$(python -c "import tomllib; d=tomllib.load(open('pyproject.toml','rb')); print(d['project']['version'])")
+          if [ "$PKG_VERSION" != "${{ steps.version.outputs.version }}" ]; then
+            echo "ERROR: pyproject.toml version ($PKG_VERSION) != tag (${{ steps.version.outputs.version }})"
+            exit 1
+          fi
+
+      - name: Build package
+        run: python -m build
+
+      - name: Check distribution
+        run: twine check dist/*
+
+      - name: Publish to PyPI (trusted publishing)
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body: |
+            ## Flint ${{ github.ref_name }}
+
+            Install with:
+            ```bash
+            pip install flint-dag==${{ steps.version.outputs.version }}
+            ```
+
+            See [CHANGELOG.md](CHANGELOG.md) for details.
+          files: dist/*

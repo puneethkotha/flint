@@ -13,9 +13,12 @@ from typing import Any
 import structlog
 
 from flint.engine.corruption import CorruptionDetector, ValidationResult, corruption_detector
+from flint.engine.failure_analysis import analyze_failure
 from flint.engine.retry import FailureType, RetryExecutor, classify_failure
+from flint.engine.tasks.agent_task import AgentTask
 from flint.engine.tasks.base import BaseTask, TaskExecutionError, create_task
 from flint.engine.topology import FlintCycleError, topological_sort
+from flint.engine.self_healing import SelfHealingEngine
 
 # Import all task types to register them
 import flint.engine.tasks  # noqa: F401
@@ -61,9 +64,13 @@ class DAGExecutor:
         self.ws_manager = ws_manager
         self.corruption_detector = corruption_detector
         self.retry_executor = RetryExecutor()
+        self._is_shadow = False
 
     async def execute_dag(
-        self, dag: dict[str, Any], job_id: str
+        self,
+        dag: dict[str, Any],
+        job_id: str,
+        is_shadow: bool = False,
     ) -> ExecutionResult:
         """
         Execute a DAG workflow.
@@ -72,19 +79,29 @@ class DAGExecutor:
         2. For each batch: asyncio.gather all tasks in parallel
         3. After each task: validate output, handle corruption
         4. Pass outputs downstream via context
+
+        When is_shadow=True, skips all DB/Redis/Kafka persistence (for self-healing shadow runs).
         """
         start_time = time.monotonic()
         nodes: list[dict[str, Any]] = dag.get("nodes", [])
         task_results: dict[str, TaskResult] = {}
         context: dict[str, Any] = {}  # task_id → output dict
+        self._is_shadow = is_shadow
 
-        logger.info("dag_execution_start", job_id=job_id, node_count=len(nodes))
-        await self._update_job_status(job_id, "running")
+        logger.info(
+            "dag_execution_start",
+            job_id=job_id,
+            node_count=len(nodes),
+            is_shadow=is_shadow,
+        )
+        if not is_shadow:
+            await self._update_job_status(job_id, "running")
 
         try:
             batches = topological_sort(nodes)
         except FlintCycleError as exc:
-            await self._update_job_status(job_id, "failed", error=str(exc))
+            if not is_shadow:
+                await self._update_job_status(job_id, "failed", error=str(exc))
             return ExecutionResult(
                 job_id=job_id,
                 status="failed",
@@ -120,8 +137,9 @@ class DAGExecutor:
                         failure_type=failure_type.value,
                     )
                     task_results[task_id] = task_result
-                    await self._persist_task_result(job_id, task_result)
-                    await self._broadcast(job_id, task_id, "failed")
+                    if not self._is_shadow:
+                        await self._persist_task_result(job_id, task_result)
+                        await self._broadcast(job_id, task_id, "failed")
                     halt = True
                     continue
 
@@ -141,28 +159,74 @@ class DAGExecutor:
                         task_id=task_id,
                         checks=[v.check_type for v in failed],
                     )
-                    await self._handle_corruption(
-                        job_id, task_id, task_result.output, validations
-                    )
+                    if not self._is_shadow:
+                        await self._handle_corruption(
+                            job_id, task_id, task_result.output, validations
+                        )
                     task_result.status = "failed"
                     task_result.error = f"Corruption detected: {[v.message for v in failed]}"
                     task_results[task_id] = task_result
-                    await self._persist_task_result(job_id, task_result)
-                    await self._broadcast(job_id, task_id, "failed")
+                    if not self._is_shadow:
+                        await self._persist_task_result(job_id, task_result)
+                        await self._broadcast(job_id, task_id, "failed")
                     halt = True
                     continue
 
                 task_results[task_id] = task_result
                 context[task_id] = task_result.output
-                await self._persist_task_result(job_id, task_result)
-                await self._broadcast(job_id, task_id, "completed")
+                if not self._is_shadow:
+                    await self._persist_task_result(job_id, task_result)
+                    await self._broadcast(job_id, task_id, "completed")
                 logger.info("task_complete", job_id=job_id, task_id=task_id)
 
             if halt:
                 duration_ms = int((time.monotonic() - start_time) * 1000)
-                await self._update_job_status(
-                    job_id, "failed", output_data=self._collect_outputs(task_results)
+                failure_analysis_data = None
+                failed_task_result = next(
+                    (r for r in task_results.values() if r.status == "failed"), None
                 )
+                if failed_task_result and failed_task_result.error:
+                    failed_node = next(
+                        (n for n in nodes if n.get("id") == failed_task_result.task_id),
+                        None,
+                    )
+                    if failed_node:
+                        try:
+                            analysis = await analyze_failure(
+                                node_id=failed_node.get("id", ""),
+                                node_type=failed_node.get("type", "unknown"),
+                                node_config=failed_node.get("config", {}),
+                                error=failed_task_result.error,
+                                workflow_dag=dag,
+                            )
+                            failure_analysis_data = analysis.model_dump()
+                        except Exception as exc:
+                            logger.warning("failure_analysis_skip", error=str(exc))
+                if not self._is_shadow:
+                    await self._update_job_status(
+                        job_id,
+                        "failed",
+                        output_data=self._collect_outputs(task_results),
+                        duration_ms=duration_ms,
+                        error=next(
+                            (r.error for r in task_results.values() if r.status == "failed"),
+                            None,
+                        ),
+                        failure_analysis=failure_analysis_data,
+                    )
+                    # Self-healing: check if workflow has failed 3x in a row, propose fix, shadow-run, promote
+                    if self.db_pool:
+                        try:
+                            async with self.db_pool.acquire() as conn:
+                                row = await conn.fetchrow(
+                                    "SELECT workflow_id FROM jobs WHERE id = $1",
+                                    uuid.UUID(job_id),
+                                )
+                            if row:
+                                healer = SelfHealingEngine(pool=self.db_pool, workflow_id=row["workflow_id"])
+                                await healer.check_and_heal()
+                        except Exception as exc:
+                            logger.warning("self_healing_skip", job_id=job_id, error=str(exc))
                 return ExecutionResult(
                     job_id=job_id,
                     status="failed",
@@ -175,9 +239,10 @@ class DAGExecutor:
 
         duration_ms = int((time.monotonic() - start_time) * 1000)
         output_data = self._collect_outputs(task_results)
-        await self._update_job_status(
-            job_id, "completed", output_data=output_data, duration_ms=duration_ms
-        )
+        if not self._is_shadow:
+            await self._update_job_status(
+                job_id, "completed", output_data=output_data, duration_ms=duration_ms
+            )
         logger.info("dag_execution_complete", job_id=job_id, duration_ms=duration_ms)
 
         return ExecutionResult(
@@ -199,8 +264,9 @@ class DAGExecutor:
         start_time = time.monotonic()
         attempt = 1
 
-        await self._update_task_status(job_id, task.id, "running", attempt)
-        await self._broadcast(job_id, task.id, "running")
+        if not self._is_shadow:
+            await self._update_task_status(job_id, task.id, "running", attempt)
+            await self._broadcast(job_id, task.id, "running")
 
         async def attempt_fn() -> TaskResult:
             nonlocal attempt
@@ -232,10 +298,11 @@ class DAGExecutor:
                 failure_type=failure_type.value,
                 delay=delay,
             )
-            await self._update_task_status(
-                job_id, task.id, "running", attempt,
-                retry_reason=f"attempt {attempt} after {failure_type.value}"
-            )
+            if not self._is_shadow:
+                await self._update_task_status(
+                    job_id, task.id, "running", attempt,
+                    retry_reason=f"attempt {attempt} after {failure_type.value}"
+                )
 
         return await self.retry_executor.run_with_retry(
             attempt_fn,
@@ -250,6 +317,7 @@ class DAGExecutor:
         error: str | None = None,
         output_data: dict[str, Any] | None = None,
         duration_ms: int | None = None,
+        failure_analysis: dict[str, Any] | None = None,
     ) -> None:
         """Update job status in DB if pool available."""
         if self.db_pool is None:
@@ -263,13 +331,25 @@ class DAGExecutor:
                         status, now, uuid.UUID(job_id),
                     )
                 else:
-                    await conn.execute(
-                        """UPDATE jobs SET status=$1, completed_at=$2,
-                           error=$3, output_data=$4, duration_ms=$5 WHERE id=$6""",
-                        status, now, error,
-                        json.dumps(output_data or {}),
-                        duration_ms, uuid.UUID(job_id),
-                    )
+                    if failure_analysis is not None:
+                        await conn.execute(
+                            """UPDATE jobs SET status=$1, completed_at=$2,
+                               error=$3, output_data=$4, duration_ms=$5, failure_analysis=$6
+                               WHERE id=$7""",
+                            status, now, error,
+                            json.dumps(output_data or {}),
+                            duration_ms,
+                            json.dumps(failure_analysis),
+                            uuid.UUID(job_id),
+                        )
+                    else:
+                        await conn.execute(
+                            """UPDATE jobs SET status=$1, completed_at=$2,
+                               error=$3, output_data=$4, duration_ms=$5 WHERE id=$6""",
+                            status, now, error,
+                            json.dumps(output_data or {}),
+                            duration_ms, uuid.UUID(job_id),
+                        )
         except Exception as exc:
             logger.warning("job_status_update_failed", job_id=job_id, error=str(exc))
 

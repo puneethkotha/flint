@@ -6,6 +6,7 @@ from flint.engine.tasks.python_task import PythonTask
 from flint.engine.tasks.shell_task import ShellTask
 from flint.engine.tasks.sql_task import SqlTask
 from flint.engine.tasks.webhook_task import WebhookTask
+from flint.engine.tasks.agent_task import AgentTask
 
 __all__ = [
     "HttpTask",
@@ -14,4 +15,5 @@ __all__ = [
     "PythonTask",
     "SqlTask",
     "LlmTask",
+    "AgentTask",
 ]

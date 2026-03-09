@@ -28,6 +28,8 @@ dependencies = [
     "httpx>=0.27.0",
     "python-multipart>=0.0.9",
     "websockets>=12.0",
+    "rich>=13.0",
+    "pyyaml>=6.0",
     "pytest>=9.0.2",
     "pytest-asyncio>=1.3.0",
 ]
@@ -43,7 +45,8 @@ dev = [
 ]
 
 [project.scripts]
-flint = "flint.cli:cli"
+flint = "flint.cli.main:cli"
+flint-mcp = "flint.mcp.server:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["flint"]
