@@ -5,7 +5,7 @@
 
 import React from 'react'
 
-interface CostEstimate {
+export interface CostEstimate {
   simulation_cost_usd:   number
   real_run_cost_usd:     number
   token_cost_usd:        number

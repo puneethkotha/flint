@@ -19,7 +19,7 @@ import React, { useState, useCallback } from 'react'
 import { ConfidenceGauge }    from './ConfidenceGauge'
 import { NodeSimulationCard } from './NodeSimulationCard'
 import { RiskPanel }          from './RiskPanel'
-import { CostBreakdown }      from './CostBreakdown'
+import { CostBreakdown, type CostEstimate } from './CostBreakdown'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -48,14 +48,6 @@ interface RiskItem {
   detail:               string
   can_simulate_safely:  boolean
   suggested_action:     string
-}
-
-interface CostEstimate {
-  simulation_cost_usd:   number
-  real_run_cost_usd:     number
-  token_cost_usd:        number
-  external_api_cost_usd: number
-  breakdown:             Array<Record<string, unknown>>
 }
 
 interface SimResult {
