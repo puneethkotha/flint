@@ -65,7 +65,13 @@ export const api = {
       body: JSON.stringify({ description }),
     }),
 
-  createWorkflow: (payload: { description?: string; dag?: unknown; run_immediately?: boolean }) =>
+  createWorkflow: (payload: {
+    description?: string
+    dag?: unknown
+    run_immediately?: boolean
+    schedule?: string | null
+    timezone?: string
+  }) =>
     request<WorkflowResponse>('/workflows', {
       method: 'POST',
       body: JSON.stringify(payload),

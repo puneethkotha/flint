@@ -74,8 +74,10 @@ export default function Intro({ onDone }: Props) {
         position: 'fixed', inset: 0,
         background: BG,
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
+        gap: 20,
         opacity: fading ? 0 : 1,
         transition: 'opacity 0.4s ease',
         zIndex: 9999,
@@ -83,6 +85,14 @@ export default function Intro({ onDone }: Props) {
       }}
     >
       <canvas ref={canvasRef} width={400} height={120} />
+      <div style={{ textAlign: 'center' }}>
+        <p style={{ fontSize: 24, fontWeight: 600, color: colors.textPrimary, letterSpacing: '-0.03em', marginBottom: 4 }}>
+          flint
+        </p>
+        <p style={{ fontSize: 13, color: colors.textMuted }}>
+          Describe any workflow in plain English.
+        </p>
+      </div>
     </div>
   )
 }

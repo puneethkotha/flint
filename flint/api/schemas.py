@@ -36,6 +36,8 @@ class CreateWorkflowRequest(BaseModel):
     description: str | None = None
     dag: DAGSchema | None = None
     run_immediately: bool = False
+    schedule: str | None = None
+    timezone: str = "UTC"
 
     @field_validator("description", "dag", mode="before")
     @classmethod

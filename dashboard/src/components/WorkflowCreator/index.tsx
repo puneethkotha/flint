@@ -30,6 +30,38 @@ const INSPIRATION_CARDS = [
   },
 ]
 
+type ScheduleMode = 'once' | 'recurring' | 'trigger'
+
+const CRON_PRESETS: { key: string; label: string; cron: string }[] = [
+  { key: 'daily-9', label: 'Every day at 9am', cron: '0 9 * * *' },
+  { key: 'daily-8', label: 'Every day at 8am', cron: '0 8 * * *' },
+  { key: 'mon-8', label: 'Every Monday at 8am', cron: '0 8 * * 1' },
+  { key: 'hourly', label: 'Every hour', cron: '0 * * * *' },
+  { key: '15min', label: 'Every 15 minutes', cron: '*/15 * * * *' },
+  { key: 'custom', label: 'Custom (cron)', cron: '' },
+]
+
+function cronToHuman(cron: string): string {
+  if (!cron || !cron.trim()) return 'Enter a 5-field cron (e.g. 0 9 * * *)'
+  const parts = cron.trim().split(/\s+/)
+  if (parts.length < 5) return 'Invalid cron (need 5 fields: min hour day month dow)'
+  const [min, hour, day, month, dow] = parts
+  if (min === '0' && hour !== '*' && day === '*' && month === '*' && dow === '*') {
+    return `Every day at ${hour}:00`
+  }
+  if (min === '0' && hour !== '*' && day === '*' && month === '*' && dow !== '*') {
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+    const d = dow === '0' || dow === '7' ? 'Sun' : days[parseInt(dow, 10)] || dow
+    return `Every ${d} at ${hour}:00`
+  }
+  if (min.startsWith('*/') && hour === '*' && day === '*' && month === '*' && dow === '*') {
+    const n = min.slice(2)
+    return `Every ${n} minutes`
+  }
+  if (min === '0' && hour === '*' && day === '*' && month === '*' && dow === '*') return 'Every hour'
+  return cron
+}
+
 function useTypewriter(strings: string[], enabled: boolean) {
   const [display, setDisplay] = useState('')
   const [strIdx, setStrIdx] = useState(0)
@@ -57,7 +89,12 @@ function useTypewriter(strings: string[], enabled: boolean) {
   return display
 }
 
-export default function WorkflowCreator() {
+interface WorkflowCreatorProps {
+  initialDescription?: string
+  onPrefillConsumed?: () => void
+}
+
+export default function WorkflowCreator({ initialDescription, onPrefillConsumed }: WorkflowCreatorProps) {
   const { colors } = useTheme()
   const [description, setDescription] = useState('')
   const [dag, setDag] = useState<Record<string, unknown> | null>(null)
@@ -68,8 +105,20 @@ export default function WorkflowCreator() {
   const [jobId, setJobId] = useState<string | null>(null)
   const [taskStatuses, setTaskStatuses] = useState<Record<string, string>>({})
   const [focused, setFocused] = useState(false)
+  const [scheduleMode, setScheduleMode] = useState<ScheduleMode>('once')
+  const [cronPresetKey, setCronPresetKey] = useState('daily-9')
+  const [customCron, setCustomCron] = useState('')
+  const [createdWorkflowId, setCreatedWorkflowId] = useState<string | null>(null)
 
   const placeholder = useTypewriter(TYPEWRITER_PLACEHOLDERS, !description && !focused)
+
+  // Prefill from Templates "Use Template"
+  React.useEffect(() => {
+    if (initialDescription) {
+      setDescription(initialDescription)
+      onPrefillConsumed?.()
+    }
+  }, [initialDescription, onPrefillConsumed])
 
   const handlePreview = async () => {
     if (!description.trim()) return
@@ -85,10 +134,23 @@ export default function WorkflowCreator() {
     if (!description.trim()) return
     setLoading(true); setPhase('parsing'); setError(null)
     try {
-      const wf = await api.createWorkflow({ description, run_immediately: true })
-      setPhase('running')
-      const job = await api.triggerJob(wf.id)
-      setJobId(job.job_id)
+      const isRecurring = scheduleMode === 'recurring'
+      const cronExpr = isRecurring
+        ? (cronPresetKey === 'custom' ? customCron.trim() : CRON_PRESETS.find(p => p.key === cronPresetKey)?.cron ?? '')
+        : undefined
+      const payload: Parameters<typeof api.createWorkflow>[0] = {
+        description,
+        run_immediately: scheduleMode === 'once',
+        schedule: isRecurring && cronExpr ? cronExpr : null,
+        timezone: 'UTC',
+      }
+      const wf = await api.createWorkflow(payload)
+      setCreatedWorkflowId(wf.id)
+      if (scheduleMode === 'once') {
+        setPhase('running')
+        const job = await api.triggerJob(wf.id)
+        setJobId(job.job_id)
+      }
     } catch (e) { setError(e instanceof Error ? e.message : 'Failed to create workflow') }
     finally { setLoading(false); setPhase('idle') }
   }
@@ -105,9 +167,17 @@ export default function WorkflowCreator() {
     return () => window.removeEventListener('keydown', onKey)
   }, [description, loading])
 
-  const disabled = loading || !description.trim()
+  const disabled =
+    loading ||
+    !description.trim() ||
+    (scheduleMode === 'recurring' && cronPresetKey === 'custom' && !customCron.trim())
 
-  const runBtnLabel = phase === 'parsing' ? 'Parsing...' : phase === 'running' ? 'Running...' : 'Create & Run'
+  const runBtnLabel =
+    phase === 'parsing' ? 'Parsing...'
+    : phase === 'running' ? 'Running...'
+    : scheduleMode === 'once' ? 'Create & Run'
+    : scheduleMode === 'recurring' ? 'Create & Schedule'
+    : 'Create workflow'
 
   return (
     <div className="flint-split">
@@ -161,6 +231,113 @@ export default function WorkflowCreator() {
               caretColor: '#F59E0B',
             }}
           />
+
+          {/* Schedule */}
+          <div style={{ marginTop: 20 }}>
+            <p style={{ fontSize: 10, color: '#444', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 500, marginBottom: 10 }}>
+              Schedule
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'flex-start' }}>
+              {(['once', 'recurring', 'trigger'] as const).map(mode => (
+                <label key={mode} style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+                  <input
+                    type="radio"
+                    name="schedule"
+                    checked={scheduleMode === mode}
+                    onChange={() => setScheduleMode(mode)}
+                    style={{ accentColor: '#F59E0B' }}
+                  />
+                  <span style={{ fontSize: 13, color: colors.textPrimary }}>
+                    {mode === 'once' ? 'Run once' : mode === 'recurring' ? 'Recurring' : 'On trigger'}
+                  </span>
+                </label>
+              ))}
+            </div>
+            {scheduleMode === 'recurring' && (
+              <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <select
+                  value={cronPresetKey}
+                  onChange={e => setCronPresetKey(e.target.value)}
+                  style={{
+                    background: colors.inputBg,
+                    border: `1px solid ${colors.panelBorder}`,
+                    color: colors.textPrimary,
+                    padding: '8px 12px',
+                    fontSize: 13,
+                    maxWidth: 280,
+                  }}
+                >
+                  {CRON_PRESETS.filter(p => p.key !== 'custom').map(p => (
+                    <option key={p.key} value={p.key}>{p.label}</option>
+                  ))}
+                  <option value="custom">Custom (cron)</option>
+                </select>
+                {cronPresetKey === 'custom' && (
+                  <input
+                    type="text"
+                    value={customCron}
+                    onChange={e => setCustomCron(e.target.value)}
+                    placeholder="0 9 * * *"
+                    style={{
+                      background: colors.inputBg,
+                      border: `1px solid ${colors.panelBorder}`,
+                      color: colors.textPrimary,
+                      padding: '8px 12px',
+                      fontSize: 13,
+                      maxWidth: 200,
+                      fontFamily: 'ui-monospace, monospace',
+                    }}
+                  />
+                )}
+                <p style={{ fontSize: 12, color: colors.textMuted }}>
+                  {cronToHuman(cronPresetKey === 'custom' ? customCron : CRON_PRESETS.find(p => p.key === cronPresetKey)?.cron ?? '')}
+                </p>
+              </div>
+            )}
+            {scheduleMode === 'trigger' && (
+              <div style={{ marginTop: 12 }}>
+                <p style={{ fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>
+                  POST this URL to run the workflow (create workflow first to get your ID):
+                </p>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  flexWrap: 'wrap',
+                  background: colors.inputBg,
+                  border: `1px solid ${colors.panelBorder}`,
+                  padding: '10px 12px',
+                  fontFamily: 'ui-monospace, monospace',
+                  fontSize: 12,
+                  color: colors.codeColor,
+                }}>
+                  <code style={{ wordBreak: 'break-all' }}>
+                    {(import.meta.env.VITE_API_URL || '').replace(/\/$/, '') || 'https://flint-api-fbsk.onrender.com'}/api/v1/jobs/trigger/{createdWorkflowId ?? '{workflow_id}'}
+                  </code>
+                  {createdWorkflowId && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const url = `${(import.meta.env.VITE_API_URL || '').replace(/\/$/, '') || 'https://flint-api-fbsk.onrender.com'}/api/v1/jobs/trigger/${createdWorkflowId}`
+                        void navigator.clipboard.writeText(url)
+                      }}
+                      style={{
+                        background: colors.panelBorder,
+                        border: 'none',
+                        color: colors.textPrimary,
+                        padding: '4px 10px',
+                        fontSize: 11,
+                        cursor: 'pointer',
+                        flexShrink: 0,
+                      }}
+                    >
+                      Copy
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Inspiration cards */}
           <div style={{ marginTop: 24, marginBottom: 'auto' }}>
