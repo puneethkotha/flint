@@ -13,7 +13,7 @@ import click
 
 @click.group()
 def cli() -> None:
-    """Flint — Describe any workflow in plain English. Flint runs it reliably."""
+    """Flint — Describe any workflow in natural language. Flint runs it reliably."""
 
 
 @cli.command()

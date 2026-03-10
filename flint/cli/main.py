@@ -94,7 +94,7 @@ def cli():
     """
     Flint — natural language workflow engine.
 
-    Describe any workflow in plain English. Flint runs it reliably.
+    Describe any workflow in natural language. Flint runs it reliably.
     """
     pass
 

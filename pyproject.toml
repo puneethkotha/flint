@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "flint-engine"
 version = "1.0.0"
-description = "Describe any workflow in plain English. Flint runs it reliably."
+description = "Describe any workflow in natural language. Flint runs it reliably."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }

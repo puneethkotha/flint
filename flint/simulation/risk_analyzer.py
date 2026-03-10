@@ -50,7 +50,7 @@ class Risk:
     message:             str
     detail:              str           # technical detail
     can_simulate_safely: bool          # True = simulation runs anyway; False = skip real execution
-    suggested_action:    str           # plain English recommendation
+    suggested_action:    str           # natural language recommendation
 
 
 # ---------------------------------------------------------------------------

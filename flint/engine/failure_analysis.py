@@ -30,7 +30,7 @@ settings = get_settings()
 
 
 class FailureAnalysis(BaseModel):
-    explanation: str          # 2-sentence plain English explanation
+    explanation: str          # 2-sentence natural language explanation
     suggested_fix: str        # one specific actionable fix
     fix_patch: dict | None = None  # optional: patched node config to apply
     confidence: str = "medium"    # "high" | "medium" | "low"
@@ -42,7 +42,7 @@ ANALYSIS_SYSTEM = (
     "Respond with ONLY valid JSON — no markdown, no explanation outside the JSON. "
     "The JSON must match this schema exactly:\n"
     "{\n"
-    '  "explanation": "<2 sentences max — what went wrong in plain English>",\n'
+    '  "explanation": "<2 sentences max — what went wrong in natural language>",\n'
     '  "suggested_fix": "<one specific, actionable fix — be concrete, not vague>",\n'
     '  "fix_patch": <null OR a partial node config dict that patches the broken config>,\n'
     '  "confidence": "<high|medium|low>"\n'
@@ -76,7 +76,7 @@ async def analyze_failure(
     workflow_dag: dict,
 ) -> FailureAnalysis:
     """
-    Call Claude to explain a workflow failure in plain English.
+    Call Claude to explain a workflow failure in natural language.
     Returns a FailureAnalysis with explanation, suggested fix, and optional patch.
     """
     client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)

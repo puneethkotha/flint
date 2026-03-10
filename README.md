@@ -1,6 +1,6 @@
 # Flint
 
-> Describe any workflow in plain English. Flint runs it reliably.
+> **AI-powered workflow automation.** Describe any workflow in natural language — Flint parses it into DAGs, runs it reliably with corruption detection, smart retries, and real-time monitoring.
 
 **[Live Dashboard](https://flint-dashboard-silk.vercel.app)** · **[API](https://flint-api-fbsk.onrender.com/api/v1/health)** · [GitHub](https://github.com/puneethkotha/flint)
 
@@ -17,7 +17,7 @@
 ## The Problem
 
 - **Scripts break silently** — no validation, no retries, no monitoring
-- **DAGs are code** — Airflow requires Python DAGs, Prefect requires decorators, n8n requires drag-and-drop; none accept plain English
+- **DAGs are code** — Airflow requires Python DAGs, Prefect requires decorators, n8n requires drag-and-drop; none accept natural language
 - **Observability is an afterthought** — you discover failures by checking logs manually
 
 ---

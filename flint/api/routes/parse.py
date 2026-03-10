@@ -16,7 +16,7 @@ router = APIRouter()
 @router.post("/parse", response_model=ParseResponse)
 async def parse_workflow(body: ParseRequest) -> ParseResponse:
     """
-    Parse a plain English workflow description without saving it.
+    Parse a natural language workflow description without saving it.
     Returns the DAG JSON for preview.
     """
     from flint.parser.nl_parser import parse_workflow as _parse

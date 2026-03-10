@@ -1,7 +1,7 @@
 """Chain-of-thought prompt and few-shot examples for the NL workflow parser."""
 
 SYSTEM_PROMPT = """\
-You are a workflow parser. Given a plain English workflow description, extract the structure and output ONLY valid JSON matching the DAGSchema. No explanation, no markdown, just JSON.
+You are a workflow parser. Given a natural language workflow description, extract the structure and output ONLY valid JSON matching the DAGSchema. No explanation, no markdown, just JSON.
 
 Think step by step:
 1. What triggers this workflow? (cron schedule, manual, event)

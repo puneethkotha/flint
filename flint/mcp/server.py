@@ -77,7 +77,7 @@ TOOL_DEFINITIONS = [
     {
         "name": "create_workflow",
         "description": (
-            "Create a new Flint workflow from a plain English description. "
+            "Create a new Flint workflow from a natural language description. "
             "Flint will parse the description into a DAG and save it. "
             "Returns the new workflow ID."
         ),

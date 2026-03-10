@@ -14,7 +14,7 @@ logger = structlog.get_logger(__name__)
 
 async def parse_workflow(description: str) -> dict[str, Any]:
     """
-    Parse a plain English workflow description into a validated DAG dict.
+    Parse a natural language workflow description into a validated DAG dict.
 
     1. Calls the configured LLM provider
     2. Validates the returned DAG structure

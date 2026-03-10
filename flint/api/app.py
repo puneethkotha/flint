@@ -104,7 +104,7 @@ def create_app() -> FastAPI:
 
     app = FastAPI(
         title="Flint",
-        description="Describe any workflow in plain English. Flint runs it reliably.",
+        description="Describe any workflow in natural language. Flint runs it reliably.",
         version="1.0.0",
         docs_url="/docs",
         redoc_url="/redoc",
@@ -113,12 +113,12 @@ def create_app() -> FastAPI:
             {"name": "health", "description": "System health checks. No API key required."},
             {"name": "workflows", "description": "Create, list, get, and delete workflows."},
             {"name": "jobs", "description": "Trigger workflows and monitor job execution status."},
-            {"name": "parse", "description": "Parse plain English workflow descriptions into DAG JSON."},
+            {"name": "parse", "description": "Parse natural language workflow descriptions into DAG JSON."},
             {"name": "versions", "description": "Workflow version history and diff between versions."},
             {"name": "marketplace", "description": "Browse, publish, fork, and star community workflows."},
             {"name": "benchmarks", "description": "Performance benchmarks and live Flint statistics."},
             {"name": "simulation", "description": "Simulate workflow runs with confidence scores and cost estimates."},
-            {"name": "agent", "description": "Conversational AI agent that builds, deploys, and runs workflows from plain English."},
+            {"name": "agent", "description": "Conversational AI agent that builds, deploys, and runs workflows from natural language."},
             {"name": "metrics", "description": "Prometheus metrics for monitoring."},
             {"name": "websocket", "description": "Real-time job status updates via WebSocket."},
             {"name": "export_import", "description": "Export/import workflows for backup and migration."},
