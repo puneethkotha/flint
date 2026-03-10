@@ -1,6 +1,6 @@
 # Flint
 
-> **AI-powered workflow automation.** Describe any workflow in natural language — Flint parses it into DAGs, runs it reliably with corruption detection, smart retries, and real-time monitoring.
+> **AI-powered workflow automation.** Describe any workflow in natural language. Flint parses it into DAGs, runs it reliably with corruption detection, smart retries, and real-time monitoring.
 
 **[Live Dashboard](https://flint-dashboard-silk.vercel.app)** · **[API](https://flint-api-fbsk.onrender.com/api/v1/health)** · [GitHub](https://github.com/puneethkotha/flint)
 
@@ -16,16 +16,16 @@
 
 ## The Problem
 
-- **Scripts break silently** — no validation, no retries, no monitoring
-- **DAGs are code** — Airflow requires Python DAGs, Prefect requires decorators, n8n requires drag-and-drop; none accept natural language
-- **Observability is an afterthought** — you discover failures by checking logs manually
+- **Scripts break silently**: no validation, no retries, no monitoring
+- **DAGs are code**: Airflow requires Python DAGs, Prefect requires decorators, n8n requires drag-and-drop; none accept natural language
+- **Observability is an afterthought**: you discover failures by checking logs manually
 
 ---
 
 ## Try It Live
 
 ```bash
-# Health check — all systems green
+# Health check: all systems green
 curl https://flint-api-fbsk.onrender.com/api/v1/health
 
 # Parse a workflow into a DAG (no auth needed)
@@ -99,7 +99,7 @@ Python 3.11 · FastAPI · asyncpg · aiokafka · redis[asyncio] · APScheduler �
 
 ## Author
 
-**Puneeth Kotha** — NYU MS Computer Engineering 2026  
+**Puneeth Kotha** | NYU MS Computer Engineering 2026  
 [github.com/puneethkotha](https://github.com/puneethkotha) · [linkedin.com/in/puneeth-kotha-760360215](https://linkedin.com/in/puneeth-kotha-760360215)
 
 ---

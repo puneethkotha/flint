@@ -1,4 +1,4 @@
-"""Flint CLI — run/status/list/parse/deploy commands."""
+"""Flint CLI: run/status/list/parse/deploy commands."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ import click
 
 @click.group()
 def cli() -> None:
-    """Flint — Describe any workflow in natural language. Flint runs it reliably."""
+    """Flint: Describe any workflow in natural language. Flint runs it reliably."""
 
 
 @cli.command()

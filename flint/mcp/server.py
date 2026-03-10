@@ -1,5 +1,5 @@
 """
-Phase 3d: Flint MCP Server — exposes Flint workflows as MCP tools.
+Phase 3d: Flint MCP Server. Exposes Flint workflows as MCP tools.
 
 Drop this file into: flint/mcp/server.py
 Create empty:        flint/mcp/__init__.py
@@ -391,7 +391,7 @@ def main():
     import argparse
     parser = argparse.ArgumentParser(
         prog="flint-mcp",
-        description="Flint MCP Server — exposes Flint workflows as MCP tools.",
+        description="Flint MCP Server: exposes Flint workflows as MCP tools.",
     )
     parser.parse_args()
     asyncio.run(stdio_server())

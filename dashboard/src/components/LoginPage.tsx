@@ -1,5 +1,5 @@
 /**
- * LoginPage — full-screen login with Google, GitHub, Email, Sign up, Forgot password.
+ * LoginPage: full-screen login with Google, GitHub, Email, Sign up, Forgot password.
  * Shown when user clicks "Sign in" in the navbar.
  */
 
@@ -146,7 +146,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginGoogle, onLoginGith
           <div style={{ flex: 1, height: 1, background: colors.panelBorder }} />
         </div>
 
-        {/* Email form — UI only for now, backend supports OAuth only */}
+        {/* Email form: UI only for now, backend supports OAuth only */}
         {showForgotPassword ? (
           <div style={{ marginBottom: 16 }}>
             <p style={{ fontSize: 13, color: colors.textMuted, marginBottom: 12 }}>

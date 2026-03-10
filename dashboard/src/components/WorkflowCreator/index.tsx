@@ -598,7 +598,7 @@ export default function WorkflowCreator({ initialDescription, onPrefillConsumed,
         </div>
       </div>
 
-      {/* Right panel — DAG */}
+      {/* Right panel: DAG */}
       <div
         className="flint-panel-right"
         style={{

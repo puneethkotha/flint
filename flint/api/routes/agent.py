@@ -1,4 +1,4 @@
-"""Agent Mode — conversational workflow builder with streaming SSE."""
+"""Agent Mode: conversational workflow builder with streaming SSE."""
 
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ router = APIRouter()
 
 # ─── System prompt ────────────────────────────────────────────────────────────
 
-AGENT_SYSTEM_PROMPT = """You are Flint's AI automation assistant — a friendly, expert workflow engineer.
+AGENT_SYSTEM_PROMPT = """You are Flint's AI automation assistant: a friendly, expert workflow engineer.
 
 Your job: understand what the user wants to automate, ask at most 2 clarifying questions, then build and run it.
 
@@ -44,7 +44,7 @@ Example workflow descriptions:
 - "On demand, call GPT-4 to summarize the top 5 HN posts and email to user@example.com"
 
 When the user is vague (e.g., "automate my emails"), ask ONE specific question like:
-"What should trigger this — a new email arriving, a schedule, or something else?"
+"What should trigger this: a new email arriving, a schedule, or something else?"
 """
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -159,12 +159,12 @@ async def agent_chat(
             messages=history,
         )
     except anthropic.RateLimitError as exc:
-        err = "Rate limit hit — please wait a moment and try again."
+        err = "Rate limit hit. Please wait a moment and try again."
         await _push_event(redis, session_id, {"type": "error", "message": err})
         await _push_event(redis, session_id, {"type": "end", "message": ""})
         return ChatResponse(session_id=session_id, reply=err)
     except anthropic.AuthenticationError as exc:
-        err = "Authentication error — check your Anthropic API key in settings."
+        err = "Authentication error. Check your Anthropic API key in settings."
         await _push_event(redis, session_id, {"type": "error", "message": err})
         await _push_event(redis, session_id, {"type": "end", "message": ""})
         return ChatResponse(session_id=session_id, reply=err)
@@ -319,7 +319,7 @@ async def agent_chat(
 @router.get("/agent/stream/{session_id}")
 async def agent_stream(session_id: str, request: Request) -> StreamingResponse:
     """
-    SSE endpoint — pops events from the Redis list for this session.
+    SSE endpoint: pops events from the Redis list for this session.
     Consumers connect before calling POST /agent/chat to receive all events.
     """
     redis = request.app.state.redis

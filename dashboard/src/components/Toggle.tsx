@@ -1,5 +1,5 @@
 /**
- * Toggle — switch with color fade transition.
+ * Toggle: switch with color fade transition.
  * Use for all toggles; background color fades smoothly when toggled.
  */
 

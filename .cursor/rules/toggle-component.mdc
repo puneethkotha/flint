@@ -8,7 +8,7 @@ alwaysApply: false
 
 When adding toggle/switch UI in the dashboard:
 
-- **Use `components/Toggle.tsx`** — Do not create inline toggle buttons.
+- **Use `components/Toggle.tsx`**: Do not create inline toggle buttons.
 - The Toggle component has built-in **color fade transition** (`transition: background 0.2s ease`) when toggling.
 - Props: `checked`, `onChange`, optional `onColor`, `offColor`, `size`, `ariaLabel`.
 

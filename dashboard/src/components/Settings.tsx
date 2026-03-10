@@ -1,5 +1,5 @@
 /**
- * Settings — user preferences (e.g. personalized suggestions).
+ * Settings: user preferences (e.g. personalized suggestions).
  */
 
 import React from 'react'

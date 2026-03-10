@@ -1,4 +1,4 @@
-"""NL Parser — orchestrates LLM providers and DAG validation."""
+"""NL Parser: orchestrates LLM providers and DAG validation."""
 
 from __future__ import annotations
 

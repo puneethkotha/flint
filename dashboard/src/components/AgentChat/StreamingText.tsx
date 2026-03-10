@@ -1,5 +1,5 @@
 /**
- * StreamingText — animates text appearing word-by-word.
+ * StreamingText: animates text appearing word-by-word.
  * Re-runs whenever `text` prop changes (new message appended).
  */
 

@@ -147,7 +147,7 @@ function HeartbeatPanel() {
   )
 }
 
-// Inline stat cards — moved here from MetricsCharts, shown ABOVE job table
+// Inline stat cards: moved here from MetricsCharts, shown ABOVE job table
 function StatCards({ jobs }: { jobs: JobResponse[] }) {
   const { colors } = useTheme()
   const withDuration = jobs.filter(j => j.duration_ms)

@@ -55,7 +55,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     app.state.redis = redis
     logger.info("redis_ready")
 
-    # Kafka producer (optional — degrades gracefully if unavailable)
+    # Kafka producer (optional: degrades gracefully if unavailable)
     from flint.streaming.producer import start_producer
     await start_producer()
     logger.info("kafka_producer_ready")

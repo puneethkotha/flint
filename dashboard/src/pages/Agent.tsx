@@ -1,5 +1,5 @@
 /**
- * Agent Mode — full-height split layout.
+ * Agent Mode: full-height split layout.
  * Left: conversational chat with Flint's AI agent.
  * Right: live DAG visualization building in real time.
  *
@@ -66,7 +66,7 @@ export default function Agent({ personalizedSuggestions = false, onEnablePersona
     }
 
     es.onerror = () => {
-      // SSE errors are expected when stream ends — reconnect will happen on next send
+      // SSE errors are expected when stream ends; reconnect will happen on next send
       es.close()
     }
   }, [sessionId]) // eslint-disable-line react-hooks/exhaustive-deps

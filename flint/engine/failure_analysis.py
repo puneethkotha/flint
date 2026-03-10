@@ -1,5 +1,5 @@
 """
-Phase 3c: Natural Language Debugging — AI-powered failure analysis.
+Phase 3c: Natural Language Debugging. AI-powered failure analysis.
 
 HOW TO INTEGRATE:
   1. In executor.py, after a job transitions to "failed", call:

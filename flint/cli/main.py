@@ -1,5 +1,5 @@
 """
-Phase 4a: Flint CLI — full rewrite with rich terminal output.
+Phase 4a: Flint CLI. Full rewrite with rich terminal output.
 
 Replaces/augments: flint/cli.py or flint/cli/main.py
 
@@ -92,7 +92,7 @@ def _info(msg: str):
 @click.version_option(version="1.0.0", prog_name="flint")
 def cli():
     """
-    Flint — natural language workflow engine.
+    Flint: natural language workflow engine.
 
     Describe any workflow in natural language. Flint runs it reliably.
     """
@@ -160,7 +160,7 @@ async def _run_workflow(description: str, base_url: str, stream: bool, input_dat
         except json.JSONDecodeError:
             _error(f"--input must be valid JSON, got: {input_data_str}")
 
-    _print(f"\n[bold cyan]Flint[/bold cyan] — parsing workflow...\n" if HAS_RICH else "\nFlint — parsing workflow...\n")
+    _print(f"\n[bold cyan]Flint[/bold cyan]: parsing workflow...\n" if HAS_RICH else "\nFlint: parsing workflow...\n")
 
     async with httpx.AsyncClient(base_url=base_url, timeout=60, headers=_headers()) as client:
         # Step 1: Parse NL to DAG
@@ -169,7 +169,7 @@ async def _run_workflow(description: str, base_url: str, stream: bool, input_dat
             resp.raise_for_status()
             workflow = resp.json()
         except httpx.HTTPStatusError as e:
-            _error(f"Failed to create workflow: {e.response.status_code} — {e.response.text}")
+            _error(f"Failed to create workflow: {e.response.status_code}: {e.response.text}")
         except httpx.ConnectError:
             _error(f"Cannot connect to Flint at {base_url}. Is it running?")
 
@@ -364,7 +364,7 @@ async def _job_status(job_id: str, base_url: str):
         icon = {"completed": "ok", "failed": "fail", "running": "...", "pending": "..."}.get(
             task["status"], "?"
         )
-        click.echo(f"  {icon} {task['task_id']} — {task['status']}")
+        click.echo(f"  {icon} {task['task_id']}: {task['status']}")
 
     if data.get("failure_analysis"):
         fa = data["failure_analysis"]
@@ -404,7 +404,7 @@ async def _deploy_workflows(yaml_files: list[Path], base_url: str):
             data = yaml.safe_load(f.read_text())
             description = data.get("description", "").strip()
             if not description:
-                _print(f"Skipping {f.name} — no description", "dim")
+                _print(f"Skipping {f.name}: no description", "dim")
                 continue
 
             _print(f"Deploying {f.name}...")

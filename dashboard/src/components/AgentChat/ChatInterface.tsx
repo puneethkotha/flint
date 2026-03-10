@@ -1,5 +1,5 @@
 /**
- * ChatInterface — left-panel conversational UI for Agent Mode.
+ * ChatInterface: left-panel conversational UI for Agent Mode.
  *
  * Features:
  * - User bubbles (right, white bg on dark / dark bg on light)

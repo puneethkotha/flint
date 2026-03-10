@@ -1,5 +1,5 @@
 /**
- * LiveDAGPanel — right-panel that animates the DAG being built node-by-node
+ * LiveDAGPanel: right-panel that animates the DAG being built node-by-node
  * as the Agent Mode conversation progresses.
  *
  * Nodes appear one-by-one with a staggered animation when the DAG arrives
