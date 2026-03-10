@@ -7,7 +7,7 @@ import { useAuth } from '../../context/AuthContext'
 import { recordUserEvent } from '../../utils/userAnalytics'
 
 const TYPEWRITER_PLACEHOLDERS = [
-  'Fetch top HN stories, summarize with Claude, post to Slack...',
+  'Fetch top HN stories, summarize with an LLM, post to Slack...',
   'Every hour pull orders from API, compute revenue, store in Postgres...',
   'Run tests, if passing deploy to production and notify the team...',
 ]
@@ -27,9 +27,9 @@ const INSPIRATION_CARDS = [
   },
   {
     title: 'LLM pipeline',
-    subtitle: 'Scrape → summarize with Claude → email',
+    subtitle: 'Scrape → summarize with LLM → email',
     icon: 'LLM', color: '#059669',
-    prompt: 'Scrape Hacker News front page, summarize top 5 stories with Claude, email me the digest',
+    prompt: 'Scrape Hacker News front page, summarize top 5 stories with an LLM, email me the digest',
   },
 ]
 

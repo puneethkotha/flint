@@ -7,7 +7,7 @@ Create empty:        flint/mcp/__init__.py
 Add to pyproject.toml [project.scripts]:
     flint-mcp = "flint.mcp.server:main"
 
-USAGE (Claude Code / Cursor):
+USAGE:
     Add to your MCP config:
     {
       "mcpServers": {
@@ -32,7 +32,7 @@ USAGE (Claude Code / Cursor):
       }
     }
 
-Then in Claude/Cursor you can say:
+Example prompts:
     "Run my data-pipeline workflow"
     "Create a workflow that fetches GitHub stars and saves to DB"
     "What's the status of job abc-123?"

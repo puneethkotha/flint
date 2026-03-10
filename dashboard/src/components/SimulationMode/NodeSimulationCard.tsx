@@ -24,7 +24,7 @@ const BASIS_LABELS: Record<string, string> = {
   historical_high_volume:  'High-volume history',
   historical_medium_volume:'Medium history',
   historical_low_volume:    'Low history',
-  claude_api_knowledge:    'Claude knowledge',
+  claude_api_knowledge:    'LLM knowledge',
   sandbox_execution:       'Sandbox executed',
   deterministic:           'Deterministic',
   propagated_uncertainty:  'Propagated',

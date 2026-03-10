@@ -5,7 +5,7 @@ interface Props {
 }
 
 const TIPS = [
-  { title: 'Create workflow', body: 'Type what you want: fetch data, run SQL, call Claude. Click Create & Run to execute.' },
+  { title: 'Create workflow', body: 'Type what you want: fetch data, run SQL, call an LLM. Click Create & Run to execute.' },
   { title: 'Agent', body: 'Chat with the AI to design and run workflows. Tell it what to automate and it builds it for you.' },
   { title: 'Templates', body: 'Browse ready-made workflows and use them as starting points.' },
   { title: 'Dashboard', body: 'View jobs, live logs, and DAG status as tasks complete.' },

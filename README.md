@@ -31,7 +31,7 @@ curl https://flint-api-fbsk.onrender.com/api/v1/health
 # Parse a workflow into a DAG (no auth needed)
 curl -X POST https://flint-api-fbsk.onrender.com/api/v1/parse \
   -H "Content-Type: application/json" \
-  -d '{"description": "fetch top HN stories and summarize them with Claude"}'
+  -d '{"description": "fetch top HN stories and summarize them with an LLM"}'
 ```
 
 ## Quick Start (Local)
@@ -70,7 +70,7 @@ open http://localhost:3000
 
 ## How It Works
 
-- **Plain English → DAG**: Claude claude-sonnet-4-6 parses your description using chain-of-thought prompting into a typed DAG with 5 few-shot examples
+- **Plain English → DAG**: An LLM (claude-sonnet-4-6) parses your description using chain-of-thought prompting into a typed DAG with 5 few-shot examples
 - **Parallel Execution**: Kahn's topological sort produces parallel batches; `asyncio.gather()` runs each batch concurrently
 - **Corruption Detection**: 5 validation checks per task (cardinality, required fields, non-nullable, range, freshness) before downstream tasks run
 - **Smart Retries**: Failure classifier distinguishes rate limits → wait, network → backoff, logic errors → halt immediately
@@ -87,13 +87,13 @@ open http://localhost:3000
 | `python` | Inline Python code | Data transforms, computations |
 | `webhook` | POST templated payloads | Slack, Discord, Zapier |
 | `sql` | PostgreSQL queries | Data reads, writes, migrations |
-| `llm` | Claude/GPT/Ollama calls | Summarization, classification |
+| `llm` | LLM calls (Claude, GPT, Ollama) | Summarization, classification |
 
 ---
 
 ## Stack
 
-Python 3.11 · FastAPI · asyncpg · aiokafka · redis[asyncio] · APScheduler · Claude claude-sonnet-4-6 · Prometheus · React 18 · React Flow · Recharts · Docker · Render
+Python 3.11 · FastAPI · asyncpg · aiokafka · redis[asyncio] · APScheduler · claude-sonnet-4-6 · Prometheus · React 18 · React Flow · Recharts · Docker · Render
 
 ---
 
