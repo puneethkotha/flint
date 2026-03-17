@@ -1,6 +1,6 @@
 # Flint
 
-**Natural language workflow automation with corruption detection and smart retries.** Parse natural language descriptions into DAGs, execute with parallel batching, validate outputs with 5-check corruption detection, and recover from failures intelligently.
+**NL to DAG compiler for ML pipelines with async execution and retries.** Parse natural language descriptions into DAGs, execute with parallel batching, validate outputs with 5-check corruption detection, and recover from failures intelligently.
 
 [![Dashboard](https://img.shields.io/badge/dashboard-live-2563eb)](https://flint-dashboard-silk.vercel.app)
 [![API](https://img.shields.io/badge/API-live-2563eb)](https://flint-api-fbsk.onrender.com/api/v1/health)
