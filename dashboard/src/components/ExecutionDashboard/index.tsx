@@ -99,7 +99,7 @@ function HeartbeatPanel() {
     <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
       <div style={{ width: 5, height: 5, borderRadius: '50%', background: ok ? '#22c55e' : '#ef4444', flexShrink: 0 }} />
       <span style={{ fontSize: 11, color: colors.textMuted, fontFamily: 'ui-monospace, monospace', minWidth: 40 }}>{label}</span>
-      <span style={{ fontSize: 11, color: '#888', fontFamily: 'ui-monospace, monospace' }}>{value}</span>
+      <span style={{ fontSize: 11, color: colors.codeColor, fontFamily: 'ui-monospace, monospace' }}>{value}</span>
     </div>
   )
 
@@ -328,7 +328,7 @@ export default function ExecutionDashboard({ onOpenLogin }: { onOpenLogin?: () =
 
   const statusDotColor = selectedJob?.status === 'completed' ? '#22c55e'
     : selectedJob?.status === 'failed' ? '#ef4444'
-    : selectedJob?.status === 'running' ? '#f5f5f5'
+    : selectedJob?.status === 'running' ? colors.textPrimary
     : colors.textMuted
 
   // Logged-out visitors never see a runs feed — show a clean sign-in state.
@@ -339,7 +339,7 @@ export default function ExecutionDashboard({ onOpenLogin }: { onOpenLogin?: () =
         background: colors.panelBg, border: `1px solid ${colors.panelBorder}`, borderRadius: 12,
       }}>
         <div style={{ textAlign: 'center', maxWidth: 340, padding: '40px 24px' }}>
-          <NodeGraph size={44} strokeWidth={1.4} style={{ color: '#2f2f2f' }} />
+          <NodeGraph size={44} strokeWidth={1.4} style={{ color: colors.textDisabled }} />
           <div style={{ fontSize: 17, fontWeight: 600, color: colors.textSecondary, letterSpacing: '-0.01em', marginTop: 16 }}>
             Your workflow runs live here
           </div>

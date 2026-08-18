@@ -7,6 +7,7 @@
  */
 
 import React, { useEffect, useState } from 'react'
+import { useTheme } from '../../theme'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -48,6 +49,7 @@ const STATUS_DOT_COLORS = {
 }
 
 export const VersionHistory: React.FC<VersionHistoryProps> = ({ workflowId }) => {
+  const { colors } = useTheme()
   const [versions, setVersions] = useState<Version[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedA, setSelectedA] = useState<number | null>(null)
@@ -82,12 +84,12 @@ export const VersionHistory: React.FC<VersionHistoryProps> = ({ workflowId }) =>
   }, [workflowId, selectedA, selectedB])
 
   if (loading) {
-    return <div style={{ padding: 24, color: '#64748b', fontSize: 13 }}>Loading version history…</div>
+    return <div style={{ padding: 24, color: colors.textMuted, fontSize: 13 }}>Loading version history…</div>
   }
 
   if (versions.length === 0) {
     return (
-      <div style={{ padding: 24, color: '#64748b', fontSize: 13, textAlign: 'center' }}>
+      <div style={{ padding: 24, color: colors.textMuted, fontSize: 13, textAlign: 'center' }}>
         No version history yet. Save or update this workflow to start tracking versions.
       </div>
     )
@@ -101,13 +103,13 @@ export const VersionHistory: React.FC<VersionHistoryProps> = ({ workflowId }) =>
     <div style={{ display: 'flex', gap: 20, padding: 20, height: '100%' }}>
       {/* Left: version timeline */}
       <div style={{ width: 260, flexShrink: 0 }}>
-        <div style={{ fontSize: 12, color: '#64748b', marginBottom: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        <div style={{ fontSize: 12, color: colors.textMuted, marginBottom: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           Version timeline
         </div>
 
         <div style={{ position: 'relative' }}>
           {/* Vertical line */}
-          <div style={{ position: 'absolute', left: 10, top: 12, bottom: 0, width: 2, background: '#1e293b' }} />
+          <div style={{ position: 'absolute', left: 10, top: 12, bottom: 0, width: 2, background: colors.panelBorder }} />
 
           {versions.map((v, i) => {
             const isA = selectedA === v.version_number
@@ -128,8 +130,8 @@ export const VersionHistory: React.FC<VersionHistoryProps> = ({ workflowId }) =>
                     width: 14,
                     height: 14,
                     borderRadius: '50%',
-                    background: isA || isB ? '#a78bfa' : '#334155',
-                    border: isA || isB ? '2px solid #7c3aed' : '2px solid #1e293b',
+                    background: isA || isB ? '#a78bfa' : colors.textMuted,
+                    border: isA || isB ? '2px solid #7c3aed' : `2px solid ${colors.panelBorder}`,
                     zIndex: 1,
                   }}
                 />
@@ -137,15 +139,15 @@ export const VersionHistory: React.FC<VersionHistoryProps> = ({ workflowId }) =>
                 {/* Version card */}
                 <div
                   style={{
-                    background: isA || isB ? '#1e1b4b' : '#0f172a',
-                    border: `1px solid ${isA || isB ? '#4338ca' : '#1e293b'}`,
+                    background: isA || isB ? colors.rowSelected : colors.inputBg,
+                    border: `1px solid ${isA || isB ? '#4338ca' : colors.panelBorder}`,
                     borderRadius: 8,
                     padding: '8px 10px',
                     cursor: 'pointer',
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: '#e2e8f0' }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: colors.textPrimary }}>
                       v{v.version_number}
                     </span>
                     <div style={{ display: 'flex', gap: 4 }}>
@@ -162,18 +164,18 @@ export const VersionHistory: React.FC<VersionHistoryProps> = ({ workflowId }) =>
                     </div>
                   </div>
 
-                  <div style={{ fontSize: 10, color: '#64748b', marginTop: 2 }}>
+                  <div style={{ fontSize: 10, color: colors.textMuted, marginTop: 2 }}>
                     {new Date(v.created_at).toLocaleString()}
                   </div>
 
                   {v.avg_execution_ms && (
-                    <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 2 }}>
+                    <div style={{ fontSize: 10, color: colors.textSecondary, marginTop: 2 }}>
                       avg {v.avg_execution_ms}ms
                     </div>
                   )}
 
                   {v.change_summary && (
-                    <div style={{ fontSize: 10, color: '#475569', marginTop: 4, fontStyle: 'italic' }}>
+                    <div style={{ fontSize: 10, color: colors.textMuted, marginTop: 4, fontStyle: 'italic' }}>
                       {v.change_summary}
                     </div>
                   )}
@@ -184,8 +186,8 @@ export const VersionHistory: React.FC<VersionHistoryProps> = ({ workflowId }) =>
                       onClick={() => setSelectedA(v.version_number)}
                       style={{
                         fontSize: 9, padding: '2px 6px', borderRadius: 3,
-                        background: isA ? '#7c3aed' : '#1e293b',
-                        color: isA ? '#fff' : '#64748b',
+                        background: isA ? '#7c3aed' : colors.inputBg,
+                        color: isA ? '#fff' : colors.textMuted,
                         border: 'none', cursor: 'pointer',
                       }}
                     >
@@ -195,8 +197,8 @@ export const VersionHistory: React.FC<VersionHistoryProps> = ({ workflowId }) =>
                       onClick={() => setSelectedB(v.version_number)}
                       style={{
                         fontSize: 9, padding: '2px 6px', borderRadius: 3,
-                        background: isB ? '#7c3aed' : '#1e293b',
-                        color: isB ? '#fff' : '#64748b',
+                        background: isB ? '#7c3aed' : colors.inputBg,
+                        color: isB ? '#fff' : colors.textMuted,
                         border: 'none', cursor: 'pointer',
                       }}
                     >
@@ -214,16 +216,16 @@ export const VersionHistory: React.FC<VersionHistoryProps> = ({ workflowId }) =>
       <div style={{ flex: 1, minWidth: 0 }}>
         {selectedA != null && selectedB != null && selectedA !== selectedB ? (
           <>
-            <div style={{ fontSize: 12, color: '#64748b', marginBottom: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <div style={{ fontSize: 12, color: colors.textMuted, marginBottom: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Diff: v{selectedA} → v{selectedB}
             </div>
 
             {diffLoading ? (
-              <div style={{ color: '#64748b', fontSize: 13 }}>Computing diff…</div>
+              <div style={{ color: colors.textMuted, fontSize: 13 }}>Computing diff…</div>
             ) : diff ? (
               <>
                 {/* Summary bar */}
-                <div style={{ fontSize: 13, color: '#94a3b8', marginBottom: 14, padding: '8px 12px', background: '#0f172a', borderRadius: 6, border: '1px solid #1e293b' }}>
+                <div style={{ fontSize: 13, color: colors.textSecondary, marginBottom: 14, padding: '8px 12px', background: colors.inputBg, borderRadius: 6, border: `1px solid ${colors.panelBorder}` }}>
                   {diff.summary || 'No changes detected'}
                 </div>
 
@@ -232,7 +234,7 @@ export const VersionHistory: React.FC<VersionHistoryProps> = ({ workflowId }) =>
                   <div
                     key={node.node_id}
                     style={{
-                      background: '#0f172a',
+                      background: colors.inputBg,
                       border: `1px solid ${STATUS_DOT_COLORS[node.status]}33`,
                       borderLeft: `3px solid ${STATUS_DOT_COLORS[node.status]}`,
                       borderRadius: 6,
@@ -244,13 +246,13 @@ export const VersionHistory: React.FC<VersionHistoryProps> = ({ workflowId }) =>
                       <span style={{ fontSize: 10, fontWeight: 700, color: STATUS_DOT_COLORS[node.status], textTransform: 'uppercase' }}>
                         {node.status}
                       </span>
-                      <span style={{ fontSize: 12, color: '#e2e8f0', fontWeight: 600 }}>
+                      <span style={{ fontSize: 12, color: colors.textPrimary, fontWeight: 600 }}>
                         {node.node_id}
                       </span>
                     </div>
 
                     {node.changed_fields.length > 0 && (
-                      <div style={{ fontSize: 11, color: '#64748b' }}>
+                      <div style={{ fontSize: 11, color: colors.textMuted }}>
                         Changed: <span style={{ color: '#f59e0b' }}>{node.changed_fields.join(', ')}</span>
                       </div>
                     )}
@@ -262,14 +264,14 @@ export const VersionHistory: React.FC<VersionHistoryProps> = ({ workflowId }) =>
                   <div
                     key={i}
                     style={{
-                      background: '#0f172a',
+                      background: colors.inputBg,
                       border: `1px solid ${e.type === 'added' ? '#10b98133' : '#ef444433'}`,
                       borderLeft: `3px solid ${e.type === 'added' ? '#10b981' : '#ef4444'}`,
                       borderRadius: 6,
                       padding: '8px 12px',
                       marginBottom: 8,
                       fontSize: 11,
-                      color: '#94a3b8',
+                      color: colors.textSecondary,
                     }}
                   >
                     <span style={{ color: e.type === 'added' ? '#10b981' : '#ef4444', fontWeight: 700, textTransform: 'uppercase', marginRight: 8 }}>
@@ -280,13 +282,13 @@ export const VersionHistory: React.FC<VersionHistoryProps> = ({ workflowId }) =>
                 ))}
 
                 {diff.nodes_diff.every(n => n.status === 'unchanged') && diff.edges_diff.length === 0 && (
-                  <div style={{ color: '#64748b', fontSize: 13 }}>These versions are identical.</div>
+                  <div style={{ color: colors.textMuted, fontSize: 13 }}>These versions are identical.</div>
                 )}
               </>
             ) : null}
           </>
         ) : (
-          <div style={{ color: '#64748b', fontSize: 13, paddingTop: 40, textAlign: 'center' }}>
+          <div style={{ color: colors.textMuted, fontSize: 13, paddingTop: 40, textAlign: 'center' }}>
             Select two different versions (A and B) to see the diff.
           </div>
         )}

@@ -70,7 +70,7 @@ export default function DAGVisualization({ dag, jobId, taskStatuses, onTaskStatu
   const dagNodes = (dag.nodes as DAGNode[]) || []
   const positions = useMemo(() => layoutNodes(dagNodes), [dagNodes])
 
-  const edgeColor = '#2a2a2a'
+  const edgeColor = colors.handle
 
   const buildNodes = useCallback((): Node<TaskNodeData>[] =>
     dagNodes.map(n => {
@@ -130,7 +130,7 @@ export default function DAGVisualization({ dag, jobId, taskStatuses, onTaskStatu
         proOptions={{ hideAttribution: true }}
       >
         <Background
-          color='#1a1a1a'
+          color={colors.panelBorder}
           variant={BackgroundVariant.Dots}
           gap={28} size={1}
         />

@@ -32,6 +32,9 @@ function HealNode({ data }: NodeProps<HealNodeData>) {
   const prev = useRef(data.status)
   const typeColor = TYPE_COLOR[data.type] || '#6b7280'
   const s = STATUS_STYLE[data.status] ?? STATUS_STYLE.pending
+  // Pending is neutral chrome (not a status hue) — let it adapt to the theme.
+  const borderColor = data.status === 'pending' ? colors.panelBorder : s.border
+  const dotColor = data.status === 'pending' ? colors.textMuted : s.dot
 
   // Green pop when a node becomes healed.
   useEffect(() => {
@@ -67,7 +70,7 @@ function HealNode({ data }: NodeProps<HealNodeData>) {
 
       <div ref={ref} style={{
         background: colors.panelBg,
-        border: `1px solid ${s.border}`,
+        border: `1px solid ${borderColor}`,
         padding: '10px 14px', minWidth: 150, maxWidth: 210, borderRadius: 4,
         transition: 'border-color 0.3s, background 0.2s',
         animation: s.anim ?? 'none',
@@ -75,7 +78,7 @@ function HealNode({ data }: NodeProps<HealNodeData>) {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
           <span style={{
-            width: 7, height: 7, borderRadius: '50%', background: s.dot, flexShrink: 0,
+            width: 7, height: 7, borderRadius: '50%', background: dotColor, flexShrink: 0,
             animation: (data.status !== 'pending' && data.status !== 'healed') ? 'healDot 1.2s ease-in-out infinite' : 'none',
           }} />
           <span style={{

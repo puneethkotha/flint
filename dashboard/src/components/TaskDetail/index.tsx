@@ -1,5 +1,6 @@
 import React from 'react'
 import { TaskExecution } from '../../api/client'
+import { useTheme } from '../../theme'
 
 interface Props {
   task: TaskExecution
@@ -7,6 +8,7 @@ interface Props {
 }
 
 export default function TaskDetail({ task, onClose }: Props) {
+  const { colors } = useTheme()
   return (
     <div style={{
       position: 'fixed',
@@ -14,8 +16,8 @@ export default function TaskDetail({ task, onClose }: Props) {
       top: 0,
       bottom: 0,
       width: 400,
-      background: '#1a1a1a',
-      borderLeft: '1px solid #2a2a2a',
+      background: colors.panelBg,
+      borderLeft: `1px solid ${colors.panelBorder}`,
       overflowY: 'auto',
       zIndex: 100,
       padding: 24,
@@ -24,7 +26,7 @@ export default function TaskDetail({ task, onClose }: Props) {
         <h3 style={{ margin: 0, fontSize: 16 }}>{task.task_id}</h3>
         <button
           onClick={onClose}
-          style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', fontSize: 20 }}
+          style={{ background: 'none', border: 'none', color: colors.textMuted, cursor: 'pointer', fontSize: 20 }}
         >
           ×
         </button>
@@ -38,9 +40,9 @@ export default function TaskDetail({ task, onClose }: Props) {
           { label: 'Duration', value: task.duration_ms ? `${task.duration_ms}ms` : 'N/A' },
           { label: 'Failure Type', value: task.failure_type || 'N/A' },
         ].map(({ label, value }) => (
-          <div key={label} style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #2a2a2a', paddingBottom: 8 }}>
-            <span style={{ color: '#555', fontSize: 13 }}>{label}</span>
-            <span style={{ color: '#ccc', fontSize: 13 }}>{value}</span>
+          <div key={label} style={{ display: 'flex', justifyContent: 'space-between', borderBottom: `1px solid ${colors.divider}`, paddingBottom: 8 }}>
+            <span style={{ color: colors.textMuted, fontSize: 13 }}>{label}</span>
+            <span style={{ color: colors.textSecondary, fontSize: 13 }}>{value}</span>
           </div>
         ))}
 
@@ -55,7 +57,7 @@ export default function TaskDetail({ task, onClose }: Props) {
 
         {Object.keys(task.output_data || {}).length > 0 && (
           <div>
-            <p style={{ margin: '0 0 8px', color: '#555', fontSize: 11, fontWeight: 600 }}>OUTPUT</p>
+            <p style={{ margin: '0 0 8px', color: colors.textMuted, fontSize: 11, fontWeight: 600 }}>OUTPUT</p>
             <pre style={{
               background: '#0f0f0f',
               borderRadius: 6,

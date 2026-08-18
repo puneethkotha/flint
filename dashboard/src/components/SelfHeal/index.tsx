@@ -280,7 +280,7 @@ const TraceCard: React.FC<{ step: import('../../api/client').HealTraceStep; colo
     }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-          <span style={{ width: 7, height: 7, borderRadius: '50%', background: healed ? '#10b981' : '#64748b', flexShrink: 0 }} />
+          <span style={{ width: 7, height: 7, borderRadius: '50%', background: healed ? '#10b981' : colors.textMuted, flexShrink: 0 }} />
           <span style={{ fontSize: 12, fontWeight: 600, color: colors.textSecondary, fontFamily: 'ui-monospace, monospace' }}>{step.node_id}</span>
           <span style={{ fontSize: 9, color: colors.textMuted, textTransform: 'uppercase' }}>{step.node_type}</span>
         </div>

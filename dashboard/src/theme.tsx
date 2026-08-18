@@ -43,22 +43,22 @@ const DARK: ThemeColors = {
 }
 
 const LIGHT: ThemeColors = {
-  pageBg:        '#fafafa',
+  pageBg:        '#ffffff',
   panelBg:       '#ffffff',
-  panelBorder:   '#e5e5e5',
-  inputBg:       '#f5f5f5',
+  panelBorder:   '#ececec',
+  inputBg:       '#f6f6f6',
   rowAlt:        '#fafafa',
-  rowHover:      '#f5f5f5',
-  rowSelected:   '#eeeeee',
-  textPrimary:   '#171717',
-  textSecondary: '#525252',
-  textMuted:     '#737373',
-  textDisabled:  '#a3a3a3',
-  divider:       '#e5e5e5',
-  handle:        '#d4d4d4',
-  navBg:         '#fafafa',
+  rowHover:      '#f2f2f2',
+  rowSelected:   '#ededed',
+  textPrimary:   '#0f0f0f',
+  textSecondary: '#3f3f3f',
+  textMuted:     '#8a8a8a',
+  textDisabled:  '#b8b8b8',
+  divider:       '#ececec',
+  handle:        '#cfcfcf',
+  navBg:         '#ffffff',
   statCardBg:    '#ffffff',
-  codeColor:     '#525252',
+  codeColor:     '#3f3f3f',
 }
 
 interface ThemeCtx {

@@ -335,7 +335,7 @@ const mkStyles = (colors: ThemeColors) => ({
   loadingBarFill: {
     height: '100%',
     width: '30%',
-    background: '#333',
+    background: colors.textDisabled,
     animation: 'shimmer 1.5s ease-in-out infinite',
   },
   metricsRow: {

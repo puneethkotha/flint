@@ -40,7 +40,7 @@ export const FailureAnalysisCard: React.FC<FailureAnalysisCardProps> = ({
   analysis,
   onApplyFix,
 }) => {
-  const { colors } = useTheme()
+  const { colors, theme } = useTheme()
   const [dismissed, setDismissed] = useState(false)
   const [showPatch, setShowPatch] = useState(false)
 
@@ -52,7 +52,9 @@ export const FailureAnalysisCard: React.FC<FailureAnalysisCardProps> = ({
   return (
     <div
       style={{
-        background: 'linear-gradient(135deg, #1a0f2e 0%, #0f172a 100%)',
+        background: theme === 'dark'
+          ? 'linear-gradient(135deg, #1a0f2e 0%, #0f172a 100%)'
+          : 'linear-gradient(135deg, #f6f2fe 0%, #f9f7ff 100%)',
         border: '1px solid #7c3aed',
         borderRadius: 12,
         padding: '16px 20px',
@@ -70,7 +72,7 @@ export const FailureAnalysisCard: React.FC<FailureAnalysisCardProps> = ({
           background: 'none',
           border: 'none',
           cursor: 'pointer',
-          color: '#475569',
+          color: colors.textMuted,
           fontSize: 16,
           lineHeight: 1,
         }}
@@ -95,11 +97,11 @@ export const FailureAnalysisCard: React.FC<FailureAnalysisCardProps> = ({
       <div
         style={{
           fontSize: 13,
-          color: '#e2e8f0',
+          color: colors.textSecondary,
           lineHeight: 1.6,
           marginBottom: 14,
           paddingBottom: 14,
-          borderBottom: '1px solid #1e293b',
+          borderBottom: `1px solid ${colors.divider}`,
         }}
       >
         {analysis.explanation}
@@ -108,10 +110,10 @@ export const FailureAnalysisCard: React.FC<FailureAnalysisCardProps> = ({
       {/* Suggested fix footer */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 11, color: '#64748b', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <div style={{ fontSize: 11, color: colors.textMuted, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             Suggested fix
           </div>
-          <div style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.5 }}>
+          <div style={{ fontSize: 12, color: colors.textSecondary, lineHeight: 1.5 }}>
             {analysis.suggested_fix}
           </div>
         </div>
@@ -141,8 +143,8 @@ export const FailureAnalysisCard: React.FC<FailureAnalysisCardProps> = ({
               onClick={() => setShowPatch(!showPatch)}
               style={{
                 background: 'none',
-                color: '#64748b',
-                border: '1px solid #334155',
+                color: colors.textMuted,
+                border: `1px solid ${colors.panelBorder}`,
                 borderRadius: 6,
                 padding: '5px 10px',
                 fontSize: 11,
