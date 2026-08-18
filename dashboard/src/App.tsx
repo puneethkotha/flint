@@ -454,7 +454,7 @@ export default function App() {
             <Templates onUseTemplate={handleUseTemplate} />
           </div>
           <div style={{ display: activeTab === 'dashboard' ? 'flex' : 'none', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-            <ExecutionDashboard />
+            <ExecutionDashboard onOpenLogin={() => setShowLoginPage(true)} />
           </div>
           <div style={{ display: activeTab === 'settings' ? 'flex' : 'none', flexDirection: 'column', flex: 1, minHeight: 0 }}>
             <Settings

@@ -9,6 +9,8 @@ import VersionHistory from '../VersionHistory/VersionHistory'
 import { api, JobResponse } from '../../api/client'
 import type { TaskExecution } from '../../api/client'
 import { useTheme } from '../../theme'
+import { useAuth } from '../../context/AuthContext'
+import { NodeGraph } from '../icons'
 
 function ShimmerBar({ color }: { color: string }) {
   return (
@@ -261,9 +263,12 @@ function LiveLogPanel({ job }: { job: JobResponse | null }) {
   )
 }
 
-export default function ExecutionDashboard() {
+export default function ExecutionDashboard({ onOpenLogin }: { onOpenLogin?: () => void } = {}) {
   const { colors } = useTheme()
-  const { jobs, loading } = useJobs(5000)
+  const { user } = useAuth()
+  // Only fetch/show the runs feed for a signed-in user — never expose a shared
+  // global feed to anonymous visitors.
+  const { jobs, loading } = useJobs(5000, !!user)
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null)
   const [selectedJob, setSelectedJob] = useState<JobResponse | null>(null)
   const [dagForJob, setDagForJob] = useState<Record<string, unknown> | null>(null)
@@ -325,6 +330,37 @@ export default function ExecutionDashboard() {
     : selectedJob?.status === 'failed' ? '#ef4444'
     : selectedJob?.status === 'running' ? '#f5f5f5'
     : colors.textMuted
+
+  // Logged-out visitors never see a runs feed — show a clean sign-in state.
+  if (!user) {
+    return (
+      <div style={{
+        flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: colors.panelBg, border: `1px solid ${colors.panelBorder}`, borderRadius: 12,
+      }}>
+        <div style={{ textAlign: 'center', maxWidth: 340, padding: '40px 24px' }}>
+          <NodeGraph size={44} strokeWidth={1.4} style={{ color: '#2f2f2f' }} />
+          <div style={{ fontSize: 17, fontWeight: 600, color: colors.textSecondary, letterSpacing: '-0.01em', marginTop: 16 }}>
+            Your workflow runs live here
+          </div>
+          <div style={{ fontSize: 13, color: colors.textMuted, lineHeight: 1.6, marginTop: 8 }}>
+            Sign in to create workflows and watch their execution — DAGs, live logs,
+            metrics, and failure analysis, scoped privately to your account.
+          </div>
+          <button
+            onClick={() => onOpenLogin?.()}
+            style={{
+              marginTop: 20, padding: '9px 20px', borderRadius: 7, border: 'none',
+              background: colors.textPrimary, color: colors.pageBg, fontSize: 13, fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            Sign in
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flint-split">
