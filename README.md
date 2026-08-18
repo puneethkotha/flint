@@ -69,6 +69,8 @@ Watch the dashboard for real-time execution visualization.
 
 ## Self-Heal ⭐
 
+![Flint Self-Heal — monitor, detect, diagnose, recover, verify](assets/self-heal.gif)
+
 Most workflow tools help you *build* automations. Flint also makes them **reliable** — and shows you the work.
 
 Open the **Self-Heal** tab, describe a workflow, and Flint runs the 2026 self-healing loop live:
