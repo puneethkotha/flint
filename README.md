@@ -1,6 +1,6 @@
 # Flint
 
-**Natural-language workflow automation that heals itself — and runs on a free, real-time LLM.** Parse plain English into DAGs, execute with parallel batching, validate outputs with corruption detection, recover from failures intelligently, and audit + auto-patch a workflow's reliability before it ever runs.
+**Natural-language workflow automation that heals itself — and runs on a free, real-time LLM.** Parse natural language descriptions into DAGs, execute with parallel batching, validate outputs with 5-check corruption detection, recover from failures intelligently, and audit + auto-patch a workflow's reliability before it ever runs.
 
 [![Dashboard](https://img.shields.io/badge/dashboard-live-2563eb)](https://flint-dashboard-silk.vercel.app)
 [![API](https://img.shields.io/badge/API-live-2563eb)](https://flint-api-fbsk.onrender.com/api/v1/health)
@@ -26,13 +26,13 @@ Modern workflow automation tools fail in three critical ways:
 
 ## The Solution
 
-Flint is a workflow automation engine that takes natural language descriptions and runs them reliably. It parses plain English into directed acyclic graphs (DAGs), executes tasks in parallel batches using topological sorting, validates outputs with 5-check corruption detection before downstream tasks run, and recovers from failures with intelligent retry classification.
+Flint is a workflow automation engine that takes natural language descriptions and runs them reliably. It parses natural language into directed acyclic graphs (DAGs), executes tasks in parallel batches using topological sorting, validates outputs with 5-check corruption detection before downstream tasks run, and recovers from failures with intelligent retry classification.
 
 **Key capabilities:**
 
 - **Free, real-time LLM pipeline:** The entire pipeline (parser, agent, self-heal, simulation) runs on a free provider by default — Groq (no credit card, OpenAI-compatible, 300–800 tok/s). Swap to Gemini, Claude, OpenAI, or local Ollama with one env var.
 - **Self-Heal (⭐ new):** Audit a workflow's resilience and watch Flint run the monitor → detect → diagnose → recover → verify loop live — turning fragile nodes red, then healing them to green with applicable fix patches and a climbing reliability score.
-- **Natural language parsing:** Describe workflows in plain English. The LLM parses into typed DAGs with dependencies.
+- **Natural language parsing:** Describe workflows in natural language. The LLM parses into typed DAGs with dependencies.
 - **Parallel execution:** Topological sort produces batches. `asyncio.gather()` runs each batch concurrently.
 - **Corruption detection:** 5 validation checks per task (cardinality, required fields, non-nullable, range, freshness).
 - **Smart retries:** Failure classifier distinguishes rate limits (wait), network errors (backoff), logic errors (halt immediately).
@@ -136,7 +136,7 @@ Next [Retry] Next [Retry] Next [Retry]
     Cache        → Redis
 ```
 
-**Parser:** Accepts plain English, uses chain-of-thought prompting with 5 few-shot examples, validates against schema, returns typed DAG.
+**Parser:** Accepts natural language, uses chain-of-thought prompting with 5 few-shot examples, validates against schema, returns typed DAG.
 
 **Executor:** Runs Kahn's topological sort to produce execution batches, executes each batch with `asyncio.gather()`, passes outputs to downstream tasks via templating.
 
