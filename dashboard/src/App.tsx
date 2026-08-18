@@ -8,9 +8,9 @@ import LoginPage from './components/LoginPage'
 import Settings, { getPersonalizedSuggestionsEnabled, setPersonalizedSuggestionsEnabled } from './components/Settings'
 import Agent from './pages/Agent'
 import SelfHeal from './components/SelfHeal'
-import FlintMark from './components/FlintMark'
 import CommandPalette from './components/CommandPalette'
 import Toggle from './components/Toggle'
+import { Sun, Moon } from './components/icons'
 import { useTheme } from './theme'
 import { useAuth } from './context/AuthContext'
 import { recordUserEvent } from './utils/userAnalytics'
@@ -140,7 +140,7 @@ export default function App() {
         position: 'fixed', inset: 0, background: '#080808',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
       }}>
-        <FlintMark size={72} />
+        <img src="/flint-logo.png" alt="Flint" width={80} height={80} style={{ opacity: 0.9 }} />
         <div style={{ marginTop: 16, fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>Loading...</div>
       </div>
     )
@@ -290,7 +290,7 @@ export default function App() {
 
           {/* Brand */}
           <div style={{ display: 'flex', alignItems: 'center', marginRight: 20, flexShrink: 0 }}>
-            <FlintMark size={34} />
+            <img src="/flint-logo.png" alt="Flint" width={36} height={36} style={{ display: 'block' }} />
           </div>
 
           {/* Tabs */}
@@ -337,8 +337,23 @@ export default function App() {
             })}
           </div>
 
-          {/* Right: ⌘K + API status + Auth */}
+          {/* Right: theme + ⌘K + API status + Auth */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+            <button
+              onClick={() => toggleTheme()}
+              title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                width: 28, height: 28, background: colors.inputBg,
+                border: `1px solid ${colors.panelBorder}`, borderRadius: 6,
+                color: colors.textMuted, cursor: 'pointer',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.color = colors.textSecondary; e.currentTarget.style.borderColor = '#2a2a2a' }}
+              onMouseLeave={e => { e.currentTarget.style.color = colors.textMuted; e.currentTarget.style.borderColor = colors.panelBorder }}
+            >
+              {theme === 'dark' ? <Moon size={15} /> : <Sun size={15} />}
+            </button>
             <button
               onClick={() => setCmdkOpen(true)}
               title="Command palette (⌘K)"
