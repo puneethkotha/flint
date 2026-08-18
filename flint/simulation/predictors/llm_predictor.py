@@ -21,7 +21,7 @@ import re
 import uuid
 from typing import Any
 
-from flint.simulation.engine import NodeSimulation, ConfidenceBasis  # type: ignore
+from flint.simulation.engine import ConfidenceBasis, NodeSimulation  # type: ignore
 from flint.simulation.predictors.base import BasePredictor
 
 # Session-level cache: prompt_hash → output
@@ -87,7 +87,7 @@ class LlmPredictor(BasePredictor):
         if cache_key in _prompt_cache:
             output   = _prompt_cache[cache_key]
             duration = 200
-            note     = f"Cached simulation result (identical prompt)"
+            note     = "Cached simulation result (identical prompt)"
         else:
             output, duration = await self._run_simulation(prompt, system, sim_model, max_tokens)
             _prompt_cache[cache_key] = output

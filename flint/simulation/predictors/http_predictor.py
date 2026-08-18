@@ -15,7 +15,7 @@ import json
 import re
 import uuid
 
-from flint.simulation.engine import NodeSimulation, ConfidenceBasis  # type: ignore
+from flint.simulation.engine import ConfidenceBasis, NodeSimulation  # type: ignore
 from flint.simulation.predictors.base import BasePredictor
 
 # Well-known APIs the model has strong knowledge of

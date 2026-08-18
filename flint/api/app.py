@@ -2,21 +2,21 @@
 
 from __future__ import annotations
 
-from contextlib import asynccontextmanager
 from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 import structlog
 from fastapi import Depends, FastAPI
 from fastapi.staticfiles import StaticFiles
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
 from flint.api.dependencies import verify_api_key
 from flint.api.limiter import limiter
 from flint.config import get_settings
 from flint.observability.logging import configure_logging
-from slowapi import _rate_limit_exceeded_handler
-from slowapi.errors import RateLimitExceeded
-from slowapi.middleware import SlowAPIMiddleware
 
 logger = structlog.get_logger(__name__)
 
@@ -56,7 +56,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     app.state.db_pool = pool
 
     # SQLAlchemy async engine (for simulation module)
-    from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+    from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
     sa_engine = create_async_engine(
         settings.sqlalchemy_async_url,
         echo=False,
@@ -164,22 +164,22 @@ def create_app() -> FastAPI:
 
     # API routes
     from flint.api.routes import (
-        health,
-        jobs,
-        metrics,
-        parse,
-        workflows,
-        versions,
-        marketplace,
-        benchmarks,
-        simulation,
-        export_import,
+        agent,
         audit,
         auth,
-        agent,
+        benchmarks,
         demo,
-        suggestions,
+        export_import,
+        health,
+        jobs,
+        marketplace,
+        metrics,
+        parse,
         reliability,
+        simulation,
+        suggestions,
+        versions,
+        workflows,
     )
     from flint.api.routes.websocket import router as ws_router
 

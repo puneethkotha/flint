@@ -21,7 +21,7 @@ from typing import Any
 import anthropic
 
 from flint.config import get_settings
-from flint.simulation.engine import NodeSimulation, ConfidenceBasis  # type: ignore
+from flint.simulation.engine import ConfidenceBasis, NodeSimulation  # type: ignore
 from flint.simulation.predictors.base import BasePredictor
 
 settings = get_settings()

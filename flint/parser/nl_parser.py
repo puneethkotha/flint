@@ -6,8 +6,7 @@ from typing import Any
 
 import structlog
 
-from flint.config import get_settings
-from flint.parser.dag_validator import DAGValidationError, validate_dag
+from flint.parser.dag_validator import validate_dag
 
 logger = structlog.get_logger(__name__)
 

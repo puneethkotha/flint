@@ -6,7 +6,7 @@ Blocks illegal, harmful, or sensitive content before processing.
 from __future__ import annotations
 
 import re
-from typing import Sequence
+from collections.abc import Sequence
 
 # Phrases that indicate illegal or harmful intent (case-insensitive, substring match)
 # Keep these specific to avoid false positives on legitimate automation (e.g. "kill process")

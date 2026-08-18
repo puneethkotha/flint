@@ -26,11 +26,10 @@ gateway, but every number here is produced by pure Python.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any
 
-from flint.engine.retry import FailureType, RetryAction, classify_failure
-
+from flint.engine.retry import classify_failure
 
 # ─── Chaos scenarios ─────────────────────────────────────────────────────────────
 # Each scenario carries a factory that builds the exception a task would raise,

@@ -16,7 +16,7 @@ import re
 import uuid
 from typing import Any
 
-from flint.simulation.engine import NodeSimulation, ConfidenceBasis  # type: ignore
+from flint.simulation.engine import ConfidenceBasis, NodeSimulation  # type: ignore
 from flint.simulation.predictors.base import BasePredictor
 
 # Commands safe to actually execute in simulation
@@ -127,7 +127,7 @@ class ShellPredictor(BasePredictor):
                 "stderr":    stderr.decode().strip()[:500],
                 "exit_code": proc.returncode,
             }, duration
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return {"stdout": "", "stderr": "timeout", "exit_code": 1}, 3000
         except Exception as e:
             return {"stdout": "", "stderr": str(e), "exit_code": 1}, 500
