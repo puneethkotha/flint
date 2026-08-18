@@ -266,7 +266,7 @@ export const ChatInterface: React.FC<Props> = ({
                 onClick={() => onSend(ex)}
                 style={{
                   background: colors.inputBg,
-                  border: '1px solid rgba(255,255,255,0.06)',
+                  border: `1px solid ${colors.panelBorder}`,
                   borderRadius: 8,
                   padding: '10px 14px',
                   color: colors.textSecondary,
@@ -278,7 +278,7 @@ export const ChatInterface: React.FC<Props> = ({
                   boxSizing: 'border-box',
                 }}
                 onMouseEnter={e => (e.currentTarget.style.borderColor = '#F59E0B')}
-                onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)')}
+                onMouseLeave={e => (e.currentTarget.style.borderColor = colors.panelBorder)}
               >
                 {ex}
               </button>
@@ -405,9 +405,13 @@ const MessageBubble: React.FC<{
 const WorkflowSuccessCard: React.FC<{
   card: WorkflowCard
   colors: ReturnType<typeof useTheme>['colors']
-}> = ({ card, colors }) => (
+}> = ({ card, colors }) => {
+  const { theme } = useTheme()
+  return (
   <div style={{
-    background: 'linear-gradient(135deg, #022c22 0%, #0a1628 100%)',
+    background: theme === 'dark'
+      ? 'linear-gradient(135deg, #022c22 0%, #0a1628 100%)'
+      : 'linear-gradient(135deg, #edfdf5 0%, #f2fdf8 100%)',
     border: '1px solid #10b981',
     borderRadius: 10,
     padding: '12px 16px',
@@ -422,8 +426,8 @@ const WorkflowSuccessCard: React.FC<{
       <div style={{ fontSize: 11, color: '#10b981', fontWeight: 600, marginBottom: 3 }}>
         ✓ WORKFLOW LIVE
       </div>
-      <div style={{ fontSize: 13, color: '#e2e8f0', fontWeight: 500 }}>{card.name}</div>
-      <div style={{ fontSize: 10, color: '#64748b', marginTop: 2, fontFamily: 'ui-monospace, monospace' }}>
+      <div style={{ fontSize: 13, color: colors.textPrimary, fontWeight: 500 }}>{card.name}</div>
+      <div style={{ fontSize: 10, color: colors.textMuted, marginTop: 2, fontFamily: 'ui-monospace, monospace' }}>
         job {card.job_id.slice(0, 8)}… running
       </div>
     </div>
@@ -442,6 +446,7 @@ const WorkflowSuccessCard: React.FC<{
       View in Dashboard →
     </a>
   </div>
-)
+  )
+}
 
 export default ChatInterface

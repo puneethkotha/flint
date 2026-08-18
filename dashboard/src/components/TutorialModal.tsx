@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useTheme } from '../theme'
 
 interface Props {
   onClose: () => void
@@ -15,6 +16,7 @@ const TIPS = [
 const PER_PAGE = 3
 
 export default function TutorialModal({ onClose }: Props) {
+  const { colors } = useTheme()
   const [page, setPage] = useState(0)
   const start = page * PER_PAGE
   const visibleTips = TIPS.slice(start, start + PER_PAGE)
@@ -37,18 +39,18 @@ export default function TutorialModal({ onClose }: Props) {
     >
       <div
         style={{
-          background: '#0f0f0f',
-          border: '1px solid #1a1a1a',
+          background: colors.panelBg,
+          border: `1px solid ${colors.panelBorder}`,
           maxWidth: 420,
           width: '100%',
           padding: 28,
         }}
         onClick={(e: React.MouseEvent) => e.stopPropagation()}
       >
-        <h2 style={{ fontSize: 18, fontWeight: 600, color: '#f5f5f5', marginBottom: 8, letterSpacing: '-0.02em' }}>
+        <h2 style={{ fontSize: 18, fontWeight: 600, color: colors.textPrimary, marginBottom: 8, letterSpacing: '-0.02em' }}>
           Quick start
         </h2>
-        <p style={{ fontSize: 13, color: '#888', marginBottom: 24, lineHeight: 1.5 }}>
+        <p style={{ fontSize: 13, color: colors.textSecondary, marginBottom: 24, lineHeight: 1.5 }}>
           What you can do:
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 28 }}>
@@ -64,8 +66,8 @@ export default function TutorialModal({ onClose }: Props) {
                 {start + i + 1}
               </span>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 500, color: '#f5f5f5', marginBottom: 2 }}>{tip.title}</div>
-                <div style={{ fontSize: 12, color: '#888', lineHeight: 1.5 }}>{tip.body}</div>
+                <div style={{ fontSize: 13, fontWeight: 500, color: colors.textPrimary, marginBottom: 2 }}>{tip.title}</div>
+                <div style={{ fontSize: 12, color: colors.textSecondary, lineHeight: 1.5 }}>{tip.body}</div>
               </div>
             </div>
           ))}
@@ -77,7 +79,7 @@ export default function TutorialModal({ onClose }: Props) {
                 key={i}
                 style={{
                   width: 6, height: 6, borderRadius: '50%',
-                  background: i === page ? '#F59E0B' : '#333',
+                  background: i === page ? '#F59E0B' : colors.handle,
                 }}
               />
             ))}
@@ -86,8 +88,8 @@ export default function TutorialModal({ onClose }: Props) {
             onClick={isLast ? onClose : () => setPage(p => p + 1)}
             style={{
               padding: '12px 24px',
-              background: '#f5f5f5',
-              color: '#080808',
+              background: colors.textPrimary,
+              color: colors.pageBg,
               border: 'none',
               fontSize: 13,
               fontWeight: 600,

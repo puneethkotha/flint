@@ -37,7 +37,7 @@ export default function MetricsCharts({ jobs }: Props) {
 
   const axisStyle = { fill: colors.textMuted, fontSize: 10 }
   const noLines = { axisLine: false, tickLine: false }
-  const gridColor = '#1a1a1a'
+  const gridColor = colors.panelBorder
 
   const tooltipStyle = {
     contentStyle: { background: colors.panelBg, border: `1px solid ${colors.panelBorder}`, borderRadius: 0, fontSize: 11, color: colors.textPrimary, boxShadow: 'none' },
@@ -81,7 +81,7 @@ export default function MetricsCharts({ jobs }: Props) {
               <XAxis dataKey="time" tick={axisStyle} {...noLines} />
               <YAxis tick={axisStyle} {...noLines} width={32} />
               <Tooltip {...tooltipStyle} />
-              <Line type="monotone" dataKey="p95" name="p95ms" stroke='#555' strokeWidth={1.5} dot={false} isAnimationActive={false} />
+              <Line type="monotone" dataKey="p95" name="p95ms" stroke={colors.textMuted} strokeWidth={1.5} dot={false} isAnimationActive={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>

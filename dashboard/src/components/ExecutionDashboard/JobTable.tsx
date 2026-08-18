@@ -36,9 +36,9 @@ function JobRow({ job, selected, index, onSelect }: {
         <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{
             width: 6, height: 6, borderRadius: '50%',
-            background: STATUS_DOT[job.status] || '#6b7280',
+            background: job.status === 'running' ? colors.textPrimary : (STATUS_DOT[job.status] || '#6b7280'),
             flexShrink: 0,
-            boxShadow: job.status === 'running' ? '0 0 6px #f5f5f5aa' : 'none',
+            boxShadow: job.status === 'running' ? `0 0 6px ${colors.textPrimary}aa` : 'none',
           }} />
           <span style={{ color: colors.textSecondary, fontSize: 12 }}>{job.status}</span>
         </span>

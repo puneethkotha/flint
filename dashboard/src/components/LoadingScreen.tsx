@@ -4,11 +4,12 @@
  */
 
 import React, { useState, useEffect } from 'react'
-import FlintMark from './FlintMark'
 
 const SESSION_KEY = 'flint-splash-shown'
 const DURATION_MS = 2500
 const FADE_MS = 300
+
+const LOGO_SRC = '/flint-logo.png'
 
 export const LoadingScreen: React.FC<{
   onComplete: () => void
@@ -57,7 +58,7 @@ export const LoadingScreen: React.FC<{
       `}</style>
 
       <div className="flint-splash-logo" style={{ marginBottom: 16 }}>
-        <FlintMark size={120} />
+        <img src={LOGO_SRC} alt="Flint" width={140} height={140} style={{ display: 'block' }} />
       </div>
 
       <div style={{

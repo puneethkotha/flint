@@ -358,7 +358,7 @@ export default function WorkflowCreator({ initialDescription, onPrefillConsumed,
             style={{
               background: 'transparent',
               border: 'none',
-              borderBottom: `1px solid ${focused ? '#333' : colors.panelBorder}`,
+              borderBottom: `1px solid ${focused ? colors.textMuted : colors.panelBorder}`,
               color: colors.textPrimary,
               padding: '0 0 16px',
               fontSize: 15,
@@ -373,7 +373,7 @@ export default function WorkflowCreator({ initialDescription, onPrefillConsumed,
 
           {/* Schedule */}
           <div style={{ marginTop: 20 }}>
-            <p style={{ fontSize: 10, color: '#444', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 500, marginBottom: 10 }}>
+            <p style={{ fontSize: 10, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 500, marginBottom: 10 }}>
               Schedule
             </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'flex-start' }}>
@@ -480,7 +480,7 @@ export default function WorkflowCreator({ initialDescription, onPrefillConsumed,
 
           {/* Inspiration cards */}
           <div style={{ marginTop: 24, marginBottom: 'auto' }}>
-            <p style={{ fontSize: 10, color: '#444', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 500, marginBottom: 10 }}>
+            <p style={{ fontSize: 10, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 500, marginBottom: 10 }}>
               Try an example
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -499,7 +499,7 @@ export default function WorkflowCreator({ initialDescription, onPrefillConsumed,
                   }}
                   onMouseEnter={e => {
                     e.currentTarget.style.background = colors.rowHover
-                    e.currentTarget.style.borderColor = '#2a2a2a'
+                    e.currentTarget.style.borderColor = colors.handle
                   }}
                   onMouseLeave={e => {
                     e.currentTarget.style.background = 'none'
@@ -548,14 +548,14 @@ export default function WorkflowCreator({ initialDescription, onPrefillConsumed,
             onClick={handlePreview} disabled={disabled}
             style={{
               flex: 1, height: 38, background: 'none',
-              border: `1px solid ${disabled ? colors.panelBorder : '#2a2a2a'}`,
+              border: `1px solid ${disabled ? colors.panelBorder : colors.handle}`,
               color: disabled ? colors.textDisabled : colors.textPrimary,
               fontSize: 13, fontWeight: 500,
               cursor: disabled ? 'not-allowed' : 'pointer',
               transition: 'border-color 0.15s, background 0.15s', borderRadius: 0,
             }}
-            onMouseEnter={e => { if (!disabled) { e.currentTarget.style.borderColor = '#444'; e.currentTarget.style.background = colors.rowHover } }}
-            onMouseLeave={e => { if (!disabled) { e.currentTarget.style.borderColor = '#2a2a2a'; e.currentTarget.style.background = 'none' } }}
+            onMouseEnter={e => { if (!disabled) { e.currentTarget.style.borderColor = colors.textMuted; e.currentTarget.style.background = colors.rowHover } }}
+            onMouseLeave={e => { if (!disabled) { e.currentTarget.style.borderColor = colors.handle; e.currentTarget.style.background = 'none' } }}
           >
             {loading && phase === 'parsing' && !jobId ? 'Parsing...' : 'Preview DAG'}
           </button>
@@ -574,7 +574,7 @@ export default function WorkflowCreator({ initialDescription, onPrefillConsumed,
               position: 'relative',
               overflow: 'hidden',
             }}
-            onMouseEnter={e => { if (!disabled && !loading) e.currentTarget.style.background = '#e5e5e5' }}
+            onMouseEnter={e => { if (!disabled && !loading) e.currentTarget.style.background = colors.textSecondary }}
             onMouseLeave={e => { if (!disabled && !loading) e.currentTarget.style.background = colors.textPrimary }}
           >
             {/* Shimmer sweep overlay while loading */}
@@ -591,7 +591,7 @@ export default function WorkflowCreator({ initialDescription, onPrefillConsumed,
 
           {/* Cmd+Enter hint */}
           {!disabled && (
-            <span style={{ fontSize: 10, color: '#444', whiteSpace: 'nowrap', fontFamily: 'ui-monospace, monospace', flexShrink: 0 }}>
+            <span style={{ fontSize: 10, color: colors.textMuted, whiteSpace: 'nowrap', fontFamily: 'ui-monospace, monospace', flexShrink: 0 }}>
               ⌘↵
             </span>
           )}
@@ -613,10 +613,10 @@ export default function WorkflowCreator({ initialDescription, onPrefillConsumed,
           <DAGVisualization dag={dag} jobId={jobId} taskStatuses={taskStatuses} onTaskStatusUpdate={setTaskStatuses} />
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', padding: 40 }}>
-            <div style={{ border: '1px dashed #222', padding: '48px 64px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-              <NodeGraph size={44} strokeWidth={1.4} style={{ color: '#2f2f2f', marginBottom: 2 }} />
+            <div style={{ border: `1px dashed ${colors.panelBorder}`, padding: '48px 64px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+              <NodeGraph size={44} strokeWidth={1.4} style={{ color: colors.textDisabled, marginBottom: 2 }} />
               <p style={{ fontSize: 13, color: colors.textMuted, fontWeight: 500 }}>DAG will appear here</p>
-              <p style={{ fontSize: 11, color: '#2a2a2a', textAlign: 'center', maxWidth: 200 }}>
+              <p style={{ fontSize: 11, color: colors.textDisabled, textAlign: 'center', maxWidth: 200 }}>
                 Type a workflow description and click Preview DAG
               </p>
             </div>

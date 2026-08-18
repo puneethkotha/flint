@@ -8,9 +8,9 @@ import LoginPage from './components/LoginPage'
 import Settings, { getPersonalizedSuggestionsEnabled, setPersonalizedSuggestionsEnabled } from './components/Settings'
 import Agent from './pages/Agent'
 import SelfHeal from './components/SelfHeal'
-import FlintMark from './components/FlintMark'
 import CommandPalette from './components/CommandPalette'
 import Toggle from './components/Toggle'
+import { Sun, Moon } from './components/icons'
 import { useTheme } from './theme'
 import { useAuth } from './context/AuthContext'
 import { recordUserEvent } from './utils/userAnalytics'
@@ -137,11 +137,11 @@ export default function App() {
   if (authLoading && !user) {
     return (
       <div style={{
-        position: 'fixed', inset: 0, background: '#080808',
+        position: 'fixed', inset: 0, background: colors.pageBg,
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
       }}>
-        <FlintMark size={72} />
-        <div style={{ marginTop: 16, fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>Loading...</div>
+        <img src="/flint-logo.png" alt="Flint" width={80} height={80} style={{ opacity: 0.9 }} />
+        <div style={{ marginTop: 16, fontSize: 13, color: colors.textMuted }}>Loading...</div>
       </div>
     )
   }
@@ -169,7 +169,7 @@ export default function App() {
         textarea, input { font-family: inherit; }
         ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #222; border-radius: 2px; }
+        ::-webkit-scrollbar-thumb { background: ${colors.handle}; border-radius: 2px; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
         @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(400%); } }
         @keyframes btnShimmer { 0% { transform: translateX(-150%); } 100% { transform: translateX(250%); } }
@@ -290,7 +290,7 @@ export default function App() {
 
           {/* Brand */}
           <div style={{ display: 'flex', alignItems: 'center', marginRight: 20, flexShrink: 0 }}>
-            <FlintMark size={34} />
+            <img src="/flint-logo.png" alt="Flint" width={36} height={36} style={{ display: 'block' }} />
           </div>
 
           {/* Tabs */}
@@ -337,8 +337,23 @@ export default function App() {
             })}
           </div>
 
-          {/* Right: ⌘K + API status + Auth */}
+          {/* Right: theme + ⌘K + API status + Auth */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+            <button
+              onClick={() => toggleTheme()}
+              title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                width: 28, height: 28, background: colors.inputBg,
+                border: `1px solid ${colors.panelBorder}`, borderRadius: 6,
+                color: colors.textMuted, cursor: 'pointer',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.color = colors.textSecondary; e.currentTarget.style.borderColor = colors.handle }}
+              onMouseLeave={e => { e.currentTarget.style.color = colors.textMuted; e.currentTarget.style.borderColor = colors.panelBorder }}
+            >
+              {theme === 'dark' ? <Moon size={15} /> : <Sun size={15} />}
+            </button>
             <button
               onClick={() => setCmdkOpen(true)}
               title="Command palette (⌘K)"
@@ -349,7 +364,7 @@ export default function App() {
                 borderRadius: 6, padding: '4px 8px', color: colors.textMuted,
                 fontSize: 11, fontFamily: 'ui-monospace, monospace', cursor: 'pointer',
               }}
-              onMouseEnter={e => { e.currentTarget.style.color = colors.textSecondary; e.currentTarget.style.borderColor = '#2a2a2a' }}
+              onMouseEnter={e => { e.currentTarget.style.color = colors.textSecondary; e.currentTarget.style.borderColor = colors.handle }}
               onMouseLeave={e => { e.currentTarget.style.color = colors.textMuted; e.currentTarget.style.borderColor = colors.panelBorder }}
             >
               <span style={{ fontSize: 13, lineHeight: 1 }}>⌘</span>K

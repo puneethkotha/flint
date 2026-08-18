@@ -47,7 +47,7 @@ function TaskNode({ data }: NodeProps<TaskNodeData>) {
     data.status === 'completed' ? '#22c55e'
     : data.status === 'failed'  ? '#ef4444'
     : data.status === 'running' ? '#F59E0B'
-    : '#444'
+    : colors.textMuted
 
   return (
     <>

@@ -6,6 +6,7 @@
  */
 
 import React, { useState } from 'react'
+import { useTheme } from '../../theme'
 
 interface ToolCall {
   tool: string
@@ -31,6 +32,7 @@ export const AgentReasoningTrace: React.FC<AgentReasoningTraceProps> = ({
   totalTokens,
   agentDurationMs,
 }) => {
+  const { colors } = useTheme()
   const [expanded, setExpanded] = useState(false)
   const [expandedStep, setExpandedStep] = useState<number | null>(null)
 
@@ -39,8 +41,8 @@ export const AgentReasoningTrace: React.FC<AgentReasoningTraceProps> = ({
   return (
     <div
       style={{
-        background: '#0f172a',
-        border: '1px solid #1e293b',
+        background: colors.panelBg,
+        border: `1px solid ${colors.panelBorder}`,
         borderRadius: 8,
         marginTop: 12,
         overflow: 'hidden',
@@ -64,7 +66,7 @@ export const AgentReasoningTrace: React.FC<AgentReasoningTraceProps> = ({
         <span style={{ fontSize: 13, fontWeight: 600 }}>
           Agent reasoning trace ({trace.length} steps)
         </span>
-        <span style={{ fontSize: 11, color: '#64748b' }}>
+        <span style={{ fontSize: 11, color: colors.textMuted }}>
           {expanded ? 'Collapse' : 'Expand'}
         </span>
       </button>
@@ -73,7 +75,7 @@ export const AgentReasoningTrace: React.FC<AgentReasoningTraceProps> = ({
         <div style={{ padding: '0 14px 14px' }}>
           {/* Stats row */}
           {(totalTokens || agentDurationMs) && (
-            <div style={{ display: 'flex', gap: 16, marginBottom: 12, fontSize: 11, color: '#64748b' }}>
+            <div style={{ display: 'flex', gap: 16, marginBottom: 12, fontSize: 11, color: colors.textMuted }}>
               {totalTokens && <span>{totalTokens.toLocaleString()} tokens</span>}
               {agentDurationMs && <span>{agentDurationMs}ms total</span>}
             </div>
@@ -84,7 +86,7 @@ export const AgentReasoningTrace: React.FC<AgentReasoningTraceProps> = ({
             <div
               key={i}
               style={{
-                borderLeft: '2px solid #334155',
+                borderLeft: `2px solid ${colors.panelBorder}`,
                 paddingLeft: 12,
                 marginBottom: 10,
               }}
@@ -99,22 +101,22 @@ export const AgentReasoningTrace: React.FC<AgentReasoningTraceProps> = ({
                   alignItems: 'center',
                   gap: 8,
                   padding: 0,
-                  color: '#cbd5e1',
+                  color: colors.textSecondary,
                   fontSize: 12,
                   fontWeight: 500,
                 }}
               >
                 <span>{TOOL_LABELS[step.tool] ?? 'Tool'}</span>
                 <span style={{ color: '#a78bfa' }}>{step.tool}</span>
-                <span style={{ color: '#475569', fontSize: 10 }}>({step.duration_ms}ms)</span>
-                <span style={{ color: '#475569', fontSize: 10 }}>
+                <span style={{ color: colors.textMuted, fontSize: 10 }}>({step.duration_ms}ms)</span>
+                <span style={{ color: colors.textMuted, fontSize: 10 }}>
                   {expandedStep === i ? '-' : '+'}
                 </span>
               </button>
 
               {expandedStep === i && (
                 <div style={{ marginTop: 8, fontSize: 11 }}>
-                  <div style={{ color: '#64748b', marginBottom: 4 }}>Input:</div>
+                  <div style={{ color: colors.textMuted, marginBottom: 4 }}>Input:</div>
                   <pre
                     style={{
                       background: '#1e293b',
@@ -129,7 +131,7 @@ export const AgentReasoningTrace: React.FC<AgentReasoningTraceProps> = ({
                   >
                     {JSON.stringify(step.input, null, 2)}
                   </pre>
-                  <div style={{ color: '#64748b', marginBottom: 4 }}>Result:</div>
+                  <div style={{ color: colors.textMuted, marginBottom: 4 }}>Result:</div>
                   <pre
                     style={{
                       background: '#1e293b',

@@ -9,6 +9,7 @@
 
 import React, { memo } from 'react'
 import { Handle, Position, NodeProps } from 'reactflow'
+import { useTheme } from '../../theme'
 
 interface AgentNodeData {
   label: string
@@ -37,6 +38,7 @@ const STATUS_COLORS: Record<string, string> = {
 }
 
 export const AgentNode = memo(({ data, selected }: NodeProps<AgentNodeData>) => {
+  const { colors } = useTheme()
   const status = data.status || 'pending'
   const color = STATUS_COLORS[status] ?? STATUS_COLORS.pending
   const isRunning = status === 'running'
@@ -67,7 +69,7 @@ export const AgentNode = memo(({ data, selected }: NodeProps<AgentNodeData>) => 
       >
         <polygon
           points="70,4 134,34 134,86 70,116 6,86 6,34"
-          fill="#1e1e2e"
+          fill={colors.panelBg}
           stroke={selected ? '#a78bfa' : color}
           strokeWidth={selected ? 2.5 : 1.5}
         />
@@ -102,12 +104,12 @@ export const AgentNode = memo(({ data, selected }: NodeProps<AgentNodeData>) => 
         }}
       >
         {/* Robot emoji + label */}
-        <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', marginBottom: 4, textTransform: 'uppercase' }}>Agent</div>
+        <div style={{ fontSize: 11, fontWeight: 600, color: colors.textMuted, marginBottom: 4, textTransform: 'uppercase' }}>Agent</div>
         <div
           style={{
             fontSize: 11,
             fontWeight: 600,
-            color: '#e2e8f0',
+            color: colors.textSecondary,
             textAlign: 'center',
             lineHeight: 1.3,
             maxWidth: 90,
@@ -132,7 +134,7 @@ export const AgentNode = memo(({ data, selected }: NodeProps<AgentNodeData>) => 
           AGENT
         </div>
         {traceCount > 0 && (
-          <div style={{ fontSize: 9, color: '#94a3b8', marginTop: 2 }}>
+          <div style={{ fontSize: 9, color: colors.textMuted, marginTop: 2 }}>
             {traceCount} tool{traceCount !== 1 ? 's' : ''} called
           </div>
         )}
