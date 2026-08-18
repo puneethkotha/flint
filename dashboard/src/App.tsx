@@ -8,6 +8,8 @@ import LoginPage from './components/LoginPage'
 import Settings, { getPersonalizedSuggestionsEnabled, setPersonalizedSuggestionsEnabled } from './components/Settings'
 import Agent from './pages/Agent'
 import SelfHeal from './components/SelfHeal'
+import FlintMark from './components/FlintMark'
+import CommandPalette from './components/CommandPalette'
 import Toggle from './components/Toggle'
 import { useTheme } from './theme'
 import { useAuth } from './context/AuthContext'
@@ -47,7 +49,20 @@ export default function App() {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const profileMenuRef = useRef<HTMLDivElement>(null)
   const [personalizedSuggestions, setPersonalizedSuggestions] = useState(() => getPersonalizedSuggestionsEnabled())
+  const [cmdkOpen, setCmdkOpen] = useState(false)
   const { colors, theme, toggle: toggleTheme } = useTheme()
+
+  // ⌘K / Ctrl+K opens the command palette from anywhere.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
+        e.preventDefault()
+        setCmdkOpen(o => !o)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
 
   useEffect(() => {
     if (!profileMenuOpen) return
@@ -125,7 +140,7 @@ export default function App() {
         position: 'fixed', inset: 0, background: '#080808',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
       }}>
-        <img src="/flint-logo.png" alt="Flint" width={80} height={80} style={{ opacity: 0.9 }} />
+        <FlintMark size={72} />
         <div style={{ marginTop: 16, fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>Loading...</div>
       </div>
     )
@@ -232,6 +247,7 @@ export default function App() {
         }
         @media (max-width: 640px) {
           .flint-nav-tab-label { font-size: 12px !important; }
+          .flint-cmdk-hint { display: none !important; }
         }
 
         /* Inspiration cards: shrink padding on mobile */
@@ -253,6 +269,12 @@ export default function App() {
           />
         )}
         {showTutorial && <TutorialModal onClose={handleTutorialClose} />}
+        <CommandPalette
+          open={cmdkOpen}
+          onClose={() => setCmdkOpen(false)}
+          onNavigate={(tab) => switchTab(tab)}
+          onUseTemplate={handleUseTemplate}
+        />
         {/* Navbar */}
         <nav style={{
           height: 48, display: 'flex', alignItems: 'center',
@@ -268,7 +290,7 @@ export default function App() {
 
           {/* Brand */}
           <div style={{ display: 'flex', alignItems: 'center', marginRight: 20, flexShrink: 0 }}>
-            <img src="/flint-logo.png" alt="Flint" width={36} height={36} style={{ display: 'block' }} />
+            <FlintMark size={34} />
           </div>
 
           {/* Tabs */}
@@ -315,8 +337,23 @@ export default function App() {
             })}
           </div>
 
-          {/* Right: API status + Auth */}
+          {/* Right: ⌘K + API status + Auth */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+            <button
+              onClick={() => setCmdkOpen(true)}
+              title="Command palette (⌘K)"
+              className="flint-cmdk-hint"
+              style={{
+                display: 'flex', alignItems: 'center', gap: 5,
+                background: colors.inputBg, border: `1px solid ${colors.panelBorder}`,
+                borderRadius: 6, padding: '4px 8px', color: colors.textMuted,
+                fontSize: 11, fontFamily: 'ui-monospace, monospace', cursor: 'pointer',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.color = colors.textSecondary; e.currentTarget.style.borderColor = '#2a2a2a' }}
+              onMouseLeave={e => { e.currentTarget.style.color = colors.textMuted; e.currentTarget.style.borderColor = colors.panelBorder }}
+            >
+              <span style={{ fontSize: 13, lineHeight: 1 }}>⌘</span>K
+            </button>
             <div style={{
               width: 6, height: 6, borderRadius: '50%', background: statusDot,
               animation: apiStatus === 'checking' ? 'pulse 1.5s ease-in-out infinite' : 'none',
