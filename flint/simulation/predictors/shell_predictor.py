@@ -16,13 +16,8 @@ import re
 import uuid
 from typing import Any
 
-import anthropic
-
-from flint.config import get_settings
-from flint.simulation.engine import NodeSimulation, ConfidenceBasis  # type: ignore
+from flint.simulation.engine import ConfidenceBasis, NodeSimulation  # type: ignore
 from flint.simulation.predictors.base import BasePredictor
-
-settings = get_settings()
 
 # Commands safe to actually execute in simulation
 SAFE_COMMAND_PATTERNS = [
@@ -54,7 +49,6 @@ class ShellPredictor(BasePredictor):
 
     def __init__(self, db: Any):
         super().__init__(db)
-        self.client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
 
     async def predict(
         self,
@@ -93,11 +87,11 @@ class ShellPredictor(BasePredictor):
             note  = f"Executed safely in sandbox: {command[:50]}"
             warnings = []
         else:
-            # Claude prediction
-            output, duration = await self._claude_predict(command, upstream_context)
+            # Model prediction (free provider)
+            output, duration = await self._model_predict(command, upstream_context)
             conf  = 0.55
             basis = ConfidenceBasis.CLAUDE_KNOWLEDGE
-            note  = f"Predicted output shape — command not safe to execute in simulation"
+            note  = "Predicted output shape — command not safe to execute in simulation"
             warnings = ["Shell command predicted, not executed — verify output format manually"]
 
         return NodeSimulation(
@@ -133,27 +127,22 @@ class ShellPredictor(BasePredictor):
                 "stderr":    stderr.decode().strip()[:500],
                 "exit_code": proc.returncode,
             }, duration
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return {"stdout": "", "stderr": "timeout", "exit_code": 1}, 3000
         except Exception as e:
             return {"stdout": "", "stderr": str(e), "exit_code": 1}, 500
 
-    async def _claude_predict(self, command: str, context: dict) -> tuple[dict, int]:
+    async def _model_predict(self, command: str, context: dict) -> tuple[dict, int]:
         import time
+
+        from flint import llm
+
         t = time.monotonic()
         prompt = f"Command: {command}"
         if context:
             prompt += f"\nContext: {json.dumps(context)}"
         try:
-            resp = await self.client.messages.create(
-                model="claude-haiku-4-5-20251001",
-                max_tokens=256,
-                system=SHELL_PREDICTION_SYSTEM,
-                messages=[{"role": "user", "content": prompt}],
-            )
-            raw = resp.content[0].text.strip()
-            raw = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw)
-            result = json.loads(raw)
+            result = await llm.chat_json(SHELL_PREDICTION_SYSTEM, prompt, fast=True, max_tokens=256)
             return result, int((time.monotonic() - t) * 1000)
         except Exception:
             return {"stdout": "", "exit_code": 0, "stderr": ""}, 500

@@ -6,8 +6,7 @@ from typing import Any
 
 import structlog
 
-from flint.config import get_settings
-from flint.parser.dag_validator import DAGValidationError, validate_dag
+from flint.parser.dag_validator import validate_dag
 
 logger = structlog.get_logger(__name__)
 
@@ -25,16 +24,18 @@ async def parse_workflow(description: str) -> dict[str, Any]:
         DAGValidationError: if the returned DAG is structurally invalid
         ValueError: if JSON parsing fails
     """
-    settings = get_settings()
-    provider = settings.llm_provider
+    from flint import llm
+
+    spec = llm.resolve_provider()
 
     logger.info(
         "nl_parse_start",
-        provider=provider,
+        provider=spec.name,
+        model=llm.resolve_model(spec),
         description=description[:100],
     )
 
-    dag = await _call_provider(provider, description)
+    dag = await _call_provider(spec.name, description)
 
     # Ensure required top-level fields have defaults
     dag.setdefault("name", _infer_name(description))
@@ -49,25 +50,23 @@ async def parse_workflow(description: str) -> dict[str, Any]:
 
     logger.info(
         "nl_parse_complete",
-        provider=provider,
+        provider=spec.name,
         node_count=len(dag["nodes"]),
     )
     return dag
 
 
 async def _call_provider(provider: str, description: str) -> dict[str, Any]:
-    """Dispatch to the correct LLM provider."""
-    if provider == "claude":
-        from flint.parser.providers.claude import parse_with_claude
-        return await parse_with_claude(description)
-    elif provider == "openai":
-        from flint.parser.providers.openai import parse_with_openai
-        return await parse_with_openai(description)
-    elif provider == "ollama":
-        from flint.parser.providers.ollama import parse_with_ollama
-        return await parse_with_ollama(description)
-    else:
-        raise ValueError(f"Unknown LLM provider: '{provider}'. Use: claude, openai, ollama")
+    """
+    Parse a description into a DAG dict via the unified LLM gateway.
+
+    Every provider (groq, gemini, openai, claude, ollama) goes through the same
+    JSON-mode path so the free default (Groq) behaves identically to the others.
+    """
+    from flint import llm
+    from flint.parser.prompts import SYSTEM_PROMPT
+
+    return await llm.chat_json(SYSTEM_PROMPT, description, max_tokens=4096, temperature=0.1)
 
 
 def _infer_name(description: str) -> str:

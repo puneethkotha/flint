@@ -14,17 +14,11 @@ from __future__ import annotations
 import json
 import re
 import uuid
-from typing import Any
 
-import anthropic
-
-from flint.config import get_settings
-from flint.simulation.engine import NodeSimulation, ConfidenceBasis  # type: ignore
+from flint.simulation.engine import ConfidenceBasis, NodeSimulation  # type: ignore
 from flint.simulation.predictors.base import BasePredictor
 
-settings = get_settings()
-
-# Well-known APIs Claude has strong knowledge of
+# Well-known APIs the model has strong knowledge of
 WELL_KNOWN_APIS = {
     r"api\.stripe\.com":     "Stripe payments API",
     r"api\.github\.com":     "GitHub REST API",
@@ -82,18 +76,18 @@ class HttpPredictor(BasePredictor):
             note = f"Based on {n} historical runs of this node"
 
         else:
-            # 2. Claude prediction
+            # 2. Model prediction (free provider)
             api_name = self._identify_api(url)
             familiarity = "well_known" if api_name else "common"
             base_conf = self.propagator.from_claude_knowledge(familiarity)
 
-            output, duration = await self._claude_predict(url, method, body, headers, upstream_context)
+            output, duration = await self._model_predict(url, method, body, headers, upstream_context)
             conf   = base_conf
             basis  = ConfidenceBasis.CLAUDE_KNOWLEDGE
             note   = (
-                f"Predicted using Claude's knowledge of {api_name}"
+                f"Predicted using the model's knowledge of {api_name}"
                 if api_name
-                else f"Predicted using Claude's general REST API knowledge"
+                else "Predicted using the model's general REST API knowledge"
             )
 
         return NodeSimulation(
@@ -116,7 +110,7 @@ class HttpPredictor(BasePredictor):
                 return name
         return None
 
-    async def _claude_predict(
+    async def _model_predict(
         self,
         url:      str,
         method:   str,
@@ -124,8 +118,8 @@ class HttpPredictor(BasePredictor):
         headers:  dict,
         context:  dict,
     ) -> tuple[dict, int]:
-        """Ask Claude to predict the API response."""
-        client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
+        """Ask the active (free) model to predict the API response."""
+        from flint import llm
 
         # Sanitize headers (remove auth tokens for safety)
         safe_headers = {
@@ -144,16 +138,9 @@ class HttpPredictor(BasePredictor):
             prompt += f"\nUpstream context (inputs from previous nodes):\n{json.dumps(context, indent=2)}"
 
         try:
-            resp = await client.messages.create(
-                model="claude-haiku-4-5-20251001",  # fast + cheap for simulation
-                max_tokens=512,
-                system=CLAUDE_PREDICTION_SYSTEM,
-                messages=[{"role": "user", "content": prompt}],
+            output = await llm.chat_json(
+                CLAUDE_PREDICTION_SYSTEM, prompt, fast=True, max_tokens=512
             )
-            raw = resp.content[0].text.strip()
-            raw = re.sub(r"^```(?:json)?\s*", "", raw)
-            raw = re.sub(r"\s*```$", "", raw)
-            output = json.loads(raw)
             # Estimate duration: GET ~200ms, POST ~400ms, external ~600ms
             duration = 200 if method == "GET" else 450
             return output, duration

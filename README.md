@@ -1,10 +1,10 @@
 # Flint
 
-**NL to DAG compiler for ML pipelines with async execution and retries.** Parse natural language descriptions into DAGs, execute with parallel batching, validate outputs with 5-check corruption detection, and recover from failures intelligently.
+**Natural-language workflow automation that heals itself — and runs on a free, real-time LLM.** Parse natural language descriptions into DAGs, execute with parallel batching, validate outputs with 5-check corruption detection, recover from failures intelligently, and audit + auto-patch a workflow's reliability before it ever runs.
 
 [![Dashboard](https://img.shields.io/badge/dashboard-live-2563eb)](https://flint-dashboard-silk.vercel.app)
 [![API](https://img.shields.io/badge/API-live-2563eb)](https://flint-api-fbsk.onrender.com/api/v1/health)
-[![PyPI](https://img.shields.io/pypi/v/flint-dag?color=3b82f6)](https://pypi.org/project/flint-dag/)
+[![LLM](https://img.shields.io/badge/LLM-free%20(Groq)-7c3aed)](https://console.groq.com)
 [![Python](https://img.shields.io/badge/Python-3.11+-3776ab)](https://www.python.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
@@ -30,7 +30,9 @@ Flint is a workflow automation engine that takes natural language descriptions a
 
 **Key capabilities:**
 
-- **Natural language parsing:** Describe workflows in natural language. LLM parses into typed DAGs with dependencies.
+- **Free, real-time LLM pipeline:** The entire pipeline (parser, agent, self-heal, simulation) runs on a free provider by default — Groq (no credit card, OpenAI-compatible, 300–800 tok/s). Swap to Gemini, Claude, OpenAI, or local Ollama with one env var.
+- **Self-Heal (⭐ new):** Audit a workflow's resilience and watch Flint run the monitor → detect → diagnose → recover → verify loop live — turning fragile nodes red, then healing them to green with applicable fix patches and a climbing reliability score.
+- **Natural language parsing:** Describe workflows in natural language. The LLM parses into typed DAGs with dependencies.
 - **Parallel execution:** Topological sort produces batches. `asyncio.gather()` runs each batch concurrently.
 - **Corruption detection:** 5 validation checks per task (cardinality, required fields, non-nullable, range, freshness).
 - **Smart retries:** Failure classifier distinguishes rate limits (wait), network errors (backoff), logic errors (halt immediately).
@@ -62,6 +64,38 @@ curl -X POST https://flint-api-fbsk.onrender.com/api/v1/workflows \
 ```
 
 Watch the dashboard for real-time execution visualization.
+
+---
+
+## Self-Heal ⭐
+
+![Flint Self-Heal — monitor, detect, diagnose, recover, verify](assets/self-heal.gif)
+
+Most workflow tools help you *build* automations. Flint also makes them **reliable** — and shows you the work.
+
+Open the **Self-Heal** tab, describe a workflow, and Flint runs the 2026 self-healing loop live:
+
+**monitor → detect → diagnose → recover → verify**
+
+- **Monitor** — the workflow is parsed and mapped into a reliability graph.
+- **Detect** — each node is stress-tested against real fault scenarios (rate limits, network blips, upstream 5xx, schema drift, empty results, hangs, non-retryable 4xx). Fragile nodes turn **red**.
+- **Diagnose** — every scenario is classified through Flint's *production* failure classifier (`flint/engine/retry.py`), so the diagnosis is the same logic the executor uses at runtime.
+- **Recover** — Flint auto-generates applicable **fix patches** (retry policies, corruption checks, timeouts) and applies them. Nodes go **violet → green**.
+- **Verify** — the healed DAG is re-scored; the reliability ring climbs from, say, **F (16) → A (100)**.
+
+It's not a canned animation — every number (reliability score, MTTR, retry-waste avoided) is computed in `flint/engine/reliability.py`, the fix patches are real and applicable to the returned DAG, and it runs with **zero execution** (safe, deterministic, free, works on infra with only a database).
+
+```bash
+# Audit a workflow's reliability (no changes made)
+curl -X POST https://flint-api-fbsk.onrender.com/api/v1/reliability/audit \
+  -H "Content-Type: application/json" \
+  -d '{"description": "fetch HN top stories, summarize with an LLM, post to Slack"}'
+
+# Run the full self-heal loop → patched DAG + trace + metrics
+curl -X POST https://flint-api-fbsk.onrender.com/api/v1/reliability/heal \
+  -H "Content-Type: application/json" \
+  -d '{"description": "fetch HN top stories, summarize with an LLM, post to Slack"}'
+```
 
 ---
 
@@ -123,7 +157,7 @@ Next [Retry] Next [Retry] Next [Retry]
 | Database | PostgreSQL (asyncpg) |
 | Cache | Redis (redis[asyncio]) |
 | Message Queue | Apache Kafka (aiokafka) |
-| LLM Parser | claude-sonnet-4-6 (Anthropic API) |
+| LLM (default) | Groq `openai/gpt-oss-120b` — free, OpenAI-compatible (Gemini/Claude/OpenAI/Ollama pluggable) |
 | Task Scheduling | APScheduler |
 | Metrics | Prometheus + Grafana |
 | Frontend | React 18, React Flow, Recharts |
@@ -136,13 +170,13 @@ Next [Retry] Next [Retry] Next [Retry]
 - **PostgreSQL:** ACID guarantees for workflow state, async driver.
 - **Redis:** Sub-millisecond cache lookups, pub/sub for WebSocket broadcast.
 - **Kafka:** Durable event streaming, replay capability for debugging.
-- **claude-sonnet-4-6:** High reasoning quality for DAG parsing, structured output support.
+- **Groq (default LLM):** Free with no credit card, OpenAI-compatible, and runs on LPU hardware — fast enough for real-time agent streaming (measured: NL→DAG parse ~3s, heal narration <600ms). Defaults to `openai/gpt-oss-120b` (primary) and `openai/gpt-oss-20b` (fast tier); override with `LLM_MODEL` if your account exposes different ids. All LLM calls route through a single gateway (`flint/llm.py`), so switching providers is one env var.
 
 ---
 
 ## Quickstart
 
-**Prerequisites:** Python 3.11+, Docker, Anthropic API key
+**Prerequisites:** Python 3.11+, Docker, and a **free** Groq API key ([console.groq.com](https://console.groq.com) — no credit card).
 
 ```bash
 # 1. Clone repository
@@ -151,13 +185,14 @@ cd flint
 
 # 2. Configure environment
 cp .env.example .env
-# Edit .env and add: ANTHROPIC_API_KEY=sk-ant-...
+# Edit .env and add your free key: GROQ_API_KEY=gsk_...
+# (LLM_PROVIDER=groq is already the default — nothing to pay.)
 
 # 3. Start infrastructure (PostgreSQL, Redis, Kafka, Prometheus, Grafana)
 docker compose up -d
 
-# 4. Install Flint
-pip install flint-dag
+# 4. Install Flint (from source)
+pip install -e .
 
 # 5. Run your first workflow
 flint run "fetch https://api.github.com/events and print the count"
@@ -166,24 +201,33 @@ flint run "fetch https://api.github.com/events and print the count"
 open http://localhost:3000
 ```
 
-**Alternative: Install from PyPI**
-
-```bash
-pip install flint-dag
-flint run "your workflow description here"
-```
+> Redis is optional for local dev and single-instance deploys — if it isn't
+> reachable, Flint transparently falls back to an in-memory store so Agent mode
+> and the demo keep working.
 
 ---
 
-## Getting an Anthropic API Key
+## Getting a free API key
 
-1. Go to [console.anthropic.com](https://console.anthropic.com)
-2. Sign in or create account
-3. Navigate to API Keys
-4. Create new key
-5. Copy key to `.env` file
+Flint defaults to **Groq** — genuinely free, no credit card, and fast enough for
+real-time agent streaming.
 
-Free tier: $5 credit, sufficient for 500+ workflow parses.
+1. Go to [console.groq.com](https://console.groq.com)
+2. Sign in (Google/GitHub)
+3. Create an API key
+4. Add it to `.env`: `GROQ_API_KEY=gsk_...`
+
+That's it — `LLM_PROVIDER=groq` is already the default.
+
+**Prefer a different provider?** Set `LLM_PROVIDER` and the matching key:
+
+| Provider | Env | Cost | Notes |
+|----------|-----|------|-------|
+| `groq` (default) | `GROQ_API_KEY` | Free | No credit card, real-time (LPU) |
+| `gemini` | `GEMINI_API_KEY` | Free tier | Native JSON-schema, 1M context |
+| `openai` | `OPENAI_API_KEY` | Paid | |
+| `claude` | `ANTHROPIC_API_KEY` | Paid | |
+| `ollama` | — | Free (local) | On-device, no key |
 
 ---
 
@@ -857,6 +901,19 @@ export MAX_WORKERS=5
 ```
 
 Or configure in `.env` file. Lower values reduce memory but decrease throughput.
+
+---
+
+## Security
+
+Flint executes user-described workflows, so it takes outbound and content safety seriously:
+
+- **SSRF guard.** `http` and `webhook` tasks resolve their target and refuse private, loopback, link-local, and cloud-metadata addresses (e.g. `169.254.169.254`). Self-hosters calling internal services can opt out with `ALLOW_PRIVATE_URLS=true`.
+- **Content + code moderation.** Workflow descriptions are screened for disallowed content and PII, and — critically — `command`/`code`/`script` fields are scanned for reverse shells, `rm -rf /`, pipe-to-shell, and metadata-endpoint access.
+- **Safe public demo.** The anonymous `/demo/run` endpoint executes only non-code task types (`http`, `llm`, `webhook`) — never arbitrary `shell`/`python`/`sql`.
+- **Secrets.** Flint refuses to boot in production with the default placeholder `FLINT_SECRET_KEY` (which would let anyone forge JWTs), and warns in development.
+
+> Note: `shell` and `python` tasks execute code by design and are intended for **trusted, self-hosted** use. Keep `FLINT_API_KEY` set on any shared deployment.
 
 ---
 

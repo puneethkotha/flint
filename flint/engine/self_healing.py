@@ -19,18 +19,14 @@ HOW TO INTEGRATE:
 from __future__ import annotations
 
 import json
-import re
 import uuid
 from typing import Any
 
-import anthropic
 from asyncpg import Pool
 
-from flint.config import get_settings
 from flint.observability.logging import get_logger
 
 logger = get_logger(__name__)
-settings = get_settings()
 
 # Number of consecutive failures before triggering self-healing
 FAILURE_THRESHOLD = 3
@@ -133,8 +129,8 @@ class SelfHealingEngine:
         }
 
     async def _propose_fix(self, workflow: dict, failure: dict) -> dict | None:
-        """Call Claude to propose a fixed DAG definition."""
-        client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
+        """Ask the active (free) model to propose a fixed DAG definition."""
+        from flint import llm
 
         system = (
             "You are a workflow repair agent for Flint. "
@@ -154,16 +150,7 @@ class SelfHealingEngine:
         )
 
         try:
-            response = await client.messages.create(
-                model="claude-opus-4-6",
-                max_tokens=4096,
-                system=system,
-                messages=[{"role": "user", "content": user}],
-            )
-            raw = response.content[0].text.strip()
-            raw = re.sub(r"^```(?:json)?\s*", "", raw)
-            raw = re.sub(r"\s*```$", "", raw)
-            return json.loads(raw)
+            return await llm.chat_json(system, user, max_tokens=4096)
         except Exception as e:
             logger.error("self_healing_propose_fix_failed", error=str(e))
             return None

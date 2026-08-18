@@ -6,9 +6,9 @@ Drop this file into: flint/engine/tasks/agent_task.py
 
 from __future__ import annotations
 
+import asyncio
 import json
 import time
-import asyncio
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -194,6 +194,16 @@ class AgentTaskCore:
         self.client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
 
     async def execute(self) -> AgentResult:
+        # The AGENT node uses Anthropic's native tool-calling loop, so it needs an
+        # Anthropic key even though the rest of the pipeline runs free (Groq/Gemini).
+        # Fail clearly rather than with an opaque auth error.
+        if not settings.anthropic_api_key:
+            raise TaskExecutionError(
+                "AGENT tasks require an ANTHROPIC_API_KEY (native tool-calling). "
+                "The rest of Flint runs free on Groq/Gemini; set an Anthropic key to "
+                "use AGENT nodes, or use an 'llm' task instead."
+            )
+
         prompt = self.config.get("prompt", "")
         max_iterations = self.config.get("max_iterations", 10)
         model = self.config.get("model", "claude-opus-4-6")

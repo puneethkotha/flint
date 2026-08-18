@@ -15,10 +15,16 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    # LLM
+    # LLM — free-first. Groq is the default: no credit card, OpenAI-compatible,
+    # real-time LPU inference. See flint/llm.py for the unified gateway.
+    llm_provider: Literal["groq", "gemini", "openai", "claude", "ollama"] = "groq"
+    groq_api_key: str = ""
+    gemini_api_key: str = ""
     anthropic_api_key: str = ""
     openai_api_key: str = "skip"
-    llm_provider: Literal["claude", "openai", "ollama"] = "claude"
+    # Optional model overrides (blank = use the provider's sensible default).
+    llm_model: str = ""       # primary model (parsing, agent, heal narrative)
+    llm_fast_model: str = ""  # cheap/fast tier (simulation, quick classification)
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "llama3"
 
@@ -48,6 +54,9 @@ class Settings(BaseSettings):
     max_task_concurrency: int = 100
     default_task_timeout_seconds: int = 300
     max_retry_attempts: int = 5
+    # Security: block http/webhook tasks from reaching private/internal addresses
+    # (SSRF guard). Set true only when self-hosting and calling internal services.
+    allow_private_urls: bool = False
 
     # WebSocket
     ws_heartbeat_interval: int = 30
@@ -67,6 +76,11 @@ class Settings(BaseSettings):
     @property
     def is_production(self) -> bool:
         return self.flint_env == "production"
+
+    @property
+    def has_insecure_secret(self) -> bool:
+        """True if the JWT signing secret is still the shipped placeholder."""
+        return self.flint_secret_key.strip() in ("", "change-this-in-production")
 
     @property
     def asyncpg_dsn(self) -> str:

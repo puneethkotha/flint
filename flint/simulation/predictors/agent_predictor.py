@@ -21,7 +21,7 @@ from typing import Any
 import anthropic
 
 from flint.config import get_settings
-from flint.simulation.engine import NodeSimulation, ConfidenceBasis  # type: ignore
+from flint.simulation.engine import ConfidenceBasis, NodeSimulation  # type: ignore
 from flint.simulation.predictors.base import BasePredictor
 
 settings = get_settings()
@@ -146,9 +146,26 @@ class AgentPredictor(BasePredictor):
         prompt:         str,
         max_iterations: int,
     ) -> tuple[dict, list[dict]]:
-        """Run Claude with mock tool responses — realistic reasoning, fake external data."""
+        """Run Claude with mock tool responses — realistic reasoning, fake external data.
 
+        AGENT simulation uses Anthropic's native tool-calling loop. If no Anthropic
+        key is configured (the free default runs on Groq/Gemini), we skip the live
+        loop and return a representative simulated output so the pipeline stays free
+        and never hard-fails.
+        """
         from flint.engine.tasks.agent_task import AGENT_TOOLS  # reuse tool schemas
+
+        if not settings.anthropic_api_key:
+            return (
+                {
+                    "result": (
+                        "Simulated agent output (structure representative). Set "
+                        "ANTHROPIC_API_KEY to run the live tool-calling simulation."
+                    ),
+                    "simulated": True,
+                },
+                [],
+            )
 
         messages: list[dict] = [{"role": "user", "content": prompt}]
         trace: list[dict] = []
