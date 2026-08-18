@@ -155,7 +155,7 @@ Next [Retry] Next [Retry] Next [Retry]
 | Database | PostgreSQL (asyncpg) |
 | Cache | Redis (redis[asyncio]) |
 | Message Queue | Apache Kafka (aiokafka) |
-| LLM (default) | Groq `llama-3.3-70b-versatile` — free, OpenAI-compatible (Gemini/Claude/OpenAI/Ollama pluggable) |
+| LLM (default) | Groq `openai/gpt-oss-120b` — free, OpenAI-compatible (Gemini/Claude/OpenAI/Ollama pluggable) |
 | Task Scheduling | APScheduler |
 | Metrics | Prometheus + Grafana |
 | Frontend | React 18, React Flow, Recharts |
@@ -168,7 +168,7 @@ Next [Retry] Next [Retry] Next [Retry]
 - **PostgreSQL:** ACID guarantees for workflow state, async driver.
 - **Redis:** Sub-millisecond cache lookups, pub/sub for WebSocket broadcast.
 - **Kafka:** Durable event streaming, replay capability for debugging.
-- **Groq (default LLM):** Free with no credit card, OpenAI-compatible, and runs on LPU hardware at 300–800 tok/s — fast enough for real-time agent streaming. All LLM calls route through a single gateway (`flint/llm.py`), so switching providers is one env var.
+- **Groq (default LLM):** Free with no credit card, OpenAI-compatible, and runs on LPU hardware — fast enough for real-time agent streaming (measured: NL→DAG parse ~3s, heal narration <600ms). Defaults to `openai/gpt-oss-120b` (primary) and `openai/gpt-oss-20b` (fast tier); override with `LLM_MODEL` if your account exposes different ids. All LLM calls route through a single gateway (`flint/llm.py`), so switching providers is one env var.
 
 ---
 

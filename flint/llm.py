@@ -51,12 +51,15 @@ class ProviderSpec:
 
 PROVIDERS: dict[str, ProviderSpec] = {
     # Groq — free, no credit card, OpenAI-compatible, LPU real-time inference.
+    # gpt-oss are OpenAI's open-weight models: strong JSON/reasoning, ~1000 tok/s
+    # on the 20B. Groq rotates its catalogue, so override with LLM_MODEL if your
+    # account exposes a different id (see: https://console.groq.com/docs/models).
     "groq": ProviderSpec(
         name="groq",
         kind="openai_compat",
         base_url="https://api.groq.com/openai/v1",
-        default_model="llama-3.3-70b-versatile",
-        fast_model="llama-3.1-8b-instant",
+        default_model="openai/gpt-oss-120b",
+        fast_model="openai/gpt-oss-20b",
     ),
     # Google Gemini — free tier, native JSON-schema structured output, 1M context.
     "gemini": ProviderSpec(
