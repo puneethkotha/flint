@@ -54,6 +54,78 @@ export interface ParseResponse {
   warnings: string[]
 }
 
+// ─── Self-Heal / Reliability ──────────────────────────────────────────────
+
+export interface ReliabilityCheck {
+  scenario: string
+  label: string
+  description: string
+  failure_type: string
+  recovery_action: string
+  handled: boolean
+}
+
+export interface ReliabilityGap {
+  kind: string
+  severity: 'high' | 'medium' | 'low'
+  message: string
+}
+
+export interface NodeReport {
+  node_id: string
+  node_type: string
+  score: number
+  grade: string
+  blast_radius: number
+  checks: ReliabilityCheck[]
+  gaps: ReliabilityGap[]
+}
+
+export interface ReliabilityReport {
+  workflow_name: string
+  overall_score: number
+  grade: string
+  node_count: number
+  total_gaps: number
+  total_vulnerabilities: number
+  nodes: NodeReport[]
+}
+
+export interface HealTraceStep {
+  node_id: string
+  node_type: string
+  score_before: number
+  score_after: number
+  healed: boolean
+  vulnerabilities: ReliabilityCheck[]
+  fixes_applied: string[]
+  fix_patch: Record<string, unknown> | null
+}
+
+export interface HealMetrics {
+  score_before: number
+  score_after: number
+  score_delta: number
+  grade_before: string
+  grade_after: string
+  vulnerabilities_before: number
+  vulnerabilities_after: number
+  vulnerabilities_closed: number
+  fixes_applied: number
+  estimated_mttr_seconds: number
+  retry_waste_avoided_seconds: number
+}
+
+export interface HealResult {
+  workflow_name: string
+  before: ReliabilityReport
+  after: ReliabilityReport
+  patched_dag: Record<string, unknown>
+  trace: HealTraceStep[]
+  metrics: HealMetrics
+  narration: string
+}
+
 function getAuthHeaders(): Record<string, string> {
   const token = typeof localStorage !== 'undefined' ? localStorage.getItem('flint_token') : null
   if (token) return { Authorization: `Bearer ${token}` }
@@ -121,4 +193,16 @@ export const api = {
       output_data: Record<string, unknown>
       dag: Record<string, unknown>
     }>('/demo/run', { method: 'POST', body: JSON.stringify({ description }) }),
+
+  auditReliability: (payload: { description?: string; dag?: unknown }) =>
+    request<{ dag: Record<string, unknown>; report: ReliabilityReport }>(
+      '/reliability/audit',
+      { method: 'POST', body: JSON.stringify(payload) }
+    ),
+
+  healWorkflow: (payload: { description?: string; dag?: unknown; narrate?: boolean }) =>
+    request<HealResult>('/reliability/heal', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
 }

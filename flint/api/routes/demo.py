@@ -19,6 +19,21 @@ router = APIRouter()
 DEMO_KEY_PREFIX = "flint:demo:"
 DEMO_TTL_SECONDS = 86400  # 24 hours
 
+# The anonymous demo runs untrusted, user-described DAGs. Restrict it to task
+# types that cannot execute arbitrary code on the server. shell/python/sql/AGENT
+# are blocked here (they remain available to authenticated, self-hosted users).
+DEMO_SAFE_TASK_TYPES = {"http", "llm", "webhook"}
+
+
+def _unsafe_task_types(dag: dict) -> set[str]:
+    types = set()
+    for node in dag.get("nodes", []) or []:
+        if isinstance(node, dict):
+            t = str(node.get("type", "")).lower()
+            if t and t not in DEMO_SAFE_TASK_TYPES:
+                types.add(t)
+    return types
+
 
 @router.post("/demo/run")
 async def demo_run(
@@ -37,9 +52,9 @@ async def demo_run(
     ip = get_client_ip(request) or "0.0.0.0"
     key = f"{DEMO_KEY_PREFIX}{ip}"
 
+    # Rate limit (best-effort — never fail the request if the store hiccups).
     try:
-        exists = await redis.get(key)
-        if exists:
+        if await redis.get(key):
             raise HTTPException(
                 status_code=429,
                 detail="Demo limit reached. You get one free run per day. Sign in to run unlimited workflows.",
@@ -47,8 +62,7 @@ async def demo_run(
     except HTTPException:
         raise
     except Exception as exc:
-        logger.warning("demo_redis_check_failed", error=str(exc))
-        raise HTTPException(status_code=503, detail="Demo service unavailable") from exc
+        logger.warning("demo_rate_check_skipped", error=str(exc))
 
     block_reason = check_content(body.description)
     if block_reason:
@@ -58,6 +72,18 @@ async def demo_run(
         dag = await parse_workflow(body.description)
     except Exception as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    # Safety gate: the public demo executes only non-code task types.
+    unsafe = _unsafe_task_types(dag)
+    if unsafe:
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                f"This workflow uses task types not allowed in the public demo "
+                f"({', '.join(sorted(unsafe))}). The demo runs http, llm and webhook "
+                f"tasks only. Sign in or self-host to run shell/python/sql/agent tasks."
+            ),
+        )
 
     job_id = str(uuid.uuid4())
     result = await executor.execute_dag(dag, job_id, is_shadow=True)

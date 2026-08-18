@@ -67,6 +67,13 @@ class WebhookTask(BaseTask):
         timeout: int = self.config.get("timeout", 30)
         method: str = self.config.get("method", "POST").upper()
 
+        # SSRF guard: block private/internal/metadata targets.
+        from flint.engine.net_guard import BlockedURLError, assert_safe_url
+        try:
+            await assert_safe_url(url)
+        except BlockedURLError as exc:
+            raise TaskExecutionError(str(exc)) from exc
+
         logger.info("webhook_task_start", task_id=self.id, url=url, method=method)
 
         try:

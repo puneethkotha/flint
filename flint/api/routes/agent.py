@@ -7,14 +7,12 @@ import json
 import uuid
 from typing import Annotated, Any, AsyncGenerator
 
-import anthropic
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from flint.api.dependencies import get_db_pool, get_executor, get_redis
-from flint.config import get_settings
 from flint.moderation import check_content
 
 logger = structlog.get_logger(__name__)
@@ -132,7 +130,6 @@ async def agent_chat(
     Events are pushed to Redis and streamed via GET /agent/stream/{session_id}.
     """
     session_id = body.session_id or str(uuid.uuid4())
-    settings = get_settings()
 
     # Content moderation
     block_reason = check_content(body.message)
@@ -149,33 +146,36 @@ async def agent_chat(
         "message": "Understanding your request...",
     })
 
-    # ── Call Claude for agent reasoning ──────────────────────────────────────
-    client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
+    # ── Call the LLM for agent reasoning (free Groq by default) ──────────────
+    from flint import llm
+
     try:
-        response = await client.messages.create(
-            model="claude-haiku-4-5",
-            max_tokens=1024,
+        # Agent chat is latency-sensitive — use the provider's fast tier.
+        reply_text = (await llm.chat(
+            history,
             system=AGENT_SYSTEM_PROMPT,
-            messages=history,
+            fast=True,
+            max_tokens=1024,
+            temperature=0.3,
+        )).strip()
+    except llm.LLMNotConfiguredError:
+        err = (
+            "No AI provider is configured. Set a free GROQ_API_KEY "
+            "(console.groq.com, no credit card) to enable the agent."
         )
-    except anthropic.RateLimitError as exc:
-        err = "Rate limit hit. Please wait a moment and try again."
-        await _push_event(redis, session_id, {"type": "error", "message": err})
-        await _push_event(redis, session_id, {"type": "end", "message": ""})
-        return ChatResponse(session_id=session_id, reply=err)
-    except anthropic.AuthenticationError as exc:
-        err = "Authentication error. Check your Anthropic API key in settings."
         await _push_event(redis, session_id, {"type": "error", "message": err})
         await _push_event(redis, session_id, {"type": "end", "message": ""})
         return ChatResponse(session_id=session_id, reply=err)
     except Exception as exc:
-        logger.error("agent_claude_error", error=str(exc), session_id=session_id)
-        err = f"AI error: {exc}"
+        logger.error("agent_llm_error", error=str(exc), session_id=session_id)
+        msg = str(exc).lower()
+        if "rate" in msg and "limit" in msg:
+            err = "Rate limit hit. Please wait a moment and try again."
+        else:
+            err = f"AI error: {exc}"
         await _push_event(redis, session_id, {"type": "error", "message": err})
         await _push_event(redis, session_id, {"type": "end", "message": ""})
         return ChatResponse(session_id=session_id, reply=err)
-
-    reply_text = response.content[0].text.strip()
 
     # Append assistant reply to history and save
     history.append({"role": "assistant", "content": reply_text})

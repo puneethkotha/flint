@@ -31,6 +31,24 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     configure_logging(settings.flint_log_level)
     logger.info("flint_starting", env=settings.flint_env)
 
+    # Security: refuse to run in production with the shipped placeholder JWT
+    # secret (it would let anyone forge valid user tokens).
+    if settings.has_insecure_secret:
+        if settings.is_production:
+            raise RuntimeError(
+                "FLINT_SECRET_KEY is unset or still the default placeholder. "
+                "Set a strong random FLINT_SECRET_KEY before running in production."
+            )
+        logger.warning(
+            "insecure_jwt_secret",
+            detail="FLINT_SECRET_KEY is the default placeholder — fine for local dev, "
+                   "unsafe for any shared/public deployment.",
+        )
+
+    # Log which LLM provider is active (helps confirm the free default is wired).
+    from flint import llm
+    logger.info("llm_provider_active", **llm.active_provider_info())
+
     # Database
     from flint.storage.database import close_pool, create_pool, init_db
     pool = await create_pool()
@@ -119,6 +137,7 @@ def create_app() -> FastAPI:
             {"name": "benchmarks", "description": "Performance benchmarks and live Flint statistics."},
             {"name": "simulation", "description": "Simulate workflow runs with confidence scores and cost estimates."},
             {"name": "agent", "description": "Conversational AI agent that builds, deploys, and runs workflows from natural language."},
+            {"name": "reliability", "description": "Self-Heal: audit a workflow's resilience and auto-patch reliability gaps."},
             {"name": "metrics", "description": "Prometheus metrics for monitoring."},
             {"name": "websocket", "description": "Real-time job status updates via WebSocket."},
             {"name": "export_import", "description": "Export/import workflows for backup and migration."},
@@ -160,6 +179,7 @@ def create_app() -> FastAPI:
         agent,
         demo,
         suggestions,
+        reliability,
     )
     from flint.api.routes.websocket import router as ws_router
 
@@ -171,6 +191,7 @@ def create_app() -> FastAPI:
     app.include_router(auth.router, prefix="/api/v1", tags=["auth"])
     app.include_router(demo.router, prefix="/api/v1", tags=["demo"])  # No API_DEPS: anonymous demo
     app.include_router(suggestions.router, prefix="/api/v1", tags=["suggestions"])  # No API_DEPS: works anonym + auth
+    app.include_router(reliability.router, prefix="/api/v1", tags=["reliability"])  # No API_DEPS: public Self-Heal demo
     app.include_router(agent.router, prefix="/api/v1", tags=["agent"], dependencies=API_DEPS)
     app.include_router(metrics.router, prefix="/api/v1", tags=["metrics"], dependencies=API_DEPS)
     app.include_router(workflows.router, prefix="/api/v1", tags=["workflows"], dependencies=API_DEPS)

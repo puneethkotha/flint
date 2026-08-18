@@ -21,22 +21,8 @@ import re
 import uuid
 from typing import Any
 
-import anthropic
-
-from flint.config import get_settings
 from flint.simulation.engine import NodeSimulation, ConfidenceBasis  # type: ignore
 from flint.simulation.predictors.base import BasePredictor
-
-settings = get_settings()
-
-# Simulation model mapping: use cheaper model to simulate expensive ones
-SIMULATION_MODEL_MAP = {
-    "claude-opus-4-6":           "claude-haiku-4-5-20251001",
-    "claude-sonnet-4-6":         "claude-haiku-4-5-20251001",
-    "claude-haiku-4-5-20251001": "claude-haiku-4-5-20251001",  # already cheap
-    "gpt-4o":                    "claude-haiku-4-5-20251001",
-    "gpt-4o-mini":               "claude-haiku-4-5-20251001",
-}
 
 # Session-level cache: prompt_hash → output
 _prompt_cache: dict[str, dict] = {}
@@ -46,7 +32,6 @@ class LlmPredictor(BasePredictor):
 
     def __init__(self, db: Any):
         super().__init__(db)
-        self.client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
 
     async def predict(
         self,
@@ -91,8 +76,12 @@ class LlmPredictor(BasePredictor):
                 simulation_note=note,
             )
 
-        # No/little history → actually run with cheaper model
-        sim_model  = SIMULATION_MODEL_MAP.get(model, "claude-haiku-4-5-20251001")
+        # No/little history → actually run with the active provider's fast tier.
+        from flint import llm
+        try:
+            sim_model = llm.resolve_model(llm.resolve_provider(), fast=True)
+        except llm.LLMNotConfiguredError:
+            sim_model = "fast"
         cache_key  = hashlib.sha256(f"{prompt}|{system}|{sim_model}".encode()).hexdigest()
 
         if cache_key in _prompt_cache:
@@ -137,18 +126,21 @@ class LlmPredictor(BasePredictor):
         model:      str,
         max_tokens: int,
     ) -> tuple[dict, int]:
-        """Actually run the prompt with the simulation model."""
+        """Actually run the prompt with the active provider's fast model."""
         import time
+
+        from flint import llm
+
         t = time.monotonic()
 
         try:
-            messages = [{"role": "user", "content": prompt}]
-            kwargs: dict = {"model": model, "max_tokens": max_tokens, "messages": messages}
-            if system:
-                kwargs["system"] = system
-
-            resp = await self.client.messages.create(**kwargs)
-            text = resp.content[0].text if resp.content else ""
+            text = await llm.chat(
+                [{"role": "user", "content": prompt}],
+                system=system or None,
+                fast=True,
+                max_tokens=max_tokens,
+                temperature=0.3,
+            )
             duration = int((time.monotonic() - t) * 1000)
 
             # Try to parse as JSON if the prompt expects structured output
@@ -156,7 +148,7 @@ class LlmPredictor(BasePredictor):
                 clean = re.sub(r"^```(?:json)?\s*|\s*```$", "", text.strip())
                 return json.loads(clean), duration
             except json.JSONDecodeError:
-                return {"text": text, "tokens_used": resp.usage.output_tokens}, duration
+                return {"text": text}, duration
 
         except Exception as e:
             return {"error": f"Simulation LLM call failed: {e}"}, 1000

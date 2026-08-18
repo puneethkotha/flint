@@ -86,9 +86,41 @@ def check_content(text: str) -> str | None:
     return None
 
 
+# Patterns in shell commands / inline Python that indicate an attempt to
+# exfiltrate secrets, open a reverse shell, or destroy the host. These fields
+# were previously NOT scanned — a malicious task could smuggle code past
+# moderation. Kept tight to avoid false positives on legitimate automation.
+DANGEROUS_CODE_PATTERNS: Sequence[tuple[re.Pattern[str], str]] = (
+    (re.compile(r"\brm\s+-rf\s+/(?:\s|$)"), "destructive filesystem command"),
+    (re.compile(r":\(\)\s*\{\s*:\|:&\s*\}"), "fork bomb"),
+    (re.compile(r"\b(?:bash|sh)\s+-i\b.*(?:/dev/tcp|nc\s|ncat\s)"), "reverse shell"),
+    (re.compile(r"/dev/tcp/"), "reverse shell socket"),
+    (re.compile(r"\b(?:nc|ncat|netcat)\b.*\s-e\b"), "netcat command execution"),
+    (re.compile(r"169\.254\.169\.254"), "cloud metadata endpoint access"),
+    (re.compile(r"\bos\.environ\b|\bprintenv\b|\benv\b\s*\|\s*curl"), "environment/secret exfiltration"),
+    (re.compile(r"\bcurl\b[^\n]*\|\s*(?:bash|sh)\b"), "pipe-to-shell execution"),
+)
+
+
+def check_code_content(text: str) -> str | None:
+    """Scan a shell command or inline code snippet for dangerous patterns."""
+    if not text or not isinstance(text, str):
+        return None
+    for pattern, name in DANGEROUS_CODE_PATTERNS:
+        if pattern.search(text):
+            return (
+                f"This workflow contains a {name} in a shell/code task, which we "
+                "cannot run. Remove it and describe a legitimate automation instead."
+            )
+    return None
+
+
 def check_dag_content(dag: dict) -> str | None:
     """
-    Check a DAG structure for policy violations in node configs (e.g. agent prompts).
+    Check a DAG structure for policy violations in node configs.
+
+    Scans both natural-language fields (prompt/description/query) and — critically —
+    executable fields (command/code), which earlier versions ignored.
     Returns an error message if blocked, else None.
     """
     if not dag or not isinstance(dag, dict):
@@ -101,11 +133,18 @@ def check_dag_content(dag: dict) -> str | None:
         config = node.get("config") or {}
         if not isinstance(config, dict):
             continue
-        # Check common user-provided fields in node configs
+        # Natural-language fields → policy blocklist + PII
         for key in ("prompt", "description", "query"):
             val = config.get(key)
             if isinstance(val, str) and val.strip():
                 reason = check_content(val)
+                if reason:
+                    return reason
+        # Executable fields → dangerous-code scan
+        for key in ("command", "code", "script"):
+            val = config.get(key)
+            if isinstance(val, str) and val.strip():
+                reason = check_code_content(val)
                 if reason:
                     return reason
     return None

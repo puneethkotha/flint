@@ -7,12 +7,19 @@ import LoadingScreen, { shouldShowSplash } from './components/LoadingScreen'
 import LoginPage from './components/LoginPage'
 import Settings, { getPersonalizedSuggestionsEnabled, setPersonalizedSuggestionsEnabled } from './components/Settings'
 import Agent from './pages/Agent'
+import SelfHeal from './components/SelfHeal'
 import Toggle from './components/Toggle'
 import { useTheme } from './theme'
 import { useAuth } from './context/AuthContext'
 import { recordUserEvent } from './utils/userAnalytics'
 
-type Tab = 'create' | 'dashboard' | 'templates' | 'agent' | 'settings'
+type Tab = 'create' | 'dashboard' | 'templates' | 'agent' | 'selfheal' | 'settings'
+
+// Tabs with a colored accent (others use the neutral text color).
+const TAB_ACCENT: Partial<Record<Tab, string>> = {
+  agent: '#F59E0B',
+  selfheal: '#7c3aed',
+}
 
 function useAPIStatus() {
   const [status, setStatus] = useState<'ok' | 'error' | 'checking'>('checking')
@@ -266,9 +273,12 @@ export default function App() {
             {([
               { key: 'create' as Tab, label: 'Create Workflow' },
               { key: 'agent' as Tab, label: 'Agent' },
+              { key: 'selfheal' as Tab, label: 'Self-Heal' },
               { key: 'templates' as Tab, label: 'Templates' },
               { key: 'dashboard' as Tab, label: 'Dashboard' },
-            ]).map(({ key, label }) => (
+            ]).map(({ key, label }) => {
+              const accent = TAB_ACCENT[key]
+              return (
               <button
                 key={key}
                 onClick={() => switchTab(key)}
@@ -276,7 +286,7 @@ export default function App() {
                 style={{
                   background: 'none', border: 'none',
                   color: activeTab === key
-                    ? (key === 'agent' ? '#F59E0B' : colors.textPrimary)
+                    ? (accent ?? colors.textPrimary)
                     : colors.textMuted,
                   fontSize: 13, fontWeight: activeTab === key ? 500 : 400,
                   padding: '0 10px', height: 48,
@@ -284,7 +294,7 @@ export default function App() {
                   whiteSpace: 'nowrap',
                 }}
                 onMouseEnter={e => {
-                  if (activeTab !== key) e.currentTarget.style.color = key === 'agent' ? '#F59E0B' : colors.textSecondary
+                  if (activeTab !== key) e.currentTarget.style.color = accent ?? colors.textSecondary
                 }}
                 onMouseLeave={e => {
                   if (activeTab !== key) e.currentTarget.style.color = colors.textMuted
@@ -294,11 +304,12 @@ export default function App() {
                 {activeTab === key && (
                   <div style={{
                     position: 'absolute', bottom: 0, left: 10, right: 10, height: 1,
-                    background: key === 'agent' ? '#F59E0B' : colors.textPrimary,
+                    background: accent ?? colors.textPrimary,
                   }} />
                 )}
               </button>
-            ))}
+              )
+            })}
           </div>
 
           {/* Right: API status + Auth */}
@@ -432,6 +443,9 @@ export default function App() {
               personalizedSuggestions={personalizedSuggestions}
               onEnablePersonalized={() => handlePersonalizedSuggestionsChange(true)}
             />
+          </div>
+          <div style={{ display: activeTab === 'selfheal' ? 'flex' : 'none', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+            <SelfHeal />
           </div>
           <div style={{ display: activeTab === 'templates' ? 'flex' : 'none', flexDirection: 'column', flex: 1, minHeight: 0 }}>
             <Templates onUseTemplate={handleUseTemplate} />

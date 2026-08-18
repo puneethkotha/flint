@@ -16,17 +16,12 @@ HOW TO INTEGRATE:
 from __future__ import annotations
 
 import json
-import re
-from typing import Any
 
-import anthropic
 from pydantic import BaseModel
 
-from flint.config import get_settings
 from flint.observability.logging import get_logger
 
 logger = get_logger(__name__)
-settings = get_settings()
 
 
 class FailureAnalysis(BaseModel):
@@ -79,23 +74,13 @@ async def analyze_failure(
     Call Claude to explain a workflow failure in natural language.
     Returns a FailureAnalysis with explanation, suggested fix, and optional patch.
     """
-    client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
+    from flint import llm
+
     prompt = _build_analysis_prompt(node_id, node_type, node_config, error, workflow_dag)
 
     try:
-        response = await client.messages.create(
-            model="claude-haiku-4-5-20251001",  # fast + cheap for debugging
-            max_tokens=1024,
-            system=ANALYSIS_SYSTEM,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        raw = response.content[0].text.strip()
-
-        # Strip markdown fences if model ignores instructions
-        raw = re.sub(r"^```(?:json)?\s*", "", raw)
-        raw = re.sub(r"\s*```$", "", raw)
-
-        data = json.loads(raw)
+        # Debugging is a quick task — use the provider's fast tier for real-time feel.
+        data = await llm.chat_json(ANALYSIS_SYSTEM, prompt, fast=True, max_tokens=1024)
         return FailureAnalysis(**data)
 
     except Exception as e:
