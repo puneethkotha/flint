@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { api } from '../../api/client'
 import DAGVisualization from '../DAGVisualization'
 import RunChoiceModal, { getLastDemo, setLastDemo, clearLastDemo } from '../RunChoiceModal'
+import { TaskTypeIcon, NodeGraph } from '../icons'
 import { useTheme } from '../../theme'
 import { useAuth } from '../../context/AuthContext'
 import { recordUserEvent } from '../../utils/userAnalytics'
@@ -506,12 +507,11 @@ export default function WorkflowCreator({ initialDescription, onPrefillConsumed,
                   }}
                 >
                   <div style={{
-                    background: card.color + '15', border: `1px solid ${card.color}30`,
-                    borderRadius: 4, padding: '3px 6px',
-                    fontSize: 9, fontWeight: 600, color: card.color,
-                    letterSpacing: '0.05em', fontFamily: 'ui-monospace, monospace', flexShrink: 0,
+                    width: 30, height: 30, borderRadius: 6, flexShrink: 0,
+                    background: card.color + '14', border: `1px solid ${card.color}33`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', color: card.color,
                   }}>
-                    {card.icon}
+                    <TaskTypeIcon kind={card.icon} size={16} />
                   </div>
                   <div>
                     <div style={{ fontSize: 12, fontWeight: 500, color: colors.textSecondary, marginBottom: 1 }}>{card.title}</div>
@@ -613,10 +613,8 @@ export default function WorkflowCreator({ initialDescription, onPrefillConsumed,
           <DAGVisualization dag={dag} jobId={jobId} taskStatuses={taskStatuses} onTaskStatusUpdate={setTaskStatuses} />
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', padding: 40 }}>
-            <div style={{ border: '1px dashed #222', padding: '48px 64px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-              <div style={{ width: 32, height: 32, border: '1px dashed #2a2a2a', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 4 }}>
-                <div style={{ width: 10, height: 10, border: '1px solid #333' }} />
-              </div>
+            <div style={{ border: '1px dashed #222', padding: '48px 64px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+              <NodeGraph size={44} strokeWidth={1.4} style={{ color: '#2f2f2f', marginBottom: 2 }} />
               <p style={{ fontSize: 13, color: colors.textMuted, fontWeight: 500 }}>DAG will appear here</p>
               <p style={{ fontSize: 11, color: '#2a2a2a', textAlign: 'center', maxWidth: 200 }}>
                 Type a workflow description and click Preview DAG
