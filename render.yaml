@@ -7,14 +7,22 @@ services:
     healthCheckPath: /api/v1/health
     plan: free
     envVars:
-      - key: ANTHROPIC_API_KEY
+      # LLM — free by default (Groq). Paste GROQ_API_KEY in the dashboard.
+      - key: LLM_PROVIDER
+        value: groq
+      - key: GROQ_API_KEY
         sync: false
+      - key: GEMINI_API_KEY   # optional free alternative
+        sync: false
+      - key: ANTHROPIC_API_KEY   # optional (paid); only needed for AGENT tasks
+        sync: false
+      # Auto-generate a strong JWT secret so the prod boot guard is satisfied.
+      - key: FLINT_SECRET_KEY
+        generateValue: true
       - key: DATABASE_URL
         sync: false
-      - key: REDIS_URL
+      - key: REDIS_URL   # optional — Flint falls back to in-memory if unset/down
         sync: false
-      - key: LLM_PROVIDER
-        value: claude
       - key: FLINT_ENV
         value: production
       - key: KAFKA_BOOTSTRAP_SERVERS
