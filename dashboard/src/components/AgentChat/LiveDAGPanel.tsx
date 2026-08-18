@@ -20,6 +20,7 @@ import ReactFlow, {
 import 'reactflow/dist/style.css'
 import TaskNode from '../DAGVisualization/TaskNode'
 import AgentNode from '../AgentNode/AgentNode'
+import { NodeGraph } from '../icons'
 import { useTheme } from '../../theme'
 
 const nodeTypes = { taskNode: TaskNode, AGENT: AgentNode }
@@ -326,9 +327,9 @@ const EmptyState: React.FC<{ colors: ReturnType<typeof useTheme>['colors'] }> = 
     position: 'absolute', inset: 0,
     display: 'flex', flexDirection: 'column',
     alignItems: 'center', justifyContent: 'center',
-    gap: 10, color: colors.textMuted, padding: 24,
+    gap: 12, color: colors.textMuted, padding: 24,
   }}>
-    <div style={{ fontSize: 36, opacity: 0.3 }}>◈</div>
+    <NodeGraph size={52} strokeWidth={1.4} style={{ color: '#3a2f14' }} />
     <div style={{ fontSize: 13, color: colors.textSecondary, fontWeight: 500 }}>
       DAG will appear here
     </div>

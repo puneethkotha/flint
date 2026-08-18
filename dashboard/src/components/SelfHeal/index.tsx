@@ -15,6 +15,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { api, HealResult } from '../../api/client'
 import { HealStatus } from './HealNode'
 import HealDAGPanel from './HealDAGPanel'
+import { ShieldPulse } from '../icons'
 import { useTheme } from '../../theme'
 import { useAuth } from '../../context/AuthContext'
 import { recordUserEvent } from '../../utils/userAnalytics'
@@ -143,8 +144,14 @@ export default function SelfHeal() {
         background: colors.panelBg, borderRadius: 12, border: `1px solid ${colors.panelBorder}`, overflow: 'hidden',
       }}>
         <div style={{ padding: '14px 18px', borderBottom: `1px solid ${colors.panelBorder}`, flexShrink: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ color: '#7c3aed', fontSize: 15 }}>🛡</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{
+              width: 28, height: 28, borderRadius: 8, flexShrink: 0,
+              background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(124,58,237,0.35)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#7c3aed',
+            }}>
+              <ShieldPulse size={16} />
+            </div>
             <div style={{ fontSize: 13, fontWeight: 600, color: colors.textPrimary }}>Self-Heal</div>
           </div>
           <div style={{ fontSize: 11, color: colors.textMuted, marginTop: 2 }}>

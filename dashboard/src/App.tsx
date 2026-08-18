@@ -226,8 +226,11 @@ export default function App() {
         @media (max-width: 699px) {
           .flint-chart-grid { grid-template-columns: 1fr; gap: 16px; }
         }
-        @media (max-width: 399px) {
+        /* Free up nav space on tablet: drop the "api live" text (keep the dot). */
+        @media (max-width: 920px) {
           .flint-api-label { display: none; }
+        }
+        @media (max-width: 640px) {
           .flint-nav-tab-label { font-size: 12px !important; }
         }
 
