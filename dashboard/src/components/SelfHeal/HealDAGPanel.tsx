@@ -6,6 +6,7 @@ import ReactFlow, {
 import 'reactflow/dist/style.css'
 import HealNode, { HealStatus } from './HealNode'
 import ReliabilityRing from './ReliabilityRing'
+import { ShieldPulse } from '../icons'
 import { useTheme } from '../../theme'
 
 const nodeTypes = { healNode: HealNode }
@@ -104,9 +105,9 @@ export const HealDAGPanel: React.FC<Props> = ({
         {!dagNodes.length ? (
           <div style={{
             position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
-            alignItems: 'center', justifyContent: 'center', gap: 10, color: colors.textMuted, padding: 24,
+            alignItems: 'center', justifyContent: 'center', gap: 12, color: colors.textMuted, padding: 24,
           }}>
-            <div style={{ fontSize: 34, opacity: 0.3 }}>🛡</div>
+            <ShieldPulse size={52} strokeWidth={1.4} style={{ color: '#3a2f5c' }} />
             <div style={{ fontSize: 13, color: colors.textSecondary, fontWeight: 500 }}>Reliability graph will appear here</div>
             <div style={{ fontSize: 11, textAlign: 'center', lineHeight: 1.6, maxWidth: 260 }}>
               Describe a workflow and run Self-Heal. Watch nodes turn red where
