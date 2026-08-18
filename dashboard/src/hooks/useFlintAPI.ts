@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { api, JobResponse, WorkflowResponse } from '../api/client'
 
-export function useJobs(pollIntervalMs = 5000) {
+export function useJobs(pollIntervalMs = 5000, enabled = true) {
   const [jobs, setJobs] = useState<JobResponse[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(enabled)
   const [error, setError] = useState<string | null>(null)
 
   const fetchJobs = useCallback(async () => {
@@ -19,10 +19,16 @@ export function useJobs(pollIntervalMs = 5000) {
   }, [])
 
   useEffect(() => {
+    // Don't fetch (or expose) the jobs feed when disabled (e.g. logged-out).
+    if (!enabled) {
+      setJobs([])
+      setLoading(false)
+      return
+    }
     fetchJobs()
     const interval = setInterval(fetchJobs, pollIntervalMs)
     return () => clearInterval(interval)
-  }, [fetchJobs, pollIntervalMs])
+  }, [fetchJobs, pollIntervalMs, enabled])
 
   return { jobs, loading, error, refetch: fetchJobs }
 }

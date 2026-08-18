@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 import json
 import uuid
-from datetime import datetime, timezone
 from typing import Annotated
 
 import structlog
@@ -177,6 +176,12 @@ async def list_jobs(
     job_repo = JobRepository(pool)  # type: ignore[arg-type]
     user_id = getattr(request.state, "user", None)
     uid = uuid.UUID(user_id["sub"]) if user_id else None
+
+    # Privacy: anonymous callers get no jobs feed. Previously unowned jobs were
+    # returned to everyone, so any logged-out visitor saw a shared global history.
+    if uid is None:
+        return JobListResponse(jobs=[], total=0)
+
     jobs, total = await job_repo.list(
         workflow_id=workflow_id,
         limit=limit,

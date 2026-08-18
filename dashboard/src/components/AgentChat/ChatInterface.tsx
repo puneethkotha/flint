@@ -175,11 +175,11 @@ export const ChatInterface: React.FC<Props> = ({
             gap: 14, color: colors.textMuted, textAlign: 'center',
             padding: '24px 20px',
           }}>
-            <div style={{ fontSize: 15, fontWeight: 500, color: colors.textMuted, maxWidth: 320 }}>
+            <div style={{ fontSize: 16, fontWeight: 600, color: colors.textSecondary, maxWidth: 320, letterSpacing: '-0.01em' }}>
               What would you like me to build?
             </div>
             <div style={{ fontSize: 13, color: colors.textMuted, lineHeight: 1.5, maxWidth: 320 }}>
-              I&apos;ll build and run it for you.
+              Describe an automation and I&apos;ll design, build, and run it for you.
             </div>
           </div>
         )}

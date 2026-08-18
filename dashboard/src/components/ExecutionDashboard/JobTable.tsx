@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { JobResponse } from '../../api/client'
 import { useTheme } from '../../theme'
+import { NodeGraph } from '../icons'
 
 const STATUS_DOT: Record<string, string> = {
   completed: '#22c55e',
@@ -83,8 +84,12 @@ export default function JobTable({ jobs, selectedJobId, onSelect }: Props) {
         <tbody>
           {jobs.length === 0 ? (
             <tr>
-              <td colSpan={5} style={{ padding: '48px 16px', textAlign: 'center', color: colors.textMuted, fontSize: 13 }}>
-                No jobs yet
+              <td colSpan={5} style={{ padding: '44px 16px', textAlign: 'center' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+                  <NodeGraph size={36} strokeWidth={1.4} style={{ color: colors.panelBorder }} />
+                  <div style={{ fontSize: 13, color: colors.textSecondary, fontWeight: 500 }}>No runs yet</div>
+                  <div style={{ fontSize: 11.5, color: colors.textMuted }}>Create a workflow and run it to see execution here.</div>
+                </div>
               </td>
             </tr>
           ) : (

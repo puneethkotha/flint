@@ -105,6 +105,34 @@ export const ArrowRight: React.FC<IconProps> = ({ size = 13, color, strokeWidth 
   </svg>
 )
 
+/** Flint facet — the brand mark. Used for LLM/agent surfaces (not a sparkle). */
+export const Spark: React.FC<IconProps> = ({ size = 16, color, strokeWidth = 1.6, style }) => (
+  <svg {...base(size, color, strokeWidth)} style={style}>
+    <path d="M12 3 19 12 12 21 5 12Z" />
+    <path d="M12 8.4 15.6 12 12 15.6 8.4 12Z" />
+  </svg>
+)
+
+/** Database cylinder — SQL. */
+export const Database: React.FC<IconProps> = ({ size = 16, color, strokeWidth = 1.6, style }) => (
+  <svg {...base(size, color, strokeWidth)} style={style}>
+    <ellipse cx="12" cy="6" rx="7" ry="3" />
+    <path d="M5 6v12c0 1.7 3.1 3 7 3s7-1.3 7-3V6" />
+    <path d="M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3" />
+  </svg>
+)
+
+/** Map a task-type tag → its crafted glyph (for example/inspiration cards). */
+export const TaskTypeIcon: React.FC<{ kind: string } & IconProps> = ({ kind, ...rest }) => {
+  switch (kind.toUpperCase()) {
+    case 'HTTP': return <Flow {...rest} />
+    case 'SQL': return <Database {...rest} />
+    case 'LLM': return <Spark {...rest} />
+    case 'WEBHOOK': return <Branch {...rest} />
+    default: return <NodeGraph {...rest} />
+  }
+}
+
 /** Map a template category → its icon + accent colour. */
 export const CATEGORY_ACCENT: Record<string, string> = {
   All: '#8a8f98',

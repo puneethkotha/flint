@@ -5,8 +5,7 @@
 
 import React, { useState } from 'react'
 import { useTheme } from '../theme'
-
-const LOGO_SRC = '/flint-logo.png'
+import FlintMark from './FlintMark'
 
 export interface LoginPageProps {
   onLoginGoogle: () => void
@@ -57,13 +56,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginGoogle, onLoginGith
       </button>
 
       <div style={{ textAlign: 'center', maxWidth: 360, width: '100%' }}>
-        <img
-          src={LOGO_SRC}
-          alt="Flint"
-          width={80}
-          height={80}
-          style={{ display: 'block', margin: '0 auto 16px' }}
-        />
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+          <FlintMark size={72} />
+        </div>
         <h1
           style={{
             fontFamily: 'Inter, system-ui, sans-serif',
